@@ -1,113 +1,86 @@
-# 머니NPC 블로그 (Next.js + Supabase)
+# 초보자용 블로그 스타터 (로그인 + 글쓰기 + 이미지 업로드)
 
-토스 스타일의 미니멀 UI, 실제 로그인, 관리자 전용 카테고리 CRUD, 리치 텍스트 글쓰기를 포함한 개인 블로그 템플릿입니다.
+코딩을 거의 몰라도 **복붙 + 명령어 몇 개**로 시작할 수 있는 예제입니다.
 
-## 무엇이 동작하나요?
+## 먼저, 질문 답변
+**"이걸 어디에 복붙하면 되나요?"**
 
-- 공개: 홈, 글 상세, 카테고리 필터, 소개
-- 인증: `/login`에서 `signInWithPassword` 로그인, 실패 메시지 표시
-- 관리자 전용: `/admin`, 카테고리 생성/수정/삭제, 글쓰기
-- 에디터: Tiptap 리치 텍스트 + 이미지 자동 업로드/삽입(Supabase Storage: `images`)
+이 저장소 기준으로는 **복붙할 필요가 없습니다.** 이미 파일이 다 들어있습니다.
 
----
+- `app.py` : 서버 코드
+- `templates/` : 화면 HTML
+- `static/style.css` : 디자인
+- `requirements.txt` : 필요한 패키지 목록
 
-## 1) 초보용 설정 체크리스트
-
-- [ ] Supabase 프로젝트 생성
-- [ ] SQL Editor에서 `supabase/schema.sql` 전체 실행
-- [ ] `public.is_admin()` 함수 안의 이메일을 내 관리자 이메일로 변경
-- [ ] Authentication > Providers에서 Email 활성화
-- [ ] 로컬 `.env.local` 작성
-- [ ] `npm install && npm run dev`
-- [ ] 관리자 이메일 계정으로 로그인 후 `/admin` 접근 확인
+즉, 지금은 복붙보다 **실행 명령어만 입력**하면 됩니다.
 
 ---
 
-## 2) 로컬 실행
+## 1) 준비물
+- Python 3.10+
+
+## 2) 실행 방법 (그대로 복붙)
+터미널에서 프로젝트 폴더로 이동한 뒤 아래 4줄을 그대로 입력하세요.
 
 ```bash
-cp .env.example .env.local
-npm install
-npm run dev
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
 ```
 
-브라우저: `http://localhost:3000`
+브라우저에서 `http://localhost:5000` 접속하면 됩니다.
 
-### `.env.local` 예시
+---
 
-```bash
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
-ADMIN_EMAIL=admin@example.com
+## 3) 처음 사용 순서
+1. `/register` 에서 회원가입
+2. `/login` 로그인
+3. `/write` 에서 글 작성 + 이미지 업로드
+4. `/`에서 글 목록 확인
+
+---
+
+## 4) 기능
+- 회원가입/로그인/로그아웃
+- 블로그 글 발행
+- 사진 업로드(png, jpg, jpeg, gif, webp)
+- SQLite DB 자동 생성(`blog.db`)
+
+---
+
+## 5) "정말 새로 만들 때" 복붙 위치
+만약 다른 컴퓨터에서 0부터 직접 만들고 싶다면 아래처럼 파일을 만드세요.
+
+```text
+내폴더/
+├─ app.py
+├─ requirements.txt
+├─ static/
+│  └─ style.css
+├─ templates/
+│  ├─ base.html
+│  ├─ index.html
+│  ├─ login.html
+│  ├─ register.html
+│  └─ write.html
+└─ uploads/
+   └─ .gitkeep
 ```
 
----
-
-## 3) Vercel 배포 환경변수
-
-Vercel > Project Settings > Environment Variables에 아래 값 등록:
-
-- `NEXT_PUBLIC_SITE_URL=https://your-domain.vercel.app`
-- `NEXT_PUBLIC_SUPABASE_URL=...`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY=...`
-- `SUPABASE_SERVICE_ROLE_KEY=...`
-- `ADMIN_EMAIL=admin@example.com`
+각 파일 내용은 이 저장소 파일 내용을 그대로 복사해서 넣으면 됩니다.
 
 ---
 
-## 4) Supabase SQL 포함 내용
+## 6) 초보자 체크포인트
+- `app.py` 하나가 핵심 파일입니다.
+- 템플릿은 `templates/` 폴더에 있습니다.
+- CSS는 `static/style.css` 입니다.
 
-`supabase/schema.sql`에는 다음이 포함됩니다.
+## 7) 배포(0원)
+이 프로젝트는 나중에 Render/Fly.io/Railway 무료 티어로 옮길 수 있습니다.
+초보자는 먼저 로컬에서 동작 확인 후 배포하세요.
 
-- `categories` 테이블
-- `posts` 테이블(`category_id` 외래키)
-- `is_admin()` 함수 (지정 이메일 관리자)
-- 공개 읽기 정책(홈/상세)
-- 관리자 쓰기 정책(카테고리/글)
-- Storage 버킷 `images` + 정책
-
----
-
-## 5) 페이지 목록
-
-- `/` 홈(카드 목록 + 카테고리 필터)
-- `/posts/[slug]` 글 상세
-- `/topics/[slug]` 카테고리 목록
-- `/about` 소개
-- `/login` 로그인
-- `/reset-password` 비밀번호 재설정
-- `/admin` 관리자 대시보드
-- `/admin/categories` 카테고리 CRUD
-- `/admin/posts/new` 글쓰기(Tiptap)
-
----
-
-## 6) 로그인 버그 수정 내용
-
-- 로그인 폼을 `useActionState + server action`으로 연결
-- 클릭 시 실제 form submit이 발생하고 Network 요청이 발생
-- 실패 메시지 UI 표시
-- 성공 시 `/admin` 이동
-- 개발환경에서만 디버그 로그 출력
-
----
-
-## 7) 글쓰기 UX
-
-- 제목 입력 후 Enter 시 다음 입력으로 자연스럽게 포커스 이동
-- Tiptap 리치 텍스트 본문 작성
-- 첨부 버튼 클릭 → 업로드 즉시 진행
-- 업로드 성공 시 커서 위치에 이미지 자동 삽입
-- 업로드 중/실패/재시도 UI 제공
-
----
-
-## 8) 변경 파일(핵심)
-
-- `app/login/*`, `app/admin/*`, `components/editor/*`
-- `components/site-header.tsx`, `components/ui/*`
-- `lib/auth.ts`, `lib/posts.ts`, `lib/types.ts`
-- `supabase/schema.sql`
-- `README.md`, `.env.example`, `package.json`
+## 8) 주의
+- 실제 운영 전에는 `SECRET_KEY`를 환경변수로 바꾸세요.
+- `debug=True`는 개발용입니다.

@@ -1,15 +1,18 @@
-import Link from "next/link";
-import { LoginForm } from "./login-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { signInAction } from "./actions";
 
 export default function LoginPage() {
   return (
-    <section className="mx-auto w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-      <h1 className="mb-2 text-2xl font-bold tracking-tight">로그인</h1>
-      <p className="mb-6 text-sm text-zinc-500">관리자 계정으로 로그인하세요.</p>
-      <LoginForm />
-      <Link href="/reset-password" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
-        비밀번호를 잊으셨나요?
-      </Link>
+    <section className="mx-auto max-w-md rounded-xl border bg-white p-8">
+      <h1 className="mb-6 text-2xl font-bold">로그인</h1>
+      <form action={signInAction} className="space-y-3">
+        <Input name="email" type="email" placeholder="email@example.com" required />
+        <Input name="password" type="password" placeholder="••••••••" required />
+        <Button type="submit" className="w-full">
+          로그인
+        </Button>
+      </form>
     </section>
   );
 }

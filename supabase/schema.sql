@@ -1,32 +1,15 @@
+-- 1) 확장
 create extension if not exists "pgcrypto";
 
--- 관리자 이메일(반드시 본인 이메일로 변경)
--- 아래 함수의 이메일을 수정하세요.
-create or replace function public.is_admin()
-returns boolean
-language sql
-stable
-as $$
-  select coalesce((auth.jwt() ->> 'email') = 'admin@example.com', false);
-$$;
-
-create table if not exists public.categories (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  slug text not null unique,
-  description text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
+-- 2) posts 테이블
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
   author_id uuid not null references auth.users(id) on delete cascade,
-  category_id uuid references public.categories(id) on delete set null,
   title text not null,
   slug text not null unique,
   excerpt text,
   content text not null,
+  category text not null,
   tags text[] not null default '{}',
   cover_url text,
   is_published boolean not null default false,
@@ -36,8 +19,10 @@ create table if not exists public.posts (
 );
 
 create index if not exists idx_posts_published_at on public.posts(published_at desc);
-create index if not exists idx_posts_category_id on public.posts(category_id);
+create index if not exists idx_posts_category on public.posts(category);
+create index if not exists idx_posts_tags on public.posts using gin(tags);
 
+-- 3) updated_at 자동 갱신
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -48,86 +33,91 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_categories_updated_at on public.categories;
-create trigger trg_categories_updated_at before update on public.categories for each row execute procedure public.set_updated_at();
-
 drop trigger if exists trg_posts_updated_at on public.posts;
-create trigger trg_posts_updated_at before update on public.posts for each row execute procedure public.set_updated_at();
+create trigger trg_posts_updated_at
+before update on public.posts
+for each row
+execute procedure public.set_updated_at();
 
-alter table public.categories enable row level security;
+-- 4) RLS 활성화
 alter table public.posts enable row level security;
 
--- 공개 페이지
-create policy "anyone read categories"
-on public.categories
-for select
-to anon, authenticated
-using (true);
-
-create policy "anyone read published posts"
+-- 공개 읽기: 발행글만
+create policy "public can read published posts"
 on public.posts
 for select
 to anon, authenticated
 using (is_published = true);
 
--- 관리자만 카테고리/글 쓰기
-create policy "admin manage categories"
-on public.categories
-for all
-to authenticated
-using (public.is_admin())
-with check (public.is_admin());
-
-create policy "admin read all posts"
+-- 작성자만 초안/자기글 읽기
+create policy "authors can read own posts"
 on public.posts
 for select
 to authenticated
-using (public.is_admin());
+using (auth.uid() = author_id);
 
-create policy "admin insert posts"
+-- 작성자만 작성
+create policy "authors can insert own posts"
 on public.posts
 for insert
 to authenticated
-with check (public.is_admin() and auth.uid() = author_id);
+with check (auth.uid() = author_id);
 
-create policy "admin update posts"
+-- 작성자만 수정
+create policy "authors can update own posts"
 on public.posts
 for update
 to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using (auth.uid() = author_id)
+with check (auth.uid() = author_id);
 
-create policy "admin delete posts"
+-- 작성자만 삭제
+create policy "authors can delete own posts"
 on public.posts
 for delete
 to authenticated
-using (public.is_admin());
+using (auth.uid() = author_id);
 
+-- 5) Storage 버킷 및 정책
 insert into storage.buckets (id, name, public)
-values ('images', 'images', true)
+values ('post-images', 'post-images', true)
 on conflict (id) do nothing;
 
-create policy "public read images"
+-- 공개 읽기
+create policy "public read post images"
 on storage.objects
 for select
 to anon, authenticated
-using (bucket_id = 'images');
+using (bucket_id = 'post-images');
 
-create policy "admin upload images"
+-- 로그인 사용자 업로드 허용 (본인 폴더만)
+create policy "users upload own folder"
 on storage.objects
 for insert
 to authenticated
-with check (bucket_id = 'images' and public.is_admin());
+with check (
+  bucket_id = 'post-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
 
-create policy "admin update images"
+create policy "users update own folder"
 on storage.objects
 for update
 to authenticated
-using (bucket_id = 'images' and public.is_admin())
-with check (bucket_id = 'images' and public.is_admin());
+using (
+  bucket_id = 'post-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'post-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
 
-create policy "admin delete images"
+create policy "users delete own folder"
 on storage.objects
 for delete
 to authenticated
-using (bucket_id = 'images' and public.is_admin());
+using (
+  bucket_id = 'post-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
