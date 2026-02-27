@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>초보자 블로그</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header>
+      <h1><a href="{{ url_for('index') }}">초보자 블로그</a></h1>
+      <nav>
+        {% if g.user %}
+        <span>{{ g.user['username'] }}님</span>
+        <a href="{{ url_for('write_post') }}">글쓰기</a>
+        <a href="{{ url_for('logout') }}">로그아웃</a>
+        {% else %}
+        <a href="{{ url_for('register') }}">회원가입</a>
+        <a href="{{ url_for('login') }}">로그인</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <ul class="flash-list">
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
