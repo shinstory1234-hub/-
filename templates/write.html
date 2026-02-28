@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>새 글 작성</h2>
+  <form method="post" enctype="multipart/form-data" class="form-box">
+    <label>제목 <input type="text" name="title" required /></label>
+    <label>내용 <textarea name="content" rows="8" required></textarea></label>
+    <label>이미지 첨부 <input type="file" name="image" accept="image/*" /></label>
+    <button type="submit">발행하기</button>
+  </form>
+{% endblock %}

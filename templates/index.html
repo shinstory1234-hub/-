@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>최신 글</h2>
+  {% if posts %}
+    {% for post in posts %}
+      <article class="post-card">
+        <h3>{{ post['title'] }}</h3>
+        <p class="meta">작성자: {{ post['author'] }} | {{ post['created_at'][:10] }}</p>
+        <p>{{ post['content'] }}</p>
+        {% if post['image_name'] %}
+          <img src="{{ url_for('uploaded_file', filename=post['image_name']) }}" alt="업로드 이미지" />
+        {% endif %}
+      </article>
+    {% endfor %}
+  {% else %}
+    <p>아직 글이 없습니다. 첫 글을 작성해 보세요!</p>
+  {% endif %}
+{% endblock %}
