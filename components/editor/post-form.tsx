@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Category } from "@/lib/types";
@@ -37,15 +37,21 @@ function slugify(v: string) {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9가-힣\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 export function PostForm({ categories }: Props) {
   const [title, setTitle] = useState("");
-  const slug = useMemo(() => slugify(title), [title]);
+  const [slug, setSlug] = useState("");
   const [state, action] = useActionState(createPostAction, initialState);
   const { show } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    setSlug(slugify(title));
+  }, [title]);
 
   useEffect(() => {
     if (state?.ok && state.redirectTo) {
@@ -75,6 +81,7 @@ export function PostForm({ categories }: Props) {
         autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        onBlur={() => setSlug(slugify(title))}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -82,7 +89,7 @@ export function PostForm({ categories }: Props) {
           }
         }}
       />
-      <input type="hidden" name="slug" value={slug} />
+      <input type="hidden" name="slug" value={slug} readOnly />
       <p className="text-xs text-muted-foreground">slug: {slug || "제목을 입력하면 자동 생성"}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" />
       <select name="category_id" className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm">

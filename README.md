@@ -95,3 +95,13 @@ Project Settings → Environment Variables에 동일 키 등록:
 - 에디터: `components/editor/post-form.tsx`, `components/editor/rich-editor.tsx`
 - 공통 UI: `components/ui/*`
 - 권한/정책: `lib/auth.ts`, `supabase/schema.sql`, `.env.example`
+
+
+## 6) 발행/카테고리 동작 확인(이번 버그 수정 포인트)
+
+1. `/admin/posts/new`에서 제목 입력 시 `slug:` 값이 즉시 생성되는지 확인
+2. 본문 입력 후 발행 클릭
+3. DevTools Network에서 서버 액션 payload에 `title`, `slug`, `content`가 포함되는지 확인
+4. 성공 응답이 `undefined`가 아닌 `{ ok: true, id, redirectTo }` 형태인지 확인
+5. 실패 시 `{ ok: false, error }`가 오고 UI 토스트/인라인 에러가 보이는지 확인
+6. `/admin/categories`에서 카테고리 생성 후 `/admin/posts/new` 드롭다운에 즉시 보이는지 확인

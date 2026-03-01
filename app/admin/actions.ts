@@ -9,7 +9,18 @@ function toSlug(v: string) {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9가-힣\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function isMeaningfulHtml(content: string) {
+  const textOnly = content
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, "")
+    .trim();
+  return textOnly.length > 0;
 }
 
 export type CreatePostState = {
@@ -26,8 +37,13 @@ export async function createCategoryAction(formData: FormData) {
   if (!name) return;
 
   const supabase = await createClient();
-  await supabase.from("categories").insert({ name, slug: toSlug(name), description: description || null });
+  const { error } = await supabase.from("categories").insert({ name, slug: toSlug(name), description: description || null });
+  if (error) {
+    throw new Error(error.message);
+  }
+
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/posts/new");
   revalidatePath("/");
 }
 
@@ -39,8 +55,16 @@ export async function updateCategoryAction(formData: FormData) {
   if (!id || !name) return;
 
   const supabase = await createClient();
-  await supabase.from("categories").update({ name, slug: toSlug(name), description: description || null }).eq("id", id);
+  const { error } = await supabase
+    .from("categories")
+    .update({ name, slug: toSlug(name), description: description || null })
+    .eq("id", id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/posts/new");
   revalidatePath("/");
 }
 
@@ -50,8 +74,13 @@ export async function deleteCategoryAction(formData: FormData) {
   if (!id) return;
 
   const supabase = await createClient();
-  await supabase.from("categories").delete().eq("id", id);
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/posts/new");
   revalidatePath("/");
 }
 
@@ -59,14 +88,15 @@ export async function createPostAction(_prev: CreatePostState, formData: FormDat
   const user = await requireAdmin();
 
   const title = String(formData.get("title") ?? "").trim();
-  const slug = String(formData.get("slug") ?? "").trim();
+  const slugFromForm = String(formData.get("slug") ?? "").trim();
+  const slug = slugFromForm || toSlug(title);
   const excerpt = String(formData.get("excerpt") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "").trim() || null;
   const intent = String(formData.get("intent") ?? "draft").trim();
   const isPublished = intent === "publish";
 
-  if (!title || !slug || !content) {
+  if (!title || !slug || !content || !isMeaningfulHtml(content)) {
     return {
       ok: false,
       error: "제목, slug, 본문은 필수입니다."
@@ -98,6 +128,7 @@ export async function createPostAction(_prev: CreatePostState, formData: FormDat
 
   revalidatePath("/");
   revalidatePath("/admin/posts");
+  revalidatePath("/admin/posts/new");
   revalidatePath("/topics/all");
 
   return {

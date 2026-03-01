@@ -17,11 +17,18 @@ export function RichEditor({ name, initialValue = "" }: Props) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
+  const [html, setHtml] = useState(initialValue);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [StarterKit, Image],
     content: initialValue,
+    onCreate: ({ editor }) => {
+      setHtml(editor.getHTML());
+    },
+    onUpdate: ({ editor }) => {
+      setHtml(editor.getHTML());
+    },
     editorProps: {
       attributes: {
         class: "min-h-[380px] rounded-b-lg border border-t-0 border-border bg-surface p-5 outline-none"
@@ -87,7 +94,7 @@ export function RichEditor({ name, initialValue = "" }: Props) {
         />
       </div>
       <EditorContent editor={editor} />
-      <input type="hidden" name={name} value={editor?.getHTML() || ""} />
+      <input type="hidden" name={name} value={html} readOnly />
       {uploading ? (
         <div className="space-y-1">
           <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
