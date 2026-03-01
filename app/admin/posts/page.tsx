@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { deletePostFormAction, togglePublishFormAction } from "@/app/admin/actions";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
 
@@ -35,11 +36,17 @@ export default async function AdminPostsPage() {
                   <Badge>{Array.isArray(post.categories) ? post.categories[0]?.name ?? "미분류" : post.categories?.name ?? "미분류"}</Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">{(post.published_at ?? post.created_at)?.slice(0, 10)}</span>
-                <Link href={`/admin/posts/${post.id}/edit`}>
-                  <Button variant="outline">수정</Button>
-                </Link>
+                <form action={togglePublishFormAction}>
+                  <input type="hidden" name="id" value={post.id} />
+                  <input type="hidden" name="publish" value={post.is_published ? "false" : "true"} />
+                  <Button variant="outline" type="submit">{post.is_published ? "비공개" : "발행"}</Button>
+                </form>
+                <form action={deletePostFormAction}>
+                  <input type="hidden" name="id" value={post.id} />
+                  <Button variant="danger" type="submit">삭제</Button>
+                </form>
               </div>
             </CardContent>
           </Card>

@@ -9,13 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { RichEditor } from "@/components/editor/rich-editor";
 import { useToast } from "@/components/ui/toast";
-import { createPostAction, type CreatePostState } from "@/app/admin/actions";
+import { createPostAction, type ActionState } from "@/app/admin/actions";
 
 type Props = {
   categories: Category[];
 };
 
-const initialState: CreatePostState = { ok: false };
+const initialState: ActionState = { ok: false };
 
 function SubmitActions() {
   const { pending } = useFormStatus();
@@ -70,7 +70,7 @@ export function PostForm({ categories }: Props) {
     <form action={action} className="space-y-5">
       <div className="sticky top-20 z-30 flex items-center justify-between rounded-lg border border-border bg-surface/95 p-3 shadow-soft backdrop-blur">
         <p className="text-sm font-medium text-muted-foreground">초안 작성 중</p>
-        <SubmitActions />
+        {categories.length > 0 ? <SubmitActions /> : null}
       </div>
 
       {state?.error ? <p className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm text-danger">{state.error}</p> : null}
@@ -92,8 +92,11 @@ export function PostForm({ categories }: Props) {
       <input type="hidden" name="slug" value={slug} readOnly />
       <p className="text-xs text-muted-foreground">slug: {slug || "제목을 입력하면 자동 생성"}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" />
-      <select name="category_id" className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm">
-        <option value="">카테고리 선택</option>
+      {categories.length === 0 ? (
+        <p className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm text-danger">카테고리를 먼저 생성한 뒤 글을 작성해 주세요.</p>
+      ) : null}
+      <select name="category_id" required className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm">
+        <option value="">카테고리 선택(필수)</option>
         {categories.map((category) => (
           <option key={category.id} value={category.id}>
             {category.name}

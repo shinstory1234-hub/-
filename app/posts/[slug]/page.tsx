@@ -3,14 +3,15 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getPostBySlug, getPosts } from "@/lib/posts";
+import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/lib/posts";
+import { PostInteractions } from "@/components/post-interactions";
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
 
-  const all = await getPosts();
+  const [all, likes, comments] = await Promise.all([getPosts(), getPostLikesCount(post.id), getPostComments(post.id)]);
   const index = all.findIndex((item) => item.slug === slug);
   const prev = index >= 0 ? all[index + 1] : undefined;
   const next = index > 0 ? all[index - 1] : undefined;
@@ -33,6 +34,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <Button variant="outline" size="sm">링크 공유</Button>
           <Button variant="outline" size="sm">카카오 공유</Button>
         </div>
+        <PostInteractions postId={post.id} initialLikes={likes} initialComments={comments} />
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">

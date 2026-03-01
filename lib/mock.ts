@@ -8,9 +8,13 @@ export const mockPosts: Post[] = [
     excerpt: "초보자도 따라할 수 있는 블로그 구축 체크리스트입니다.",
     content: "상세 본문 예시입니다. 여기에 마크다운 렌더러를 붙이면 더 좋습니다.",
     cover_url: null,
-    category: "개발",
+    category_id: null,
+    category: { id: "c1", name: "개발", slug: "dev", description: null },
     tags: ["nextjs", "supabase"],
-    published_at: "2026-01-10"
+    is_published: true,
+    published_at: "2026-01-10",
+    created_at: "2026-01-10",
+    updated_at: "2026-01-10"
   },
   {
     id: "2",
@@ -19,8 +23,12 @@ export const mockPosts: Post[] = [
     excerpt: "카드 간격, 타이포, 썸네일 비율 중심으로 정리했습니다.",
     content: "카드 UI 설계 팁 본문.",
     cover_url: null,
-    category: "디자인",
+    category_id: null,
+    category: { id: "c2", name: "디자인", slug: "design", description: null },
     tags: ["ui", "tailwind"],
-    published_at: "2026-01-17"
+    is_published: true,
+    published_at: "2026-01-17",
+    created_at: "2026-01-17",
+    updated_at: "2026-01-17"
   }
 ];

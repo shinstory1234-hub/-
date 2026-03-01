@@ -21,3 +21,12 @@ export type Post = {
   created_at?: string;
   updated_at?: string;
 };
+
+export type Comment = {
+  id: string;
+  post_id: string;
+  user_id: string | null;
+  author_email: string | null;
+  content: string;
+  created_at: string;
+};

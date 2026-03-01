@@ -2,16 +2,16 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
-import { getCategories, getPosts } from "@/lib/posts";
+import { getCategories, getPosts, getTodayVisits } from "@/lib/posts";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
-  const [posts, categories] = await Promise.all([getPosts(category), getCategories()]);
+  const [posts, categories, todayVisits] = await Promise.all([getPosts(category), getCategories(), getTodayVisits()]);
 
   return (
     <section className="space-y-8">
       <header className="space-y-2">
-        <p className="text-sm text-muted-foreground">투자 · 커리어 · 생산성 기록</p>
+        <p className="text-sm text-muted-foreground">투자 · 커리어 · 생산성 기록 · Today {todayVisits}</p>
         <h1 className="text-3xl font-bold md:text-4xl">최신 글</h1>
       </header>
 

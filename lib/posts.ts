@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
-import { Category, Post } from "@/lib/types";
+import { Category, Comment, Post } from "@/lib/types";
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient();
@@ -44,4 +44,28 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     ...data,
     category: Array.isArray((data as any).categories) ? (data as any).categories[0] ?? null : (data as any).categories ?? null
   } as Post;
+}
+
+export async function getPostLikesCount(postId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count } = await supabase.from("likes").select("id", { count: "exact", head: true }).eq("post_id", postId);
+  return count ?? 0;
+}
+
+export async function getPostComments(postId: string): Promise<Comment[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .select("id,post_id,user_id,author_email,content,created_at")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function getTodayVisits(): Promise<number> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle();
+  return data?.visits ?? 0;
 }

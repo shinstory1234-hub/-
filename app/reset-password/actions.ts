@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase-server";
 
-export async function resetPasswordAction(formData: FormData) {
+export async function resetPasswordAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "");
   const supabase = await createClient();
 
@@ -10,6 +10,5 @@ export async function resetPasswordAction(formData: FormData) {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`
   });
 
-  if (error) return { error: error.message };
-  return { success: true };
+  if (error) throw new Error(error.message);
 }

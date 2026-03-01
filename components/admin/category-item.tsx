@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
-import { updateCategoryAction, deleteCategoryAction } from "@/app/admin/actions";
+import { updateCategoryFormAction, deleteCategoryFormAction } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ export function CategoryItem({ category }: { category: { id: string; name: strin
   const [open, setOpen] = useState(false);
 
   return (
-    <form action={updateCategoryAction} className="space-y-3 rounded-lg border border-border bg-surface p-5">
+    <form action={updateCategoryFormAction} className="space-y-3 rounded-lg border border-border bg-surface p-5">
       <input type="hidden" name="id" value={category.id} />
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold">카테고리 편집</p>
@@ -30,7 +30,7 @@ export function CategoryItem({ category }: { category: { id: string; name: strin
       <Modal open={open} onClose={() => setOpen(false)} title="카테고리 삭제" description="삭제하면 연결된 글은 미분류가 됩니다.">
         <button
           type="submit"
-          formAction={deleteCategoryAction}
+          formAction={deleteCategoryFormAction}
           className="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white"
         >
           삭제 계속하기
