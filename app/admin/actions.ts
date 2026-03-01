@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
 
@@ -12,6 +11,13 @@ function toSlug(v: string) {
     .replace(/[^a-z0-9가-힣\s-]/g, "")
     .replace(/\s+/g, "-");
 }
+
+export type CreatePostState = {
+  ok: boolean;
+  id?: string;
+  error?: string;
+  redirectTo?: string;
+};
 
 export async function createCategoryAction(formData: FormData) {
   await requireAdmin();
@@ -49,29 +55,54 @@ export async function deleteCategoryAction(formData: FormData) {
   revalidatePath("/");
 }
 
-export async function createPostAction(formData: FormData) {
+export async function createPostAction(_prev: CreatePostState, formData: FormData): Promise<CreatePostState> {
   const user = await requireAdmin();
+
   const title = String(formData.get("title") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim();
   const excerpt = String(formData.get("excerpt") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
-  const categoryId = String(formData.get("category_id") ?? "") || null;
-  const intent = String(formData.get("intent") ?? "draft");
+  const categoryId = String(formData.get("category_id") ?? "").trim() || null;
+  const intent = String(formData.get("intent") ?? "draft").trim();
   const isPublished = intent === "publish";
-  if (!title || !slug || !content) return;
+
+  if (!title || !slug || !content) {
+    return {
+      ok: false,
+      error: "제목, slug, 본문은 필수입니다."
+    };
+  }
 
   const supabase = await createClient();
-  await supabase.from("posts").insert({
-    author_id: user.id,
-    title,
-    slug,
-    excerpt: excerpt || null,
-    content,
-    category_id: categoryId,
-    is_published: isPublished,
-    published_at: isPublished ? new Date().toISOString() : null
-  });
+  const { data, error } = await supabase
+    .from("posts")
+    .insert({
+      author_id: user.id,
+      title,
+      slug,
+      excerpt: excerpt || null,
+      content,
+      category_id: categoryId,
+      is_published: isPublished,
+      published_at: isPublished ? new Date().toISOString() : null
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    return {
+      ok: false,
+      error: error.message
+    };
+  }
 
   revalidatePath("/");
-  redirect("/admin");
+  revalidatePath("/admin/posts");
+  revalidatePath("/topics/all");
+
+  return {
+    ok: true,
+    id: data.id,
+    redirectTo: "/admin/posts"
+  };
 }
