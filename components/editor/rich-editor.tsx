@@ -16,6 +16,7 @@ export function RichEditor({ name, initialValue = "" }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [lastFile, setLastFile] = useState<File | null>(null);
+  const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
@@ -23,7 +24,7 @@ export function RichEditor({ name, initialValue = "" }: Props) {
     content: initialValue,
     editorProps: {
       attributes: {
-        class: "min-h-[260px] rounded-b-2xl border border-t-0 border-zinc-200 bg-white p-4 outline-none"
+        class: "min-h-[380px] rounded-b-lg border border-t-0 border-border bg-surface p-5 outline-none"
       }
     }
   });
@@ -32,6 +33,12 @@ export function RichEditor({ name, initialValue = "" }: Props) {
     setUploading(true);
     setUploadError(null);
     setLastFile(file);
+    setProgress(8);
+
+    const progressTimer = window.setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? prev : prev + 9));
+    }, 180);
+
     try {
       const supabase = createClient();
       const user = (await supabase.auth.getUser()).data.user;
@@ -44,16 +51,21 @@ export function RichEditor({ name, initialValue = "" }: Props) {
 
       const { data } = supabase.storage.from("images").getPublicUrl(path);
       editor?.chain().focus().setImage({ src: data.publicUrl }).run();
+      setProgress(100);
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "업로드 실패");
     } finally {
-      setUploading(false);
+      window.clearInterval(progressTimer);
+      setTimeout(() => {
+        setUploading(false);
+        setProgress(0);
+      }, 250);
     }
   };
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 rounded-t-2xl border border-zinc-200 bg-zinc-50 p-2">
+      <div className="flex items-center gap-2 rounded-t-lg border border-border bg-surface-muted p-2">
         <Button type="button" variant="outline" size="sm" onClick={() => editor?.chain().focus().toggleBold().run()}>
           Bold
         </Button>
@@ -61,7 +73,7 @@ export function RichEditor({ name, initialValue = "" }: Props) {
           List
         </Button>
         <Button type="button" variant="outline" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}>
-          첨부
+          이미지 첨부
         </Button>
         <input
           ref={fileRef}
@@ -76,9 +88,16 @@ export function RichEditor({ name, initialValue = "" }: Props) {
       </div>
       <EditorContent editor={editor} />
       <input type="hidden" name={name} value={editor?.getHTML() || ""} />
-      {uploading ? <p className="text-xs text-zinc-500">이미지 업로드 중...</p> : null}
+      {uploading ? (
+        <div className="space-y-1">
+          <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="text-xs text-muted-foreground">이미지 업로드 중... {progress}%</p>
+        </div>
+      ) : null}
       {uploadError ? (
-        <div className="flex items-center gap-2 text-xs text-red-500">
+        <div className="flex items-center gap-2 text-xs text-danger">
           <span>{uploadError}</span>
           {lastFile ? (
             <Button type="button" size="sm" variant="outline" onClick={() => uploadAndInsert(lastFile)}>

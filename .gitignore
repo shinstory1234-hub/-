@@ -2,9 +2,3 @@ node_modules
 .next
 .env*
 !.env.example
-.venv/
-__pycache__/
-*.pyc
-blog.db
-uploads/*
-!uploads/.gitkeep

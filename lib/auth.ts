@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "shinstory1234@gmail.com";
 
 export async function getSessionUser() {
   const supabase = await createClient();
@@ -14,7 +14,7 @@ export async function getSessionUser() {
 export async function requireAdmin() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
-  if (!ADMIN_EMAIL || user.email !== ADMIN_EMAIL) redirect("/");
+  if (user.email !== ADMIN_EMAIL) redirect("/");
   return user;
 }
 

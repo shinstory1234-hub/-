@@ -56,7 +56,8 @@ export async function createPostAction(formData: FormData) {
   const excerpt = String(formData.get("excerpt") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "") || null;
-  const isPublished = String(formData.get("is_published") ?? "") === "true";
+  const intent = String(formData.get("intent") ?? "draft");
+  const isPublished = intent === "publish";
   if (!title || !slug || !content) return;
 
   const supabase = await createClient();
