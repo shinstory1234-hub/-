@@ -81,6 +81,7 @@ Project Settings → Environment Variables에 동일 키 등록:
 - [ ] 이미지 첨부 업로드 진행률 표시 + 업로드 후 본문 자동 삽입
 - [ ] 업로드 실패 시 에러 + 재시도 동작
 - [ ] 홈/상세/카테고리/관리자 화면이 같은 디자인 결로 통일
+- [ ] `/login` 및 공개 페이지 렌더링 시 콘솔에 `Cookies can only be modified in a Server Action or Route Handler` 에러가 더 이상 발생하지 않음
 
 ---
 
