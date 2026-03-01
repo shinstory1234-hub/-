@@ -1,6 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+<<<<<<< HEAD
+=======
+import { redirect } from "next/navigation";
+>>>>>>> origin/main
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
 
@@ -12,6 +16,7 @@ function toSlug(v: string) {
     .replace(/\s+/g, "-");
 }
 
+<<<<<<< HEAD
 export type CreatePostState = {
   ok: boolean;
   id?: string;
@@ -19,6 +24,8 @@ export type CreatePostState = {
   redirectTo?: string;
 };
 
+=======
+>>>>>>> origin/main
 export async function createCategoryAction(formData: FormData) {
   await requireAdmin();
   const name = String(formData.get("name") ?? "").trim();
@@ -55,13 +62,19 @@ export async function deleteCategoryAction(formData: FormData) {
   revalidatePath("/");
 }
 
+<<<<<<< HEAD
 export async function createPostAction(_prev: CreatePostState, formData: FormData): Promise<CreatePostState> {
   const user = await requireAdmin();
 
+=======
+export async function createPostAction(formData: FormData) {
+  const user = await requireAdmin();
+>>>>>>> origin/main
   const title = String(formData.get("title") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim();
   const excerpt = String(formData.get("excerpt") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
+<<<<<<< HEAD
   const categoryId = String(formData.get("category_id") ?? "").trim() || null;
   const intent = String(formData.get("intent") ?? "draft").trim();
   const isPublished = intent === "publish";
@@ -105,4 +118,25 @@ export async function createPostAction(_prev: CreatePostState, formData: FormDat
     id: data.id,
     redirectTo: "/admin/posts"
   };
+=======
+  const categoryId = String(formData.get("category_id") ?? "") || null;
+  const intent = String(formData.get("intent") ?? "draft");
+  const isPublished = intent === "publish";
+  if (!title || !slug || !content) return;
+
+  const supabase = await createClient();
+  await supabase.from("posts").insert({
+    author_id: user.id,
+    title,
+    slug,
+    excerpt: excerpt || null,
+    content,
+    category_id: categoryId,
+    is_published: isPublished,
+    published_at: isPublished ? new Date().toISOString() : null
+  });
+
+  revalidatePath("/");
+  redirect("/admin");
+>>>>>>> origin/main
 }
