@@ -105,3 +105,8 @@ Project Settings → Environment Variables에 동일 키 등록:
 4. 성공 응답이 `undefined`가 아닌 `{ ok: true, id, redirectTo }` 형태인지 확인
 5. 실패 시 `{ ok: false, error }`가 오고 UI 토스트/인라인 에러가 보이는지 확인
 6. `/admin/categories`에서 카테고리 생성 후 `/admin/posts/new` 드롭다운에 즉시 보이는지 확인
+
+
+- [ ] `/admin/posts/new`에서 제목/본문 입력 후 발행 시 `ok:true` 응답 확인
+- [ ] 발행 요청 payload에 `title`, `slug`, `content`가 모두 포함되는지 확인
+- [ ] 발행 직후 홈(`/`)과 관리자 글 목록(`/admin/posts`)에 새 글이 반영되는지 확인

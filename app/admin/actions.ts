@@ -14,14 +14,6 @@ function toSlug(v: string) {
     .replace(/^-|-$/g, "");
 }
 
-function isMeaningfulHtml(content: string) {
-  const textOnly = content
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, "")
-    .trim();
-  return textOnly.length > 0;
-}
 
 export type CreatePostState = {
   ok: boolean;
@@ -88,15 +80,17 @@ export async function createPostAction(_prev: CreatePostState, formData: FormDat
   const user = await requireAdmin();
 
   const title = String(formData.get("title") ?? "").trim();
-  const slugFromForm = String(formData.get("slug") ?? "").trim();
-  const slug = slugFromForm || toSlug(title);
-  const excerpt = String(formData.get("excerpt") ?? "").trim();
+  const slugRaw = String(formData.get("slug") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
+  const excerpt = String(formData.get("excerpt") ?? "").trim();
   const categoryId = String(formData.get("category_id") ?? "").trim() || null;
   const intent = String(formData.get("intent") ?? "draft").trim();
+
+  // payload 키와 1:1 매칭: title/slug/content/excerpt/category_id
+  const slug = slugRaw || toSlug(title);
   const isPublished = intent === "publish";
 
-  if (!title || !slug || !content || !isMeaningfulHtml(content)) {
+  if (!title || !slug || !content) {
     return {
       ok: false,
       error: "제목, slug, 본문은 필수입니다."
