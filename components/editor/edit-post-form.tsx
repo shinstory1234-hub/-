@@ -26,14 +26,14 @@ type Props = {
 
 const initialState: ActionState = { ok: false };
 
-function SubmitActions({ defaultPublished }: { defaultPublished: boolean }) {
+function SubmitActions() {
   const { pending } = useFormStatus();
   return (
     <div className="flex gap-2">
       <Button type="submit" name="intent" value="draft" variant="outline" loading={pending}>
         임시저장
       </Button>
-      <Button type="submit" name="intent" value="publish" loading={pending || defaultPublished}>
+      <Button type="submit" name="intent" value="publish" loading={pending}>
         발행 저장
       </Button>
     </div>
@@ -72,7 +72,7 @@ export function EditPostForm({ post, categories }: Props) {
       <input type="hidden" name="id" value={post.id} />
       <div className="sticky top-20 z-30 flex items-center justify-between rounded-lg border border-border bg-surface/95 p-3 shadow-soft backdrop-blur">
         <p className="text-sm font-medium text-muted-foreground">글 수정 중</p>
-        <SubmitActions defaultPublished={post.is_published} />
+        <SubmitActions />
       </div>
 
       <Input
