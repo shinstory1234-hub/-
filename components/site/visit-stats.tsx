@@ -19,5 +19,5 @@ export function VisitStats({ initialToday, initialTotal }: { initialToday: numbe
     run();
   }, []);
 
-  return <p className="text-sm text-muted-foreground">투자 · 커리어 · 생산성 기록 · Today {stats.today}, Total {stats.total}</p>;
+  return <p className="text-sm text-muted-foreground">VC심사역 출신의 인사이트 · Today {stats.today}, Total {stats.total}</p>;
 }

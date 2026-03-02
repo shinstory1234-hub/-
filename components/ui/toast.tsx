@@ -1,19 +1,21 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-type ToastItem = { id: number; title: string; variant?: "default" | "error" };
+type ToastItem = { id: string; title: string; variant?: "default" | "error" };
 
 const ToastContext = createContext<{ show: (title: string, variant?: "default" | "error") => void } | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
+  const toastSeq = useRef(0);
 
   const value = useMemo(
     () => ({
       show: (title: string, variant: "default" | "error" = "default") => {
-        const id = Date.now();
+        toastSeq.current += 1;
+        const id = `toast-${toastSeq.current}`;
         setItems((prev) => [...prev, { id, title, variant }]);
         setTimeout(() => setItems((prev) => prev.filter((item) => item.id !== id)), 2400);
       }

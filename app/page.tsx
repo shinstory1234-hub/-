@@ -36,8 +36,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-2">
                     {post.category?.name ? <Badge>{post.category.name}</Badge> : <Badge>미분류</Badge>}
-                    {post.tags?.slice(0, 2).map((tag) => (
-                      <Badge key={tag}>#{tag}</Badge>
+                    {post.tags?.slice(0, 2).map((tag, idx) => (
+                      <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
                     ))}
                   </div>
                   <span className="text-xs text-muted-foreground">{post.published_at?.slice(0, 10) ?? "임시저장"}</span>

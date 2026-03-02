@@ -22,8 +22,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <Badge>{post.category?.name ?? "미분류"}</Badge>
-            {post.tags?.map((tag) => (
-              <Badge key={tag}>#{tag}</Badge>
+            {post.tags?.map((tag, idx) => (
+              <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
             ))}
           </div>
           <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
