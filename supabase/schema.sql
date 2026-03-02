@@ -7,7 +7,9 @@ returns boolean
 language sql
 stable
 as $$
-  select coalesce((auth.jwt() ->> 'email') = 'shinstory1234@gmail.com', false);
+  select
+    coalesce(nullif(current_setting('app.admin_email', true), ''), '') <> ''
+    and coalesce(auth.jwt() ->> 'email', '') = current_setting('app.admin_email', true);
 $$;
 
 create or replace function public.set_updated_at()

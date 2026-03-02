@@ -19,6 +19,7 @@ KAKAO_JS_KEY=YOUR_KAKAO_JS_KEY
 3. Authentication > Providers > Email 활성화
 4. Storage > Buckets 에서 `images` 버킷 확인
 5. 관리자 이메일(`ADMIN_EMAIL`) 계정으로 회원가입/로그인
+6. SQL Editor에서 관리자 이메일 설정: `alter role authenticator set app.admin_email = 'shinstory1234@gmail.com';`
 
 ## 3) 로컬 실행
 
@@ -107,13 +108,13 @@ npm run dev
 
 ## 11) Supabase SQL 실행 순서 + 테스트 순서 (10줄)
 
-1. Supabase SQL Editor에서 `supabase/schema.sql` 전체를 한 번에 실행합니다.
-2. `categories` 테이블에 `description`, `sort_order` 컬럼이 생겼는지 Table Editor에서 확인합니다.
-3. `posts` 테이블에 `view_count` 컬럼이 생겼는지 확인합니다.
-4. 로컬 `.env.local`에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ADMIN_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY`를 입력합니다.
-5. `npm install && npm run dev` 후 `http://localhost:3000/admin/categories`로 접속합니다.
-6. 카테고리 생성 버튼을 눌러 row가 즉시 생기는지, 실패 시 토스트 에러가 보이는지 확인합니다.
-7. 관리자에서 글 상세(`/posts/[slug]`)로 들어가 우측 상단 `조회수 N`이 보이는지 확인합니다.
-8. 같은 글을 새로고침해 `조회수` 숫자가 계속 증가하는지 확인합니다.
-9. 홈에서 새로고침 3회 후 `Today`, `Total` 값이 0 고정이 아닌지 확인합니다.
-10. `/api/track-view`와 `/api/track-post/{postId}` 호출 시 JSON 응답이 정상인지 확인합니다.
+1. Supabase SQL Editor에서 `supabase/schema.sql` 전체를 실행합니다.
+2. SQL Editor에서 `NOTIFY pgrst, 'reload schema';` 를 실행해 스키마 캐시를 즉시 갱신합니다.
+3. 대체 방법 1: Supabase Dashboard → Project Settings → API에서 PostgREST(또는 API) 재시작을 실행합니다.
+4. 대체 방법 2: Dashboard의 Database/Schema cache reload 기능으로 캐시를 갱신합니다.
+5. 관리자 이메일 설정 SQL 실행: `alter role authenticator set app.admin_email = 'shinstory1234@gmail.com';`.
+6. `/admin/categories`에서 이름 입력 후 생성 버튼을 누릅니다.
+7. 생성 실패 시 토스트에 원인 에러 메시지가 표시되는지 확인합니다(조용히 실패 금지).
+8. Supabase Table Editor의 `categories`에서 row가 실제로 생성됐는지 확인합니다.
+9. 생성 직후 `/admin/categories` 목록에 새 항목이 새로고침 없이 나타나는지 확인합니다.
+10. 권한 없는 계정으로 생성 시 에러 토스트가 표시되는지 확인합니다.

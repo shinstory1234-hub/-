@@ -37,6 +37,12 @@ function getText(formData: FormData, key: string) {
   return "";
 }
 
+
+function isSortOrderSchemaError(message?: string | null) {
+  if (!message) return false;
+  return message.includes("sort_order") && message.includes("schema cache");
+}
+
 export type ActionState = {
   ok: boolean;
   id?: string;
@@ -51,18 +57,28 @@ export async function createCategoryAction(formData: FormData): Promise<ActionSt
   if (!name) return { ok: false, error: "카테고리 이름은 필수입니다." };
 
   const supabase = await createClient();
-  const { data: maxRow } = await supabase
+  const { data: maxRow, error: maxError } = await supabase
     .from("categories")
     .select("sort_order")
     .order("sort_order", { ascending: false })
     .limit(1)
     .maybeSingle();
 
+  if (maxError && !isSortOrderSchemaError(maxError.message)) {
+    return { ok: false, error: maxError.message };
+  }
+
   const nextSortOrder = Number(maxRow?.sort_order ?? 0) + 1;
 
-  const { error } = await supabase
+  let { error } = await supabase
     .from("categories")
     .insert({ name, slug: toSlug(name), description: description || null, sort_order: nextSortOrder });
+
+  if (error && isSortOrderSchemaError(error.message)) {
+    const fallbackInsert = await supabase.from("categories").insert({ name, slug: toSlug(name), description: description || null });
+    error = fallbackInsert.error;
+  }
+
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/categories");
@@ -121,7 +137,7 @@ export async function moveCategoryOrderAction(formData: FormData): Promise<Actio
     .from("categories")
     .select("id,sort_order")
     .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (error || !categories) return { ok: false, error: error?.message ?? "카테고리를 찾을 수 없습니다." };
 

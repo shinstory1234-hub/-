@@ -6,11 +6,19 @@ import { requireAdmin } from "@/lib/auth";
 export default async function AdminCategoriesPage() {
   await requireAdmin();
   const supabase = await createClient();
-  const { data: categories } = await supabase
+  let { data: categories, error } = await supabase
     .from("categories")
-    .select("id,name,slug,description,sort_order")
+    .select("id,name,slug,description,sort_order,created_at")
     .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
+
+  if (error?.message?.includes("sort_order") && error.message.includes("schema cache")) {
+    const fallback = await supabase
+      .from("categories")
+      .select("id,name,slug,description,created_at")
+      .order("created_at", { ascending: false });
+    categories = fallback.data as any;
+  }
 
   return (
     <section className="space-y-6">

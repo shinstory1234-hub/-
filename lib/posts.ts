@@ -3,11 +3,21 @@ import { Category, Comment, Post } from "@/lib/types";
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("categories")
     .select("id,name,slug,description,created_at,sort_order")
     .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
+
+  if (error?.message?.includes("sort_order") && error.message.includes("schema cache")) {
+    const fallback = await supabase
+      .from("categories")
+      .select("id,name,slug,description,created_at")
+      .order("created_at", { ascending: false });
+    data = fallback.data as any;
+    error = fallback.error;
+  }
+
   if (error) return [];
   return data ?? [];
 }
