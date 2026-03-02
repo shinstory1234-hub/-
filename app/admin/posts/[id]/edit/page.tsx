@@ -1,16 +1,18 @@
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin } from "@/lib/auth";
+import { EditPostForm } from "@/components/editor/edit-post-form";
 
 export default async function AdminEditPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
   const supabase = await createClient();
-  const { data: post } = await supabase.from("posts").select("id,title,excerpt,content").eq("id", id).single();
+  const [{ data: post }, { data: categories }] = await Promise.all([
+    supabase.from("posts").select("id,title,slug,excerpt,content,category_id,is_published").eq("id", id).single(),
+    supabase.from("categories").select("id,name,slug,description,created_at").order("name")
+  ]);
+
   if (!post) return notFound();
 
   return (
@@ -18,15 +20,10 @@ export default async function AdminEditPage({ params }: { params: Promise<{ id: 
       <Card>
         <CardHeader>
           <h2>글 수정</h2>
-          <p className="mt-2 text-sm text-muted-foreground">현재 화면은 읽기/검토용 UI입니다. 저장 기능은 다음 단계에서 연결합니다.</p>
+          <p className="mt-2 text-sm text-muted-foreground">수정 화면에서도 이미지 업로드/커서 삽입을 동일하게 지원합니다.</p>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
-            <Input defaultValue={post.title} />
-            <Textarea defaultValue={post.excerpt ?? ""} rows={3} />
-            <Textarea defaultValue={post.content} rows={12} />
-            <Button>수정 저장</Button>
-          </form>
+          <EditPostForm post={post} categories={categories ?? []} />
         </CardContent>
       </Card>
     </section>

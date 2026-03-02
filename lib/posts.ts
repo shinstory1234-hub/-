@@ -71,3 +71,16 @@ export async function getTodayVisits(): Promise<number> {
   const { data } = await supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle();
   return data?.visits ?? 0;
 }
+
+
+export async function getVisitStats(): Promise<{ today: number; total: number }> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const [{ data: todayRow }, { data: rows }] = await Promise.all([
+    supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle(),
+    supabase.from("daily_stats").select("visits")
+  ]);
+
+  const total = (rows ?? []).reduce((sum, row: any) => sum + Number(row.visits ?? 0), 0);
+  return { today: Number(todayRow?.visits ?? 0), total };
+}

@@ -8,7 +8,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const menus = [
   { href: "/", label: "홈" },
   { href: "/about", label: "소개" },
-  { href: "/topics/all", label: "카테고리" },
   { href: "/admin", label: "관리자" }
 ];
 

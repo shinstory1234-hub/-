@@ -138,6 +138,47 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   };
 }
 
+
+export async function updatePostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = String(getField(formData, "id") ?? "").trim();
+  const title = String(getField(formData, "title") ?? "").trim();
+  const slugRaw = String(getField(formData, "slug") ?? "").trim();
+  const content = String(getField(formData, "content") ?? "").trim();
+  const excerpt = String(getField(formData, "excerpt") ?? "").trim();
+  const categoryId = String(getField(formData, "category_id") ?? "").trim() || null;
+  const intent = String(getField(formData, "intent") || "draft").trim();
+
+  const slug = slugRaw || toSlug(title);
+  const isPublished = intent === "publish";
+
+  if (!id) return { ok: false, error: "post id가 없습니다." };
+  if (!title || !slug || !content) return { ok: false, error: "제목, slug, 본문은 필수입니다." };
+  if (!categoryId) return { ok: false, error: "카테고리를 먼저 선택해 주세요." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("posts")
+    .update({
+      title,
+      slug,
+      excerpt: excerpt || null,
+      content,
+      category_id: categoryId,
+      is_published: isPublished,
+      published_at: isPublished ? new Date().toISOString() : null
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/admin/posts");
+  revalidatePath(`/posts/${slug}`);
+  return { ok: true, id, redirectTo: "/admin/posts" };
+}
+
 export async function deletePostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "").trim();
