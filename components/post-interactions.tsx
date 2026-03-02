@@ -50,14 +50,14 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
         fetch(`/api/comments/${postId}`, { cache: "no-store" })
       ]);
 
-      const likesJson = (await likesRes.json()) as LikesResponse;
-      if (likesJson.ok) {
+      const likesJson = await safeJson<LikesResponse>(likesRes);
+      if (likesJson?.ok) {
         setLikes(likesJson.count ?? 0);
         setMyLiked(Boolean(likesJson.likedByMe));
       }
 
-      const commentsJson = (await commentsRes.json()) as CommentsResponse;
-      if (commentsJson.ok) {
+      const commentsJson = await safeJson<CommentsResponse>(commentsRes);
+      if (commentsJson?.ok) {
         setComments(commentsJson.comments ?? []);
       }
     };
@@ -70,14 +70,22 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     router.push("/login");
   };
 
+  const safeJson = async <T,>(res: Response): Promise<T | null> => {
+    try {
+      return (await res.json()) as T;
+    } catch {
+      return null;
+    }
+  };
+
   const toggleLike = async () => {
-    if (!me) return askLogin("로그인 후 좋아요를 눌러주세요.");
-
     const res = await fetch(`/api/likes/${postId}`, { method: myLiked ? "DELETE" : "POST" });
-    const json = (await res.json()) as LikesResponse;
+    const json = await safeJson<LikesResponse>(res);
 
-    if (!json.ok) {
-      show(json.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
+    if (!res.ok && res.status === 401) return askLogin("로그인 후 좋아요를 눌러주세요.");
+
+    if (!json?.ok) {
+      show(json?.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
       return;
     }
 
@@ -86,7 +94,6 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   };
 
   const submitComment = async () => {
-    if (!me) return askLogin("로그인 후 댓글을 작성해주세요.");
     if (!content.trim()) return;
 
     const res = await fetch(`/api/comments/${postId}`, {
@@ -95,9 +102,11 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       body: JSON.stringify({ content: content.trim() })
     });
 
-    const json = (await res.json()) as CommentsResponse;
-    if (!json.ok || !json.comment) {
-      show(json.error ?? "댓글 등록에 실패했습니다.", "error");
+    const json = await safeJson<CommentsResponse>(res);
+    if (!res.ok && res.status === 401) return askLogin("로그인 후 댓글을 작성해주세요.");
+
+    if (!json?.ok || !json.comment) {
+      show(json?.error ?? "댓글 등록에 실패했습니다.", "error");
       return;
     }
 
@@ -108,9 +117,11 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
 
   const deleteComment = async (id: string) => {
     const res = await fetch(`/api/comments/${postId}?commentId=${id}`, { method: "DELETE" });
-    const json = (await res.json()) as CommentsResponse;
-    if (!json.ok) {
-      show(json.error ?? "댓글 삭제에 실패했습니다.", "error");
+    const json = await safeJson<CommentsResponse>(res);
+    if (!res.ok && res.status === 401) return askLogin("로그인 후 댓글을 삭제할 수 있습니다.");
+
+    if (!json?.ok) {
+      show(json?.error ?? "댓글 삭제에 실패했습니다.", "error");
       return;
     }
 

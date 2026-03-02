@@ -11,7 +11,7 @@ export default async function AdminPostsPage() {
   const supabase = await createClient();
   const { data: posts } = await supabase
     .from("posts")
-    .select("id,title,slug,is_published,published_at,created_at,categories:category_id(name,slug)")
+    .select("id,title,slug,is_published,published_at,created_at,categories!posts_category_id_fkey(name,slug)")
     .order("created_at", { ascending: false })
     .limit(30);
 
