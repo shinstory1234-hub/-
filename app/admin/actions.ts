@@ -32,7 +32,7 @@ function getText(formData: FormData, key: string) {
   if (typeof exact === "string" && exact.trim()) return exact;
 
   for (const [k, v] of formData.entries()) {
-    const isMatchedKey = k === key || k.endsWith(`_${key}`);
+    const isMatchedKey = k === key || k.endsWith(`_${key}`) || k.endsWith(`:${key}`);
     if (isMatchedKey && typeof v === "string" && v.trim()) return v;
   }
   return "";
@@ -126,12 +126,8 @@ export async function deleteCategoryAction(formData: FormData): Promise<ActionSt
 
 export async function swapCategoryOrderAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
-
-  const id = String(getText(formData, "id") ?? "").trim();
-  const direction = String(getText(formData, "direction") ?? "").trim();
-  if (!id || !["up", "down"].includes(direction)) {
-    return { ok: false, error: "순서 변경 정보가 올바르지 않습니다." };
-  }
+  const direction = String(getText(formData, "direction") ?? "").trim().toLowerCase();
+  if (!["up", "down"].includes(direction)) return { ok: false, error: "순서 변경 정보가 올바르지 않습니다." };
 
   const supabase = await createClient();
   const { data: categories, error } = await supabase
@@ -141,6 +137,26 @@ export async function swapCategoryOrderAction(formData: FormData): Promise<Actio
     .order("created_at", { ascending: false });
 
   if (error || !categories) return { ok: false, error: error?.message ?? "카테고리를 찾을 수 없습니다." };
+
+  const categoryIdSet = new Set(categories.map((item) => String(item.id)));
+  const idCandidates: string[] = [];
+
+  const exact = formData.get("id");
+  if (typeof exact === "string" && exact.trim()) idCandidates.push(exact.trim());
+
+  for (const [k, v] of formData.entries()) {
+    if (typeof v !== "string") continue;
+    const normalizedKey = k.toLowerCase();
+    if (
+      (normalizedKey === "id" || normalizedKey.endsWith("_id") || normalizedKey.endsWith(":id")) &&
+      v.trim()
+    ) {
+      idCandidates.push(v.trim());
+    }
+  }
+
+  const id = idCandidates.find((candidate) => categoryIdSet.has(candidate)) ?? "";
+  if (!id) return { ok: false, error: "카테고리를 찾을 수 없습니다." };
 
   const index = categories.findIndex((item) => item.id === id);
   if (index < 0) return { ok: false, error: "카테고리를 찾을 수 없습니다." };

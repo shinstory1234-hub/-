@@ -35,8 +35,8 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
     .from("posts")
     .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
     .eq("is_published", true)
-    .not("published_at", "is", null)
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
 
   if (categorySlug) {
     const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).single();
