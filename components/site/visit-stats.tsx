@@ -21,8 +21,8 @@ export function VisitStats({ initialToday, initialTotal }: { initialToday: numbe
 
   return (
     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-      <p className="text-3xl font-bold md:text-4xl">VC심사역 출신의 인사이트</p>
-      <p className="text-3xl font-bold md:text-4xl">Today {stats.today}, Total {stats.total}</p>
+      <p className="text-xl font-bold md:text-2xl">VC심사역 출신의 인사이트</p>
+      <p className="text-xl font-bold md:text-2xl">Today {stats.today}, Total {stats.total}</p>
     </div>
   );
 }

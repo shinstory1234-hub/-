@@ -13,7 +13,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <section className="space-y-8">
       <header className="space-y-2">
         <VisitStats initialToday={visitStats.today} initialTotal={visitStats.total} />
-        <h1 className="text-3xl font-bold md:text-4xl">최신 글</h1>
+        <h1 className="text-xl font-bold md:text-2xl">최신 글</h1>
       </header>
 
       <Tabs
