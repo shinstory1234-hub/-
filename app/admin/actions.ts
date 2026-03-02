@@ -124,7 +124,7 @@ export async function deleteCategoryAction(formData: FormData): Promise<ActionSt
 }
 
 
-export async function moveCategoryOrderAction(formData: FormData): Promise<ActionState> {
+export async function swapCategoryOrderAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
 
   const id = String(getText(formData, "id") ?? "").trim();
@@ -170,7 +170,7 @@ export async function moveCategoryOrderAction(formData: FormData): Promise<Actio
 
 
 export async function moveCategoryOrderStateAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  return moveCategoryOrderAction(formData);
+  return swapCategoryOrderAction(formData);
 }
 
 export async function createCategoryStateAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -349,5 +349,5 @@ export async function deleteCategoryFormAction(formData: FormData): Promise<void
 }
 
 export async function moveCategoryOrderFormAction(formData: FormData): Promise<void> {
-  await moveCategoryOrderAction(formData);
+  await swapCategoryOrderAction(formData);
 }

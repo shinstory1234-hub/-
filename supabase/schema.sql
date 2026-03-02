@@ -73,6 +73,7 @@ alter table public.comments add column if not exists author_email text;
 
 alter table public.categories add column if not exists description text;
 
+-- sort_order is required for admin up/down ordering
 alter table public.categories add column if not exists sort_order integer not null default 0;
 update public.categories c
 set sort_order = seq.rn
