@@ -128,64 +128,54 @@ export async function swapCategoryOrderAction(formData: FormData): Promise<Actio
   await requireAdmin();
 
   const keys = Array.from(formData.keys());
+  const id = String(getText(formData, "id") ?? "").trim();
   const direction = String(getText(formData, "direction") ?? "").trim().toLowerCase();
+
+  if (!id) return { ok: false, error: `id 누락: keys=${keys.join(",") || "(none)"}` };
   if (!["up", "down"].includes(direction)) {
     return { ok: false, error: `순서 변경 정보가 올바르지 않습니다. direction=${direction || "(empty)"}` };
   }
 
   const supabase = await createClient();
-  const { data: categories, error: categoryError } = await supabase
+  const { data: current, error: currentError } = await supabase
     .from("categories")
     .select("id,sort_order,created_at")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+    .eq("id", id)
+    .single();
 
-  if (categoryError || !categories) {
-    return { ok: false, error: `카테고리 조회 실패: ${categoryError?.message ?? "unknown"}` };
+  if (currentError || !current) {
+    return { ok: false, error: `카테고리를 찾을 수 없습니다. ${currentError?.message ?? ""}`.trim() };
   }
 
-  const categoryIdSet = new Set(categories.map((item) => String(item.id)));
-  const idCandidates: string[] = [];
+  let neighborQuery = supabase
+    .from("categories")
+    .select("id,sort_order")
+    .neq("id", id)
+    .order("sort_order", { ascending: direction === "down" })
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-  const exact = formData.get("id");
-  if (typeof exact === "string" && exact.trim()) idCandidates.push(exact.trim());
-
-  for (const [k, v] of formData.entries()) {
-    if (typeof v !== "string") continue;
-    const normalizedKey = k.toLowerCase();
-    if ((normalizedKey === "id" || normalizedKey.endsWith("_id") || normalizedKey.endsWith(":id")) && v.trim()) {
-      idCandidates.push(v.trim());
-    }
+  if (direction === "up") {
+    neighborQuery = neighborQuery.lt("sort_order", current.sort_order ?? 0);
+  } else {
+    neighborQuery = neighborQuery.gt("sort_order", current.sort_order ?? 0);
   }
 
-  const id = idCandidates.find((candidate) => categoryIdSet.has(candidate)) ?? "";
-  if (!id) {
-    return { ok: false, error: `id 누락: keys=${keys.join(",") || "(none)"}` };
-  }
+  const { data: neighbor, error: neighborError } = await neighborQuery.maybeSingle();
+  if (neighborError) return { ok: false, error: `이웃 카테고리 조회 실패: ${neighborError.message}` };
+  if (!neighbor) return { ok: false, error: direction === "up" ? "이미 최상단" : "이미 최하단" };
 
-  const index = categories.findIndex((item) => item.id === id);
-  if (index < 0) return { ok: false, error: "카테고리를 찾을 수 없습니다." };
-
-  const targetIndex = direction === "up" ? index - 1 : index + 1;
-  if (direction === "up" && targetIndex < 0) return { ok: false, error: "이미 최상단입니다." };
-  if (direction === "down" && targetIndex >= categories.length) return { ok: false, error: "이미 최하단입니다." };
-
-  const current = categories[index];
-  const target = categories[targetIndex];
-  const currentOrder = Number(current.sort_order ?? index + 1);
-  const targetOrder = Number(target.sort_order ?? targetIndex + 1);
-  const tempOrder = Math.max(currentOrder, targetOrder) + 1_000_000;
+  const currentOrder = Number(current.sort_order ?? 0);
+  const neighborOrder = Number(neighbor.sort_order ?? 0);
+  const tempOrder = Math.max(currentOrder, neighborOrder) + 1_000_000;
 
   const { error: e1 } = await supabase.from("categories").update({ sort_order: tempOrder }).eq("id", current.id);
   if (e1) return { ok: false, error: `순서 저장 실패(1/3): ${e1.message}` };
 
-  const { error: e2 } = await supabase.from("categories").update({ sort_order: currentOrder }).eq("id", target.id);
-  if (e2) {
-    await supabase.from("categories").update({ sort_order: currentOrder }).eq("id", current.id);
-    return { ok: false, error: `순서 저장 실패(2/3): ${e2.message}` };
-  }
+  const { error: e2 } = await supabase.from("categories").update({ sort_order: currentOrder }).eq("id", neighbor.id);
+  if (e2) return { ok: false, error: `순서 저장 실패(2/3): ${e2.message}` };
 
-  const { error: e3 } = await supabase.from("categories").update({ sort_order: targetOrder }).eq("id", current.id);
+  const { error: e3 } = await supabase.from("categories").update({ sort_order: neighborOrder }).eq("id", current.id);
   if (e3) return { ok: false, error: `순서 저장 실패(3/3): ${e3.message}` };
 
   revalidatePath("/admin/categories");

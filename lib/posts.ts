@@ -36,25 +36,54 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
 export async function getPostsWithError(categorySlug?: string): Promise<PostListResult> {
   noStore();
   const supabase = await createClient();
-  let query = supabase
-    .from("posts")
-    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
 
-  if (categorySlug) {
-    const { data: cat, error: categoryError } = await supabase.from("categories").select("id").eq("slug", categorySlug).single();
-    if (categoryError) return { posts: [], error: categoryError.message };
-    if (cat?.id) query = query.eq("category_id", cat.id);
+  const selectWithViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)";
+  const selectWithoutViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)";
+
+  const runQuery = async (selectFields: string) => {
+    let query = supabase
+      .from("posts")
+      .select(selectFields)
+      .eq("is_published", true)
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+
+    if (categorySlug) {
+      const { data: cat, error: categoryError } = await supabase.from("categories").select("id").eq("slug", categorySlug).single();
+      if (categoryError) return { data: null, error: categoryError };
+      if (cat?.id) query = query.eq("category_id", cat.id);
+    }
+
+    return query;
+  };
+
+  const firstResult = await runQuery(selectWithViewCount);
+  if (firstResult.error) {
+    const isViewCountError =
+      firstResult.error.message.includes("view_count") || firstResult.error.message.includes("does not exist");
+
+    if (isViewCountError) {
+      const fallbackResult = await runQuery(selectWithoutViewCount);
+      if (fallbackResult.error) return { posts: [], error: fallbackResult.error.message };
+      return {
+        posts: (fallbackResult.data ?? []).map((row: any) => ({
+          ...row,
+          view_count: 0,
+          category: row.categories ?? null
+        })),
+        error: null
+      };
+    }
+
+    return { posts: [], error: firstResult.error.message };
   }
 
-  const { data, error } = await query;
-  if (error) return { posts: [], error: error.message };
-
   return {
-    posts: (data ?? []).map((row: any) => ({
+    posts: (firstResult.data ?? []).map((row: any) => ({
       ...row,
+      view_count: Number(row.view_count ?? 0),
       category: row.categories ?? null
     })),
     error: null

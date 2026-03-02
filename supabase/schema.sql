@@ -82,7 +82,30 @@ where c.id = seq.id and (c.sort_order is null or c.sort_order = 0);
 alter table public.categories alter column sort_order set default 0;
 alter table public.categories alter column sort_order set not null;
 
-alter table public.posts add column if not exists view_count bigint not null default 0;
+do $$
+declare
+  total_count integer;
+  distinct_count integer;
+begin
+  select count(*)::integer, count(distinct sort_order)::integer
+  into total_count, distinct_count
+  from public.categories;
+
+  if distinct_count < total_count then
+    with ranked as (
+      select id, row_number() over(order by created_at asc, id asc) - 1 as new_sort_order
+      from public.categories
+    )
+    update public.categories c
+    set sort_order = ranked.new_sort_order
+    from ranked
+    where ranked.id = c.id;
+  end if;
+end
+$$;
+
+
+alter table public.posts add column if not exists view_count integer not null default 0;
 
 create or replace function public.hash_password(plain_password text)
 returns text
@@ -307,3 +330,6 @@ on storage.objects
 for delete
 to authenticated
 using (bucket_id = 'images' and public.is_admin());
+
+
+NOTIFY pgrst, 'reload schema';
