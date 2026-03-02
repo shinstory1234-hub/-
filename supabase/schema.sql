@@ -1,3 +1,4 @@
+-- REQUIRED TABLES: posts, categories, likes, comments, daily_stats
 create extension if not exists "pgcrypto";
 
 -- 관리자 이메일(필요 시 변경)
@@ -66,6 +67,18 @@ create table if not exists public.daily_stats (
   visits integer not null default 0,
   updated_at timestamptz not null default now()
 );
+
+
+create or replace function public.increment_daily_visits(target_date date)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.daily_stats(date, visits) values (target_date, 1)
+  on conflict (date) do update set visits = public.daily_stats.visits + 1, updated_at = now();
+end;
+$$;
 
 create index if not exists idx_posts_published_at on public.posts(published_at desc);
 create index if not exists idx_posts_category_id on public.posts(category_id);

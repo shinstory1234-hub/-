@@ -14,6 +14,7 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
     .from("posts")
     .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories(id,name,slug,description)")
     .eq("is_published", true)
+    .not("published_at", "is", null)
     .order("published_at", { ascending: false });
 
   if (categorySlug) {
@@ -48,7 +49,8 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 
 export async function getPostLikesCount(postId: string): Promise<number> {
   const supabase = await createClient();
-  const { count } = await supabase.from("likes").select("id", { count: "exact", head: true }).eq("post_id", postId);
+  const { count, error } = await supabase.from("likes").select("id", { count: "exact", head: true }).eq("post_id", postId);
+  if (error) return 0;
   return count ?? 0;
 }
 

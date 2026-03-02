@@ -34,7 +34,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <Button variant="outline" size="sm">링크 공유</Button>
           <Button variant="outline" size="sm">카카오 공유</Button>
         </div>
-        <PostInteractions postId={post.id} initialLikes={likes} initialComments={comments} />
+        <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">
