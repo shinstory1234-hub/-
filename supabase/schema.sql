@@ -62,6 +62,27 @@ create table if not exists public.comments (
   created_at timestamptz not null default now()
 );
 
+
+alter table public.comments add column if not exists author_name text;
+alter table public.comments add column if not exists password_hash text;
+alter table public.comments add column if not exists author_email text;
+
+create or replace function public.hash_password(plain_password text)
+returns text
+language sql
+security definer
+as $$
+  select crypt(plain_password, gen_salt('bf'));
+$$;
+
+create or replace function public.verify_password(plain_password text, hashed_password text)
+returns boolean
+language sql
+security definer
+as $$
+  select crypt(plain_password, hashed_password) = hashed_password;
+$$;
+
 create table if not exists public.daily_stats (
   date date primary key,
   visits integer not null default 0,
@@ -109,7 +130,9 @@ drop policy if exists "likes insert own" on public.likes;
 drop policy if exists "likes delete own" on public.likes;
 drop policy if exists "comments select" on public.comments;
 drop policy if exists "comments insert own" on public.comments;
+drop policy if exists "comments insert anon and auth" on public.comments;
 drop policy if exists "comments delete own" on public.comments;
+drop policy if exists "comments delete anon and auth" on public.comments;
 drop policy if exists "daily stats select" on public.daily_stats;
 drop policy if exists "daily stats server mutate" on public.daily_stats;
 
@@ -175,17 +198,17 @@ for select
 to anon, authenticated
 using (true);
 
-create policy "comments insert own"
+create policy "comments insert anon and auth"
 on public.comments
 for insert
-to authenticated
-with check (auth.uid() = user_id);
+to anon, authenticated
+with check (true);
 
-create policy "comments delete own"
+create policy "comments delete anon and auth"
 on public.comments
 for delete
-to authenticated
-using (auth.uid() = user_id);
+to anon, authenticated
+using (true);
 
 create policy "daily stats select"
 on public.daily_stats

@@ -25,8 +25,10 @@ export type Post = {
 export type Comment = {
   id: string;
   post_id: string;
-  user_id: string | null;
+  user_id?: string | null;
+  author_name?: string | null;
   author_email: string | null;
+  password_hash?: string | null;
   content: string;
   created_at: string;
 };

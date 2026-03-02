@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+function admin() {
+  return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+}
 
 export async function GET(_req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = await createClient();
+  const supabase = admin();
 
   const { data, error } = await supabase
     .from("comments")
-    .select("id,post_id,user_id,author_email,content,created_at")
+    .select("id,post_id,author_name,author_email,content,created_at")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
 
@@ -20,23 +24,37 @@ export async function GET(_req: Request, { params }: { params: Promise<{ postId:
 
 export async function POST(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = await createClient();
-  const user = (await supabase.auth.getUser()).data.user;
+  const supabase = admin();
 
-  if (!user) {
-    return NextResponse.json({ ok: false, error: "로그인이 필요합니다." }, { status: 401 });
+  const body = (await req.json().catch(() => ({}))) as {
+    authorName?: string;
+    password?: string;
+    content?: string;
+  };
+
+  const authorName = String(body.authorName ?? "").trim();
+  const password = String(body.password ?? "").trim();
+  const content = String(body.content ?? "").trim();
+
+  if (!authorName || !password || !content) {
+    return NextResponse.json({ ok: false, error: "이름, 비밀번호, 댓글 내용을 입력해 주세요." }, { status: 400 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as { content?: string };
-  const content = String(body.content ?? "").trim();
-  if (!content) {
-    return NextResponse.json({ ok: false, error: "댓글 내용을 입력해 주세요." }, { status: 400 });
+  const { data: hashData, error: hashError } = await supabase.rpc("hash_password", { plain_password: password });
+  if (hashError || !hashData) {
+    return NextResponse.json({ ok: false, error: hashError?.message ?? "비밀번호 해시 생성에 실패했습니다." }, { status: 500 });
   }
 
   const { data, error } = await supabase
     .from("comments")
-    .insert({ post_id: postId, user_id: user.id, author_email: user.email ?? null, content })
-    .select("id,post_id,user_id,author_email,content,created_at")
+    .insert({
+      post_id: postId,
+      author_name: authorName,
+      author_email: null,
+      password_hash: String(hashData),
+      content
+    })
+    .select("id,post_id,author_name,author_email,content,created_at")
     .single();
 
   if (error) {
@@ -48,26 +66,40 @@ export async function POST(req: Request, { params }: { params: Promise<{ postId:
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = await createClient();
-  const user = (await supabase.auth.getUser()).data.user;
+  const supabase = admin();
+  const body = (await req.json().catch(() => ({}))) as { commentId?: string; password?: string };
 
-  if (!user) {
-    return NextResponse.json({ ok: false, error: "로그인이 필요합니다." }, { status: 401 });
+  const commentId = String(body.commentId ?? "").trim();
+  const password = String(body.password ?? "").trim();
+
+  if (!commentId || !password) {
+    return NextResponse.json({ ok: false, error: "commentId와 비밀번호가 필요합니다." }, { status: 400 });
   }
 
-  const url = new URL(req.url);
-  const commentId = url.searchParams.get("commentId")?.trim();
-  if (!commentId) {
-    return NextResponse.json({ ok: false, error: "commentId가 필요합니다." }, { status: 400 });
-  }
-
-  const { error } = await supabase
+  const { data: target, error: findError } = await supabase
     .from("comments")
-    .delete()
+    .select("id,password_hash")
     .eq("id", commentId)
     .eq("post_id", postId)
-    .eq("user_id", user.id);
+    .maybeSingle();
 
+  if (findError || !target) {
+    return NextResponse.json({ ok: false, error: "댓글을 찾을 수 없습니다." }, { status: 404 });
+  }
+
+  const { data: verified, error: verifyError } = await supabase.rpc("verify_password", {
+    plain_password: password,
+    hashed_password: target.password_hash
+  });
+
+  if (verifyError) {
+    return NextResponse.json({ ok: false, error: verifyError.message }, { status: 500 });
+  }
+  if (!verified) {
+    return NextResponse.json({ ok: false, error: "비밀번호가 일치하지 않습니다." }, { status: 401 });
+  }
+
+  const { error } = await supabase.from("comments").delete().eq("id", commentId).eq("post_id", postId);
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
   }

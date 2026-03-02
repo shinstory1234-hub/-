@@ -58,7 +58,7 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
-    .select("id,post_id,user_id,author_email,content,created_at")
+    .select("id,post_id,author_name,author_email,content,created_at")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
   if (error) return [];
