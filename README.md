@@ -115,6 +115,7 @@ npm run dev
 5. 관리자 이메일 설정 SQL 실행: `alter role authenticator set app.admin_email = 'shinstory1234@gmail.com';`.
 6. `/admin/categories`에서 이름 입력 후 생성 버튼을 누릅니다.
 7. 생성 실패 시 토스트에 원인 에러 메시지가 표시되는지 확인합니다(조용히 실패 금지).
+   - 예: `column categories.sort_order does not exist` 같은 원인이 그대로 보여야 합니다.
 8. Supabase Table Editor의 `categories`에서 row가 실제로 생성됐는지 확인합니다.
 9. 생성 직후 `/admin/categories` 목록에 새 항목이 새로고침 없이 나타나는지 확인합니다.
 10. 권한 없는 계정으로 생성 시 에러 토스트가 표시되는지 확인합니다.

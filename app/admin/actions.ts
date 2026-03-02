@@ -32,7 +32,8 @@ function getText(formData: FormData, key: string) {
   if (typeof exact === "string" && exact.trim()) return exact;
 
   for (const [k, v] of formData.entries()) {
-    if (k.endsWith(`_${key}`) && typeof v === "string" && v.trim()) return v;
+    const isMatchedKey = k === key || k.endsWith(`_${key}`);
+    if (isMatchedKey && typeof v === "string" && v.trim()) return v;
   }
   return "";
 }

@@ -73,12 +73,13 @@ alter table public.comments add column if not exists author_email text;
 
 alter table public.categories add column if not exists description text;
 
-alter table public.categories add column if not exists sort_order integer;
+alter table public.categories add column if not exists sort_order integer not null default 0;
 update public.categories c
 set sort_order = seq.rn
 from (select id, row_number() over(order by created_at asc, id asc) as rn from public.categories) seq
 where c.id = seq.id and (c.sort_order is null or c.sort_order = 0);
 alter table public.categories alter column sort_order set default 0;
+alter table public.categories alter column sort_order set not null;
 
 alter table public.posts add column if not exists view_count bigint not null default 0;
 

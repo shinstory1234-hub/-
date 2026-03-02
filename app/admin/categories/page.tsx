@@ -18,13 +18,16 @@ export default async function AdminCategoriesPage() {
       .select("id,name,slug,description,created_at")
       .order("created_at", { ascending: false });
     categories = fallback.data as any;
+    error = fallback.error;
   }
+
+  const loadError = error?.message ?? null;
 
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">카테고리 관리</h1>
 
-      <CategoryCreateForm />
+      <CategoryCreateForm initialLoadError={loadError} />
 
       {categories?.length ? (
         <div className="grid gap-3 md:grid-cols-2">
