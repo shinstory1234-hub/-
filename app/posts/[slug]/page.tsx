@@ -30,7 +30,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
-        <PostShareButtons title={post.title} description={post.excerpt ?? "머니NPC 글 공유"} keyFromEnv={process.env.KAKAO_JS_KEY} />
+        <PostShareButtons />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </Card>
 

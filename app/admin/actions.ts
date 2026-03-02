@@ -144,6 +144,13 @@ export async function deletePostAction(_prev: ActionState, formData: FormData): 
   if (!id) return { ok: false, error: "post id가 없습니다." };
 
   const supabase = await createClient();
+
+  const { error: commentsError } = await supabase.from("comments").delete().eq("post_id", id);
+  if (commentsError) return { ok: false, error: commentsError.message };
+
+  const { error: likesError } = await supabase.from("likes").delete().eq("post_id", id);
+  if (likesError) return { ok: false, error: likesError.message };
+
   const { error } = await supabase.from("posts").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
 

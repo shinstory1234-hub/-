@@ -11,7 +11,7 @@ export default async function AdminPostsPage() {
   const supabase = await createClient();
   const { data: posts } = await supabase
     .from("posts")
-    .select("id,title,slug,is_published,published_at,created_at,categories(name)")
+    .select("id,title,slug,is_published,published_at,created_at,categories:category_id(name,slug)")
     .order("created_at", { ascending: false })
     .limit(30);
 
@@ -33,7 +33,7 @@ export default async function AdminPostsPage() {
                 <p className="text-xs text-muted-foreground">/{post.slug}</p>
                 <div className="flex gap-2">
                   <Badge>{post.is_published ? "발행" : "임시저장"}</Badge>
-                  <Badge>{Array.isArray(post.categories) ? post.categories[0]?.name ?? "미분류" : post.categories?.name ?? "미분류"}</Badge>
+                  <Badge>{post.categories?.name ?? "미분류"}</Badge>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">

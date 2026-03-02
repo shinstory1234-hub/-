@@ -15,11 +15,26 @@ type Props = {
   initialComments: Comment[];
 };
 
+type LikesResponse = {
+  ok: boolean;
+  count?: number;
+  likedByMe?: boolean;
+  error?: string;
+};
+
+type CommentsResponse = {
+  ok: boolean;
+  comments?: Comment[];
+  comment?: Comment;
+  commentId?: string;
+  error?: string;
+};
+
 export function PostInteractions({ postId, initialLikes, initialComments }: Props) {
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
   const [me, setMe] = useState<string | null>(null);
-  const [myLikedId, setMyLikedId] = useState<string | null>(null);
+  const [myLiked, setMyLiked] = useState(false);
   const [content, setContent] = useState("");
   const { show } = useToast();
   const router = useRouter();
@@ -29,11 +44,24 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       const supabase = createClient();
       const user = (await supabase.auth.getUser()).data.user;
       setMe(user?.id ?? null);
-      if (user?.id) {
-        const { data } = await supabase.from("likes").select("id").eq("post_id", postId).eq("user_id", user.id).maybeSingle();
-        setMyLikedId(data?.id ?? null);
+
+      const [likesRes, commentsRes] = await Promise.all([
+        fetch(`/api/likes/${postId}`, { cache: "no-store" }),
+        fetch(`/api/comments/${postId}`, { cache: "no-store" })
+      ]);
+
+      const likesJson = (await likesRes.json()) as LikesResponse;
+      if (likesJson.ok) {
+        setLikes(likesJson.count ?? 0);
+        setMyLiked(Boolean(likesJson.likedByMe));
+      }
+
+      const commentsJson = (await commentsRes.json()) as CommentsResponse;
+      if (commentsJson.ok) {
+        setComments(commentsJson.comments ?? []);
       }
     };
+
     load();
   }, [postId]);
 
@@ -43,58 +71,57 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   };
 
   const toggleLike = async () => {
-    const supabase = createClient();
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return askLogin("로그인 후 좋아요를 눌러주세요.");
+    if (!me) return askLogin("로그인 후 좋아요를 눌러주세요.");
 
-    if (myLikedId) {
-      const { error } = await supabase.from("likes").delete().eq("id", myLikedId);
-      if (!error) {
-        setMyLikedId(null);
-        setLikes((v) => Math.max(0, v - 1));
-      }
+    const res = await fetch(`/api/likes/${postId}`, { method: myLiked ? "DELETE" : "POST" });
+    const json = (await res.json()) as LikesResponse;
+
+    if (!json.ok) {
+      show(json.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
       return;
     }
 
-    const { data, error } = await supabase.from("likes").insert({ post_id: postId, user_id: user.id }).select("id").single();
-    if (!error && data) {
-      setMyLikedId(data.id);
-      setLikes((v) => v + 1);
-    }
+    setLikes(json.count ?? 0);
+    setMyLiked(Boolean(json.likedByMe));
   };
 
   const submitComment = async () => {
-    const supabase = createClient();
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return askLogin("로그인 후 댓글을 작성해주세요.");
+    if (!me) return askLogin("로그인 후 댓글을 작성해주세요.");
     if (!content.trim()) return;
 
-    const payload = { post_id: postId, user_id: user.id, author_email: user.email ?? null, content: content.trim() };
-    const { data, error } = await supabase
-      .from("comments")
-      .insert(payload)
-      .select("id,post_id,user_id,author_email,content,created_at")
-      .single();
-    if (!error && data) {
-      setComments((prev) => [data as Comment, ...prev]);
-      setContent("");
-      show("댓글이 등록되었습니다.");
+    const res = await fetch(`/api/comments/${postId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: content.trim() })
+    });
+
+    const json = (await res.json()) as CommentsResponse;
+    if (!json.ok || !json.comment) {
+      show(json.error ?? "댓글 등록에 실패했습니다.", "error");
+      return;
     }
+
+    setComments((prev) => [json.comment as Comment, ...prev]);
+    setContent("");
+    show("댓글이 등록되었습니다.");
   };
 
   const deleteComment = async (id: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.from("comments").delete().eq("id", id);
-    if (!error) {
-      setComments((prev) => prev.filter((c) => c.id !== id));
-      show("댓글을 삭제했습니다.");
+    const res = await fetch(`/api/comments/${postId}?commentId=${id}`, { method: "DELETE" });
+    const json = (await res.json()) as CommentsResponse;
+    if (!json.ok) {
+      show(json.error ?? "댓글 삭제에 실패했습니다.", "error");
+      return;
     }
+
+    setComments((prev) => prev.filter((c) => c.id !== id));
+    show("댓글을 삭제했습니다.");
   };
 
   return (
     <div className="mt-10 space-y-4 border-t border-border pt-6">
       <div className="flex items-center gap-3">
-        <Button type="button" variant={myLikedId ? "default" : "outline"} onClick={toggleLike}>
+        <Button type="button" variant={myLiked ? "default" : "outline"} onClick={toggleLike}>
           좋아요 {likes}
         </Button>
       </div>

@@ -12,7 +12,7 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
   const supabase = await createClient();
   let query = supabase
     .from("posts")
-    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories(id,name,slug,description)")
+    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories:category_id(name,slug)")
     .eq("is_published", true)
     .not("published_at", "is", null)
     .order("published_at", { ascending: false });
@@ -27,7 +27,7 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
 
   return (data ?? []).map((row: any) => ({
     ...row,
-    category: Array.isArray(row.categories) ? row.categories[0] ?? null : row.categories ?? null
+    category: row.categories ?? null
   }));
 }
 
@@ -35,7 +35,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("posts")
-    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories(id,name,slug,description)")
+    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories:category_id(name,slug)")
     .eq("slug", slug)
     .eq("is_published", true)
     .single();
@@ -43,7 +43,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   if (error || !data) return null;
   return {
     ...data,
-    category: Array.isArray((data as any).categories) ? (data as any).categories[0] ?? null : (data as any).categories ?? null
+    category: (data as any).categories ?? null
   } as Post;
 }
 
