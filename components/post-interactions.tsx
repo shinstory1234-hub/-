@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase-browser";
 import { Comment } from "@/lib/types";
+import { useToast } from "@/components/ui/toast";
 
 type Props = {
   postId: string;
@@ -18,6 +21,8 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   const [me, setMe] = useState<string | null>(null);
   const [myLikedId, setMyLikedId] = useState<string | null>(null);
   const [content, setContent] = useState("");
+  const { show } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
@@ -32,10 +37,15 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     load();
   }, [postId]);
 
+  const askLogin = (message: string) => {
+    show(message, "error");
+    router.push("/login");
+  };
+
   const toggleLike = async () => {
     const supabase = createClient();
     const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return alert("로그인 후 좋아요를 눌러주세요.");
+    if (!user) return askLogin("로그인 후 좋아요를 눌러주세요.");
 
     if (myLikedId) {
       const { error } = await supabase.from("likes").delete().eq("id", myLikedId);
@@ -56,7 +66,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   const submitComment = async () => {
     const supabase = createClient();
     const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return alert("로그인 후 댓글을 작성해주세요.");
+    if (!user) return askLogin("로그인 후 댓글을 작성해주세요.");
     if (!content.trim()) return;
 
     const payload = { post_id: postId, user_id: user.id, author_email: user.email ?? null, content: content.trim() };
@@ -68,13 +78,17 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     if (!error && data) {
       setComments((prev) => [data as Comment, ...prev]);
       setContent("");
+      show("댓글이 등록되었습니다.");
     }
   };
 
   const deleteComment = async (id: string) => {
     const supabase = createClient();
     const { error } = await supabase.from("comments").delete().eq("id", id);
-    if (!error) setComments((prev) => prev.filter((c) => c.id !== id));
+    if (!error) {
+      setComments((prev) => prev.filter((c) => c.id !== id));
+      show("댓글을 삭제했습니다.");
+    }
   };
 
   return (
@@ -87,10 +101,16 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
 
       <div className="space-y-2">
         <p className="text-sm font-semibold">댓글 {comments.length}</p>
-        <div className="flex gap-2">
-          <Input value={content} onChange={(e) => setContent(e.target.value)} placeholder="댓글을 입력하세요" />
-          <Button type="button" onClick={submitComment}>등록</Button>
-        </div>
+        {me ? (
+          <div className="flex gap-2">
+            <Input value={content} onChange={(e) => setContent(e.target.value)} placeholder="댓글을 입력하세요" />
+            <Button type="button" onClick={submitComment}>등록</Button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            로그인 후 댓글을 작성할 수 있습니다. <Link href="/login" className="text-accent underline">로그인하기</Link>
+          </p>
+        )}
         <div className="space-y-2">
           {comments.map((comment) => (
             <div key={comment.id} className="rounded-md border border-border bg-surface p-3 text-sm">

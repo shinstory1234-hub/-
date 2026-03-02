@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { deletePostFormAction, togglePublishFormAction } from "@/app/admin/actions";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
+import { PostRowActions } from "@/components/admin/post-row-actions";
 
 export default async function AdminPostsPage() {
   await requireAdmin();
@@ -38,15 +38,7 @@ export default async function AdminPostsPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">{(post.published_at ?? post.created_at)?.slice(0, 10)}</span>
-                <form action={togglePublishFormAction}>
-                  <input type="hidden" name="id" value={post.id} />
-                  <input type="hidden" name="publish" value={post.is_published ? "false" : "true"} />
-                  <Button variant="outline" type="submit">{post.is_published ? "비공개" : "발행"}</Button>
-                </form>
-                <form action={deletePostFormAction}>
-                  <input type="hidden" name="id" value={post.id} />
-                  <Button variant="danger" type="submit">삭제</Button>
-                </form>
+                <PostRowActions id={post.id} isPublished={post.is_published} />
               </div>
             </CardContent>
           </Card>

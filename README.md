@@ -9,6 +9,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ADMIN_EMAIL=shinstory1234@gmail.com
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
+KAKAO_JS_KEY=YOUR_KAKAO_JS_KEY
 ```
 
 ## 2) Supabase 설정 순서 (초보용)
@@ -56,3 +57,12 @@ npm run dev
 - `app/api/track-view/route.ts`
 - `lib/posts.ts`, `lib/types.ts`
 - `supabase/schema.sql`
+
+
+## 7) 공유/좋아요/댓글/삭제 테스트 순서
+
+- [ ] 글 상세에서 **링크 공유** 클릭 시 클립보드 복사 + "복사 완료" 토스트 표시
+- [ ] `KAKAO_JS_KEY` 설정 후 **카카오 공유** 클릭 시 공유창 오픈 (키 미설정/SDK 실패 시 버튼 비활성 + 안내 토스트)
+- [ ] 좋아요 버튼 1회 클릭 시 증가, 다시 클릭 시 감소(중복 좋아요 방지)
+- [ ] 로그인 후 댓글 작성/목록/본인 댓글 삭제 동작
+- [ ] 관리자 `/admin/posts`에서 삭제 버튼 클릭 → 확인 모달 → 삭제 후 홈/관리자 목록에서 즉시 사라짐

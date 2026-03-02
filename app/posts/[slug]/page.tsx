@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
+import { PostShareButtons } from "@/components/post-share-buttons";
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -30,10 +30,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
-        <div className="mt-10 flex flex-wrap gap-3 border-t border-border pt-6">
-          <Button variant="outline" size="sm">링크 공유</Button>
-          <Button variant="outline" size="sm">카카오 공유</Button>
-        </div>
+        <PostShareButtons title={post.title} description={post.excerpt ?? "머니NPC 글 공유"} keyFromEnv={process.env.KAKAO_JS_KEY} />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </Card>
 
