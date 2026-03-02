@@ -12,7 +12,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   if (!post) return notFound();
 
   const [all, likes, comments] = await Promise.all([getPosts(), getPostLikesCount(post.id), getPostComments(post.id)]);
-  const index = all.findIndex((item) => item.slug === slug);
+  const index = all.findIndex((item) => item.slug === post.slug);
   const prev = index >= 0 ? all[index + 1] : undefined;
   const next = index > 0 ? all[index - 1] : undefined;
 

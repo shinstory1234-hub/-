@@ -38,6 +38,9 @@ export default async function AdminPostsPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">{(post.published_at ?? post.created_at)?.slice(0, 10)}</span>
+                <Link href={`/admin/posts/${post.id}/edit`}>
+                  <Button variant="outline" type="button">수정</Button>
+                </Link>
                 <PostRowActions id={post.id} isPublished={post.is_published} />
               </div>
             </CardContent>

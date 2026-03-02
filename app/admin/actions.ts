@@ -14,6 +14,19 @@ function toSlug(v: string) {
     .replace(/^-|-$/g, "");
 }
 
+function makePostSlug(raw: string, title: string) {
+  const base = (raw || title)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  if (base) return base;
+  return `post-${Date.now().toString(36)}`;
+}
+
 function getField(formData: FormData, key: string) {
   const exact = formData.get(key);
   if (typeof exact === "string" && exact.trim()) return exact;
@@ -92,7 +105,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   const categoryId = String(getField(formData, "category_id") ?? "").trim() || null;
   const intent = String(getField(formData, "intent") || "draft").trim();
 
-  const slug = slugRaw || toSlug(title);
+  const slug = makePostSlug(slugRaw, title);
   const isPublished = intent === "publish";
 
   if (!title || !slug || !content) {
@@ -150,7 +163,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   const categoryId = String(getField(formData, "category_id") ?? "").trim() || null;
   const intent = String(getField(formData, "intent") || "draft").trim();
 
-  const slug = slugRaw || toSlug(title);
+  const slug = makePostSlug(slugRaw, title);
   const isPublished = intent === "publish";
 
   if (!id) return { ok: false, error: "post id가 없습니다." };

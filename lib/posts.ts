@@ -31,14 +31,29 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
   }));
 }
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
+export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("posts")
-    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .single();
+  let decodedSlug = slugParam;
+
+  try {
+    decodedSlug = decodeURIComponent(slugParam);
+  } catch {
+    decodedSlug = slugParam;
+  }
+
+  const query = () =>
+    supabase
+      .from("posts")
+      .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)")
+      .eq("is_published", true);
+
+  let { data, error } = await query().eq("slug", decodedSlug).maybeSingle();
+
+  if ((!data || error) && decodedSlug !== slugParam) {
+    const fallback = await query().eq("slug", slugParam).maybeSingle();
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error || !data) return null;
   return {
