@@ -12,7 +12,7 @@ export default async function AdminWritePage() {
       <Card>
         <CardHeader>
           <h2>새 글 작성</h2>
-          <p className="mt-2 text-sm text-muted-foreground">제목을 입력하고 Enter를 누르면 본문 에디터로 포커스가 이동합니다.</p>
+          <p className="mt-2 text-sm text-muted-foreground">제목을 입력하고 Enter를 누르면 본문 에디터로 포커스가 이동합니다. 임시저장/발행은 hidden intent 값으로 구분됩니다.</p>
         </CardHeader>
         <CardContent>
           <PostForm categories={categories} />

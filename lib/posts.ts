@@ -3,11 +3,13 @@ import { Category, Comment, Post } from "@/lib/types";
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   let { data, error } = await supabase
     .from("categories")
     .select("id,name,slug,description,created_at,sort_order")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+    .order("sort_order", categoryOrder)
+    .order("created_at", createdOrder);
 
   if (error?.message?.includes("sort_order") && error.message.includes("schema cache")) {
     const fallback = await supabase
@@ -24,6 +26,8 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function getPosts(categorySlug?: string): Promise<Post[]> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   let query = supabase
     .from("posts")
     .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
@@ -47,6 +51,8 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   let decodedSlug = slugParam;
 
   try {
@@ -78,6 +84,8 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
 
 export async function getPostLikesCount(postId: string): Promise<number> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   const { count, error } = await supabase.from("likes").select("id", { count: "exact", head: true }).eq("post_id", postId);
   if (error) return 0;
   return count ?? 0;
@@ -85,6 +93,8 @@ export async function getPostLikesCount(postId: string): Promise<number> {
 
 export async function getPostComments(postId: string): Promise<Comment[]> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   const { data, error } = await supabase
     .from("comments")
     .select("id,post_id,author_name,author_email,content,created_at")
@@ -96,6 +106,8 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
 
 export async function getTodayVisits(): Promise<number> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   const today = new Date().toISOString().slice(0, 10);
   const { data } = await supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle();
   return data?.visits ?? 0;
@@ -104,6 +116,8 @@ export async function getTodayVisits(): Promise<number> {
 
 export async function getVisitStats(): Promise<{ today: number; total: number }> {
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   const today = new Date().toISOString().slice(0, 10);
   const [{ data: todayRow }, { data: rows }] = await Promise.all([
     supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle(),

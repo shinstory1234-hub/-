@@ -6,11 +6,13 @@ import { requireAdmin } from "@/lib/auth";
 export default async function AdminCategoriesPage() {
   await requireAdmin();
   const supabase = await createClient();
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
   let { data: categories, error } = await supabase
     .from("categories")
     .select("id,name,slug,description,sort_order,created_at")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+    .order("sort_order", categoryOrder)
+    .order("created_at", createdOrder);
 
   if (error?.message?.includes("sort_order") && error.message.includes("schema cache")) {
     const fallback = await supabase
