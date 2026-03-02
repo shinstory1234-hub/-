@@ -168,6 +168,11 @@ export async function moveCategoryOrderAction(formData: FormData): Promise<Actio
 }
 
 
+
+export async function moveCategoryOrderStateAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  return moveCategoryOrderAction(formData);
+}
+
 export async function createCategoryStateAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   return createCategoryAction(formData);
 }

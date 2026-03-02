@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState, type RefObject } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Category } from "@/lib/types";
@@ -26,14 +26,27 @@ type Props = {
 
 const initialState: ActionState = { ok: false };
 
-function SubmitActions() {
+function SubmitActions({ intentRef }: { intentRef: RefObject<HTMLInputElement | null> }) {
   const { pending } = useFormStatus();
   return (
     <div className="flex gap-2">
-      <Button type="submit" name="intent" value="save" variant="outline" loading={pending}>
+      <Button
+        type="submit"
+        variant="outline"
+        loading={pending}
+        onClick={() => {
+          if (intentRef.current) intentRef.current.value = "save";
+        }}
+      >
         저장
       </Button>
-      <Button type="submit" name="intent" value="publish" loading={pending}>
+      <Button
+        type="submit"
+        loading={pending}
+        onClick={() => {
+          if (intentRef.current) intentRef.current.value = "publish";
+        }}
+      >
         발행 저장
       </Button>
     </div>
@@ -56,6 +69,7 @@ export function EditPostForm({ post, categories }: Props) {
   const [state, action] = useActionState(updatePostAction, initialState);
   const { show } = useToast();
   const router = useRouter();
+  const intentRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state?.ok && state.redirectTo) {
@@ -72,7 +86,7 @@ export function EditPostForm({ post, categories }: Props) {
       <input type="hidden" name="id" value={post.id} />
       <div className="sticky top-20 z-30 flex items-center justify-between rounded-lg border border-border bg-surface/95 p-3 shadow-soft backdrop-blur">
         <p className="text-sm font-medium text-muted-foreground">글 수정 중</p>
-        <SubmitActions />
+        <SubmitActions intentRef={intentRef} />
       </div>
 
       <Input
@@ -85,6 +99,7 @@ export function EditPostForm({ post, categories }: Props) {
           setSlug(slugify(v));
         }}
       />
+      <input ref={intentRef} type="hidden" name="intent" defaultValue="save" />
       <input type="hidden" name="slug" value={slug} readOnly />
       <p className="text-xs text-muted-foreground">slug: {slug}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" defaultValue={post.excerpt ?? ""} />

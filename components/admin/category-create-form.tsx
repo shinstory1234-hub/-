@@ -23,16 +23,21 @@ export function CategoryCreateForm({ initialLoadError }: { initialLoadError?: st
   }, [initialLoadError, show]);
 
   useEffect(() => {
-    if (!submittedRef.current || !state?.error) return;
-    show(state.error, "error");
-  }, [state?.error, show]);
+    if (!submittedRef.current) return;
 
-  useEffect(() => {
-    if (!submittedRef.current || !state?.ok) return;
-    show("카테고리가 생성되었습니다.");
-    formRef.current?.reset();
-    router.refresh();
-  }, [state?.ok, router, show]);
+    if (state?.error) {
+      show(state.error, "error");
+      submittedRef.current = false;
+      return;
+    }
+
+    if (state?.ok) {
+      show("카테고리가 생성되었습니다.");
+      formRef.current?.reset();
+      router.refresh();
+      submittedRef.current = false;
+    }
+  }, [state, router, show]);
 
   return (
     <form ref={formRef} action={action} onSubmit={() => { submittedRef.current = true; }} className="space-y-3 rounded-lg border border-border bg-surface p-5 shadow-soft">

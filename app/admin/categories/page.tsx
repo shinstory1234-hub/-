@@ -22,6 +22,7 @@ export default async function AdminCategoriesPage() {
   }
 
   const loadError = error?.message ?? null;
+  const categoryItems = categories ?? [];
 
   return (
     <section className="space-y-6">
@@ -29,10 +30,10 @@ export default async function AdminCategoriesPage() {
 
       <CategoryCreateForm initialLoadError={loadError} />
 
-      {categories?.length ? (
+      {categoryItems.length ? (
         <div className="grid gap-3 md:grid-cols-2">
-          {categories.map((category, index) => (
-            <CategoryItem key={category.id} category={category} isFirst={index === 0} isLast={index === categories.length - 1} />
+          {categoryItems.map((category, index) => (
+            <CategoryItem key={category.id} category={category} isFirst={index === 0} isLast={index === categoryItems.length - 1} />
           ))}
         </div>
       ) : (

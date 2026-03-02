@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState, type RefObject } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Category } from "@/lib/types";
@@ -17,15 +17,28 @@ type Props = {
 
 const initialState: ActionState = { ok: false };
 
-function SubmitActions() {
+function SubmitActions({ intentRef }: { intentRef: RefObject<HTMLInputElement | null> }) {
   const { pending } = useFormStatus();
 
   return (
     <div className="flex gap-2">
-      <Button type="submit" name="intent" value="draft" variant="outline" loading={pending}>
+      <Button
+        type="submit"
+        variant="outline"
+        loading={pending}
+        onClick={() => {
+          if (intentRef.current) intentRef.current.value = "draft";
+        }}
+      >
         임시저장
       </Button>
-      <Button type="submit" name="intent" value="publish" loading={pending}>
+      <Button
+        type="submit"
+        loading={pending}
+        onClick={() => {
+          if (intentRef.current) intentRef.current.value = "publish";
+        }}
+      >
         발행
       </Button>
     </div>
@@ -48,6 +61,7 @@ export function PostForm({ categories }: Props) {
   const [state, action] = useActionState(createPostAction, initialState);
   const { show } = useToast();
   const router = useRouter();
+  const intentRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setSlug(slugify(title));
@@ -70,7 +84,7 @@ export function PostForm({ categories }: Props) {
     <form action={action} className="space-y-5">
       <div className="sticky top-20 z-30 flex items-center justify-between rounded-lg border border-border bg-surface/95 p-3 shadow-soft backdrop-blur">
         <p className="text-sm font-medium text-muted-foreground">초안 작성 중</p>
-        {categories.length > 0 ? <SubmitActions /> : null}
+        {categories.length > 0 ? <SubmitActions intentRef={intentRef} /> : null}
       </div>
 
       {state?.error ? <p className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm text-danger">{state.error}</p> : null}
@@ -89,6 +103,7 @@ export function PostForm({ categories }: Props) {
           }
         }}
       />
+      <input ref={intentRef} type="hidden" name="intent" defaultValue="draft" />
       <input type="hidden" name="slug" value={slug} readOnly />
       <p className="text-xs text-muted-foreground">slug: {slug || "제목을 입력하면 자동 생성"}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" />
