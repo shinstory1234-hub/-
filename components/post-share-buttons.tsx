@@ -61,6 +61,20 @@ export function PostShareButtons({ title, description, keyFromEnv }: Props) {
     }
   };
 
+  const shareLink = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text: description, url });
+        show("공유창을 열었습니다.");
+        return;
+      } catch {
+        // 사용자가 공유창을 닫은 경우를 포함해 복사로 폴백합니다.
+      }
+    }
+    await copyLink();
+  };
+
   const shareKakao = () => {
     if (!keyFromEnv) {
       show("KAKAO_JS_KEY가 설정되지 않았습니다.", "error");
@@ -93,7 +107,7 @@ export function PostShareButtons({ title, description, keyFromEnv }: Props) {
 
   return (
     <div className="mt-10 flex flex-wrap gap-3 border-t border-border pt-6">
-      <Button variant="outline" size="sm" type="button" onClick={copyLink}>
+      <Button variant="outline" size="sm" type="button" onClick={shareLink}>
         링크 공유
       </Button>
       <Button variant="outline" size="sm" type="button" onClick={shareKakao} disabled={!keyFromEnv || !kakaoReady}>
