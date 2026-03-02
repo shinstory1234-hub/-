@@ -27,7 +27,6 @@ const initialMoveState: ActionState = { ok: false, error: "" };
 export function CategoryItem({ category, isFirst, isLast }: CategoryItemProps) {
   const [open, setOpen] = useState(false);
   const [moveState, moveAction, movePending] = useActionState(moveCategoryOrderStateAction, initialMoveState);
-  const directionRef = useRef<HTMLInputElement>(null);
   const submittedRef = useRef(false);
   const { show } = useToast();
   const router = useRouter();
@@ -49,40 +48,44 @@ export function CategoryItem({ category, isFirst, isLast }: CategoryItemProps) {
 
   return (
     <div className="space-y-3 rounded-lg border border-border bg-surface p-5">
-      <form action={moveAction} className="flex items-start justify-between gap-2">
-        <input type="hidden" name="id" value={category.id} />
-        <input ref={directionRef} type="hidden" name="direction" defaultValue="up" />
+      <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold">카테고리 편집</p>
         <div className="flex items-center gap-1">
-          <button
-            type="submit"
-            disabled={isFirst || movePending}
-            onClick={() => {
-              submittedRef.current = true;
-              if (directionRef.current) directionRef.current.value = "up";
-            }}
-            className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            title="위로"
-          >
-            <ArrowUp className="h-4 w-4" />
-          </button>
-          <button
-            type="submit"
-            disabled={isLast || movePending}
-            onClick={() => {
-              submittedRef.current = true;
-              if (directionRef.current) directionRef.current.value = "down";
-            }}
-            className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            title="아래로"
-          >
-            <ArrowDown className="h-4 w-4" />
-          </button>
+          <form action={moveAction}>
+            <input type="hidden" name="id" value={category.id} />
+            <input type="hidden" name="direction" value="up" />
+            <button
+              type="submit"
+              disabled={isFirst || movePending}
+              onClick={() => {
+                submittedRef.current = true;
+              }}
+              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              title="위로"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          </form>
+          <form action={moveAction}>
+            <input type="hidden" name="id" value={category.id} />
+            <input type="hidden" name="direction" value="down" />
+            <button
+              type="submit"
+              disabled={isLast || movePending}
+              onClick={() => {
+                submittedRef.current = true;
+              }}
+              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              title="아래로"
+            >
+              <ArrowDown className="h-4 w-4" />
+            </button>
+          </form>
           <Dropdown trigger={<MoreHorizontal className="h-4 w-4 text-muted-foreground" />}>
             <DropdownItem onClick={() => setOpen(true)}>삭제하기</DropdownItem>
           </Dropdown>
         </div>
-      </form>
+      </div>
 
       <form action={updateCategoryFormAction} className="space-y-3">
         <input type="hidden" name="id" value={category.id} />

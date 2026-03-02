@@ -1,7 +1,9 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { Category, Comment, Post } from "@/lib/types";
 
 export async function getCategories(): Promise<Category[]> {
+  noStore();
   const supabase = await createClient();
   const categoryOrder = { ascending: true as const };
   const createdOrder = { ascending: false as const };
@@ -25,6 +27,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getPosts(categorySlug?: string): Promise<Post[]> {
+  noStore();
   const supabase = await createClient();
   const categoryOrder = { ascending: true as const };
   const createdOrder = { ascending: false as const };
