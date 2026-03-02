@@ -32,6 +32,10 @@ export default async function AdminCategoriesPage() {
 
       <CategoryCreateForm initialLoadError={loadError} />
 
+      {loadError ? (
+        <p className="rounded-lg border border-danger/20 bg-danger/10 p-4 text-sm text-danger">카테고리 조회 실패: {loadError}</p>
+      ) : null}
+
       {categoryItems.length ? (
         <div className="grid gap-3 md:grid-cols-2">
           {categoryItems.map((category, index) => (

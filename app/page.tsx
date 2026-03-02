@@ -4,12 +4,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
-import { getCategories, getPosts, getVisitStats } from "@/lib/posts";
+import { getCategories, getPostsWithError, getVisitStats } from "@/lib/posts";
 import { VisitStats } from "@/components/site/visit-stats";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
-  const [posts, categories, visitStats] = await Promise.all([getPosts(category), getCategories(), getVisitStats()]);
+  const [{ posts, error: postsError }, categories, visitStats] = await Promise.all([getPostsWithError(category), getCategories(), getVisitStats()]);
 
   return (
     <section className="space-y-8">
@@ -26,6 +26,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ...categories.map((cat) => ({ href: `/?category=${cat.slug}`, label: cat.name, active: category === cat.slug }))
         ]}
       />
+
+      {postsError ? (
+        <Card>
+          <CardContent className="py-14 text-center text-sm text-danger">글 목록 조회 실패: {postsError}</CardContent>
+        </Card>
+      ) : null}
 
       {posts.length === 0 ? (
         <Card>

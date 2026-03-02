@@ -26,11 +26,16 @@ export async function getCategories(): Promise<Category[]> {
   return data ?? [];
 }
 
+export type PostListResult = { posts: Post[]; error: string | null };
+
 export async function getPosts(categorySlug?: string): Promise<Post[]> {
+  const result = await getPostsWithError(categorySlug);
+  return result.posts;
+}
+
+export async function getPostsWithError(categorySlug?: string): Promise<PostListResult> {
   noStore();
   const supabase = await createClient();
-  const categoryOrder = { ascending: true as const };
-  const createdOrder = { ascending: false as const };
   let query = supabase
     .from("posts")
     .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
@@ -39,17 +44,21 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
     .order("created_at", { ascending: false });
 
   if (categorySlug) {
-    const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).single();
+    const { data: cat, error: categoryError } = await supabase.from("categories").select("id").eq("slug", categorySlug).single();
+    if (categoryError) return { posts: [], error: categoryError.message };
     if (cat?.id) query = query.eq("category_id", cat.id);
   }
 
   const { data, error } = await query;
-  if (error) return [];
+  if (error) return { posts: [], error: error.message };
 
-  return (data ?? []).map((row: any) => ({
-    ...row,
-    category: row.categories ?? null
-  }));
+  return {
+    posts: (data ?? []).map((row: any) => ({
+      ...row,
+      category: row.categories ?? null
+    })),
+    error: null
+  };
 }
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
