@@ -161,16 +161,28 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   const content = String(getField(formData, "content") ?? "").trim();
   const excerpt = String(getField(formData, "excerpt") ?? "").trim();
   const categoryId = String(getField(formData, "category_id") ?? "").trim() || null;
-  const intent = String(getField(formData, "intent") || "draft").trim();
+  const intent = String(getField(formData, "intent") || "save").trim();
 
   const slug = makePostSlug(slugRaw, title);
-  const isPublished = intent === "publish";
 
   if (!id) return { ok: false, error: "post id가 없습니다." };
   if (!title || !slug || !content) return { ok: false, error: "제목, slug, 본문은 필수입니다." };
   if (!categoryId) return { ok: false, error: "카테고리를 먼저 선택해 주세요." };
 
   const supabase = await createClient();
+  const { data: currentPost, error: currentError } = await supabase
+    .from("posts")
+    .select("is_published,published_at")
+    .eq("id", id)
+    .single();
+  if (currentError || !currentPost) return { ok: false, error: currentError?.message ?? "글을 찾을 수 없습니다." };
+
+  const isPublishIntent = intent === "publish";
+  const nextPublished = isPublishIntent ? true : Boolean(currentPost.is_published);
+  const nextPublishedAt = isPublishIntent
+    ? (currentPost.published_at ?? new Date().toISOString())
+    : currentPost.published_at;
+
   const { error } = await supabase
     .from("posts")
     .update({
@@ -179,8 +191,8 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
       excerpt: excerpt || null,
       content,
       category_id: categoryId,
-      is_published: isPublished,
-      published_at: isPublished ? new Date().toISOString() : null
+      is_published: nextPublished,
+      published_at: nextPublishedAt
     })
     .eq("id", id);
 

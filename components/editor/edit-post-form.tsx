@@ -30,8 +30,8 @@ function SubmitActions() {
   const { pending } = useFormStatus();
   return (
     <div className="flex gap-2">
-      <Button type="submit" name="intent" value="draft" variant="outline" loading={pending}>
-        임시저장
+      <Button type="submit" name="intent" value="save" variant="outline" loading={pending}>
+        저장
       </Button>
       <Button type="submit" name="intent" value="publish" loading={pending}>
         발행 저장
