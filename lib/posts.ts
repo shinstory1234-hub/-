@@ -3,7 +3,11 @@ import { Category, Comment, Post } from "@/lib/types";
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("categories").select("id,name,slug,description,created_at").order("name");
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id,name,slug,description,created_at,sort_order")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) return [];
   return data ?? [];
 }
@@ -12,7 +16,7 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
   const supabase = await createClient();
   let query = supabase
     .from("posts")
-    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)")
+    .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
     .eq("is_published", true)
     .not("published_at", "is", null)
     .order("published_at", { ascending: false });
@@ -44,7 +48,7 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const query = () =>
     supabase
       .from("posts")
-      .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)")
+      .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
       .eq("is_published", true);
 
   let { data, error } = await query().eq("slug", decodedSlug).maybeSingle();

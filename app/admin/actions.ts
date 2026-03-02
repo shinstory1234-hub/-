@@ -51,7 +51,18 @@ export async function createCategoryAction(formData: FormData): Promise<ActionSt
   if (!name) return { ok: false, error: "카테고리 이름은 필수입니다." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("categories").insert({ name, slug: toSlug(name), description: description || null });
+  const { data: maxRow } = await supabase
+    .from("categories")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextSortOrder = Number(maxRow?.sort_order ?? 0) + 1;
+
+  const { error } = await supabase
+    .from("categories")
+    .insert({ name, slug: toSlug(name), description: description || null, sort_order: nextSortOrder });
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/categories");
@@ -92,6 +103,50 @@ export async function deleteCategoryAction(formData: FormData): Promise<ActionSt
   revalidatePath("/admin/categories");
   revalidatePath("/admin/posts/new");
   revalidatePath("/");
+  return { ok: true };
+}
+
+
+export async function moveCategoryOrderAction(formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = String(formData.get("id") ?? "").trim();
+  const direction = String(formData.get("direction") ?? "").trim();
+  if (!id || !["up", "down"].includes(direction)) {
+    return { ok: false, error: "순서 변경 정보가 올바르지 않습니다." };
+  }
+
+  const supabase = await createClient();
+  const { data: categories, error } = await supabase
+    .from("categories")
+    .select("id,sort_order")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error || !categories) return { ok: false, error: error?.message ?? "카테고리를 찾을 수 없습니다." };
+
+  const index = categories.findIndex((item) => item.id === id);
+  if (index < 0) return { ok: false, error: "카테고리를 찾을 수 없습니다." };
+
+  const targetIndex = direction === "up" ? index - 1 : index + 1;
+  if (targetIndex < 0 || targetIndex >= categories.length) return { ok: true };
+
+  const current = categories[index];
+  const target = categories[targetIndex];
+  const currentOrder = Number(current.sort_order ?? index + 1);
+  const targetOrder = Number(target.sort_order ?? targetIndex + 1);
+
+  const [{ error: e1 }, { error: e2 }] = await Promise.all([
+    supabase.from("categories").update({ sort_order: targetOrder }).eq("id", current.id),
+    supabase.from("categories").update({ sort_order: currentOrder }).eq("id", target.id)
+  ]);
+
+  if (e1 || e2) return { ok: false, error: e1?.message ?? e2?.message ?? "순서 저장에 실패했습니다." };
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/admin/posts/new");
+
   return { ok: true };
 }
 
@@ -264,4 +319,8 @@ export async function updateCategoryFormAction(formData: FormData): Promise<void
 
 export async function deleteCategoryFormAction(formData: FormData): Promise<void> {
   await deleteCategoryAction(formData);
+}
+
+export async function moveCategoryOrderFormAction(formData: FormData): Promise<void> {
+  await moveCategoryOrderAction(formData);
 }

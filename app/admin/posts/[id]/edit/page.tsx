@@ -10,7 +10,7 @@ export default async function AdminEditPage({ params }: { params: Promise<{ id: 
   const supabase = await createClient();
   const [{ data: post }, { data: categories }] = await Promise.all([
     supabase.from("posts").select("id,title,slug,excerpt,content,category_id,is_published").eq("id", id).single(),
-    supabase.from("categories").select("id,name,slug,description,created_at").order("name")
+    supabase.from("categories").select("id,name,slug,description,created_at,sort_order").order("sort_order", { ascending: true }).order("created_at", { ascending: true })
   ]);
 
   if (!post) return notFound();

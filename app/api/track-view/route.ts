@@ -32,7 +32,7 @@ export async function GET() {
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, today: result.today, total: result.total });
+  return NextResponse.json({ ok: true, today: result.today, total: result.total }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST() {
@@ -40,5 +40,5 @@ export async function POST() {
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, today: result.today, total: result.total });
+  return NextResponse.json({ ok: true, today: result.today, total: result.total }, { headers: { "Cache-Control": "no-store" } });
 }

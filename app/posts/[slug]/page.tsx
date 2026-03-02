@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
+import { PostViewCounter } from "@/components/post-view-counter";
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -27,7 +28,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             ))}
           </div>
           <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
-          <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground"><p>{post.published_at?.slice(0, 10)}</p><PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} /></div>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
         <PostShareButtons />
