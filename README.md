@@ -103,3 +103,17 @@ npm run dev
 - [ ] 홈의 카테고리 탭 순서가 관리자에서 바꾼 `sort_order`와 동일하게 보인다.
 - [ ] 홈 새로고침 3회 시 `Today`와 `Total` 숫자가 실제로 증가한다(0 고정 아님).
 - [ ] 글 상세 진입 시 `조회수 N`이 증가하고, 나갔다 다시 들어오면 값이 더 올라간다.
+
+
+## 11) Supabase SQL 실행 순서 + 테스트 순서 (10줄)
+
+1. Supabase SQL Editor에서 `supabase/schema.sql` 전체를 한 번에 실행합니다.
+2. `categories` 테이블에 `description`, `sort_order` 컬럼이 생겼는지 Table Editor에서 확인합니다.
+3. `posts` 테이블에 `view_count` 컬럼이 생겼는지 확인합니다.
+4. 로컬 `.env.local`에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ADMIN_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY`를 입력합니다.
+5. `npm install && npm run dev` 후 `http://localhost:3000/admin/categories`로 접속합니다.
+6. 카테고리 생성 버튼을 눌러 row가 즉시 생기는지, 실패 시 토스트 에러가 보이는지 확인합니다.
+7. 관리자에서 글 상세(`/posts/[slug]`)로 들어가 우측 상단 `조회수 N`이 보이는지 확인합니다.
+8. 같은 글을 새로고침해 `조회수` 숫자가 계속 증가하는지 확인합니다.
+9. 홈에서 새로고침 3회 후 `Today`, `Total` 값이 0 고정이 아닌지 확인합니다.
+10. `/api/track-view`와 `/api/track-post/{postId}` 호출 시 JSON 응답이 정상인지 확인합니다.

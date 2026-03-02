@@ -69,6 +69,8 @@ alter table public.comments add column if not exists author_name text;
 alter table public.comments add column if not exists password_hash text;
 alter table public.comments add column if not exists author_email text;
 
+alter table public.categories add column if not exists description text;
+
 alter table public.categories add column if not exists sort_order integer;
 update public.categories c
 set sort_order = seq.rn
@@ -148,6 +150,9 @@ alter table public.comments enable row level security;
 alter table public.daily_stats enable row level security;
 
 drop policy if exists "anyone read categories" on public.categories;
+drop policy if exists "admin insert categories" on public.categories;
+drop policy if exists "admin update categories" on public.categories;
+drop policy if exists "admin delete categories" on public.categories;
 drop policy if exists "admin manage categories" on public.categories;
 drop policy if exists "anyone read published posts" on public.posts;
 drop policy if exists "admin read all posts" on public.posts;
@@ -172,12 +177,24 @@ for select
 to anon, authenticated
 using (true);
 
-create policy "admin manage categories"
+create policy "admin insert categories"
 on public.categories
-for all
+for insert
+to authenticated
+with check (public.is_admin());
+
+create policy "admin update categories"
+on public.categories
+for update
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
+
+create policy "admin delete categories"
+on public.categories
+for delete
+to authenticated
+using (public.is_admin());
 
 create policy "anyone read published posts"
 on public.posts

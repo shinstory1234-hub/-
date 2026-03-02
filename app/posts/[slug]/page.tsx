@@ -27,8 +27,13 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
               <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
             ))}
           </div>
-          <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground"><p>{post.published_at?.slice(0, 10)}</p><PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} /></div>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
+            <div className="pt-1">
+              <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
         <PostShareButtons />

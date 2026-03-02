@@ -27,7 +27,7 @@ function makePostSlug(raw: string, title: string) {
   return `post-${Date.now().toString(36)}`;
 }
 
-function getField(formData: FormData, key: string) {
+function getText(formData: FormData, key: string) {
   const exact = formData.get(key);
   if (typeof exact === "string" && exact.trim()) return exact;
 
@@ -46,8 +46,8 @@ export type ActionState = {
 
 export async function createCategoryAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
-  const name = String(formData.get("name") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const name = String(getText(formData, "name") ?? "").trim();
+  const description = String(getText(formData, "description") ?? "").trim();
   if (!name) return { ok: false, error: "카테고리 이름은 필수입니다." };
 
   const supabase = await createClient();
@@ -73,9 +73,9 @@ export async function createCategoryAction(formData: FormData): Promise<ActionSt
 
 export async function updateCategoryAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const name = String(formData.get("name") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const id = String(getText(formData, "id") ?? "");
+  const name = String(getText(formData, "name") ?? "").trim();
+  const description = String(getText(formData, "description") ?? "").trim();
   if (!id || !name) return { ok: false, error: "카테고리 정보가 올바르지 않습니다." };
 
   const supabase = await createClient();
@@ -93,7 +93,7 @@ export async function updateCategoryAction(formData: FormData): Promise<ActionSt
 
 export async function deleteCategoryAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
+  const id = String(getText(formData, "id") ?? "");
   if (!id) return { ok: false, error: "카테고리 id가 없습니다." };
 
   const supabase = await createClient();
@@ -110,8 +110,8 @@ export async function deleteCategoryAction(formData: FormData): Promise<ActionSt
 export async function moveCategoryOrderAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
 
-  const id = String(formData.get("id") ?? "").trim();
-  const direction = String(formData.get("direction") ?? "").trim();
+  const id = String(getText(formData, "id") ?? "").trim();
+  const direction = String(getText(formData, "direction") ?? "").trim();
   if (!id || !["up", "down"].includes(direction)) {
     return { ok: false, error: "순서 변경 정보가 올바르지 않습니다." };
   }
@@ -150,15 +150,20 @@ export async function moveCategoryOrderAction(formData: FormData): Promise<Actio
   return { ok: true };
 }
 
+
+export async function createCategoryStateAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  return createCategoryAction(formData);
+}
+
 export async function createPostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireAdmin();
 
-  const title = String(getField(formData, "title") ?? "").trim();
-  const slugRaw = String(getField(formData, "slug") ?? "").trim();
-  const content = String(getField(formData, "content") ?? "").trim();
-  const excerpt = String(getField(formData, "excerpt") ?? "").trim();
-  const categoryId = String(getField(formData, "category_id") ?? "").trim() || null;
-  const intent = String(getField(formData, "intent") || "draft").trim();
+  const title = String(getText(formData, "title") ?? "").trim();
+  const slugRaw = String(getText(formData, "slug") ?? "").trim();
+  const content = String(getText(formData, "content") ?? "").trim();
+  const excerpt = String(getText(formData, "excerpt") ?? "").trim();
+  const categoryId = String(getText(formData, "category_id") ?? "").trim() || null;
+  const intent = String(getText(formData, "intent") || "draft").trim();
 
   const slug = makePostSlug(slugRaw, title);
   const isPublished = intent === "publish";
@@ -210,13 +215,13 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
 export async function updatePostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
 
-  const id = String(getField(formData, "id") ?? "").trim();
-  const title = String(getField(formData, "title") ?? "").trim();
-  const slugRaw = String(getField(formData, "slug") ?? "").trim();
-  const content = String(getField(formData, "content") ?? "").trim();
-  const excerpt = String(getField(formData, "excerpt") ?? "").trim();
-  const categoryId = String(getField(formData, "category_id") ?? "").trim() || null;
-  const intent = String(getField(formData, "intent") || "save").trim();
+  const id = String(getText(formData, "id") ?? "").trim();
+  const title = String(getText(formData, "title") ?? "").trim();
+  const slugRaw = String(getText(formData, "slug") ?? "").trim();
+  const content = String(getText(formData, "content") ?? "").trim();
+  const excerpt = String(getText(formData, "excerpt") ?? "").trim();
+  const categoryId = String(getText(formData, "category_id") ?? "").trim() || null;
+  const intent = String(getText(formData, "intent") || "save").trim();
 
   const slug = makePostSlug(slugRaw, title);
 
@@ -261,7 +266,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
 
 export async function deletePostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "").trim();
+  const id = String(getText(formData, "id") ?? "").trim();
   if (!id) return { ok: false, error: "post id가 없습니다." };
 
   const supabase = await createClient();
@@ -282,7 +287,7 @@ export async function deletePostAction(_prev: ActionState, formData: FormData): 
 
 export async function togglePublishAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "").trim();
+  const id = String(getText(formData, "id") ?? "").trim();
   const publish = String(formData.get("publish") ?? "false") === "true";
   if (!id) return { ok: false, error: "post id가 없습니다." };
 
@@ -310,7 +315,7 @@ export async function togglePublishFormAction(formData: FormData): Promise<void>
 
 
 export async function createCategoryFormAction(formData: FormData): Promise<void> {
-  await createCategoryAction(formData);
+  await createCategoryStateAction({ ok: false }, formData);
 }
 
 export async function updateCategoryFormAction(formData: FormData): Promise<void> {
