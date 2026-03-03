@@ -3,10 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 async function readStats() {
   const supabase = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const [{ data: todayRow, error: todayError }, { data: totalRows, error: totalError }] = await Promise.all([
-    supabase.from("daily_stats").select("visits").eq("day", today).maybeSingle(),
+    supabase.from("daily_stats").select("visits").eq("day", todayStr).maybeSingle(),
     supabase.from("daily_stats").select("visits")
   ]);
 
@@ -19,11 +19,11 @@ async function readStats() {
 
 async function incrementToday() {
   const supabase = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const { error: upsertError } = await supabase
     .from("daily_stats")
-    .upsert({ day: today, visits: 1 }, { onConflict: "day" });
+    .upsert({ day: todayStr, date: todayStr, visits: 1 }, { onConflict: "day" });
 
   if (upsertError) return { ok: false as const, error: upsertError.message };
 
