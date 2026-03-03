@@ -116,7 +116,7 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
     error = fallback.error;
   }
 
-  if (error || !data) return null;
+  if (!data) return null;
   return {
     ...data,
     category: (data as any).categories ?? null
