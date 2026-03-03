@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { getCategories, getPostsWithError, getVisitStats } from "@/lib/posts";
 import { VisitStats } from "@/components/site/visit-stats";
+import { VisitStatsTracker } from "@/components/site/visit-stats-tracker";
 import { PostSlugLink } from "@/components/post-slug-link";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
@@ -14,6 +15,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   return (
     <section className="space-y-8">
       <header className="space-y-2">
+        <VisitStatsTracker />
         <VisitStats initialToday={visitStats.today} initialTotal={visitStats.total} />
         <h1 className="text-xl font-bold md:text-2xl" aria-hidden="true">
           &nbsp;

@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-function admin() {
-  return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-}
 
 export async function GET(_req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = admin();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("comments")
@@ -24,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ postId:
 
 export async function POST(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = admin();
+  const supabase = createAdminClient();
 
   const body = (await req.json().catch(() => ({}))) as {
     authorName?: string;
@@ -66,7 +63,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ postId:
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = admin();
+  const supabase = createAdminClient();
   const body = (await req.json().catch(() => ({}))) as { commentId?: string; password?: string };
 
   const commentId = String(body.commentId ?? "").trim();
