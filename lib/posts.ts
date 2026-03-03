@@ -92,8 +92,6 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const supabase = await createClient();
-  const categoryOrder = { ascending: true as const };
-  const createdOrder = { ascending: false as const };
   let decodedSlug = slugParam;
 
   try {
@@ -102,23 +100,46 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
     decodedSlug = slugParam;
   }
 
-  const query = () =>
+  const selectWithViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)";
+  const selectWithoutViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)";
+
+  const queryBySlug = async (slug: string, selectFields: string) =>
     supabase
       .from("posts")
-      .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
-      .eq("is_published", true);
+      .select(selectFields)
+      .eq("is_published", true)
+      .eq("slug", slug)
+      .maybeSingle();
 
-  let { data, error } = await query().eq("slug", decodedSlug).maybeSingle();
+  let { data, error } = await queryBySlug(decodedSlug, selectWithViewCount);
 
   if ((!data || error) && decodedSlug !== slugParam) {
-    const fallback = await query().eq("slug", slugParam).maybeSingle();
+    const fallback = await queryBySlug(slugParam, selectWithViewCount);
     data = fallback.data;
     error = fallback.error;
+  }
+
+  const isViewCountError = Boolean(error?.message && (error.message.includes("view_count") || error.message.includes("does not exist")));
+  if (isViewCountError) {
+    let fallback = await queryBySlug(decodedSlug, selectWithoutViewCount);
+    if ((!fallback.data || fallback.error) && decodedSlug !== slugParam) {
+      fallback = await queryBySlug(slugParam, selectWithoutViewCount);
+    }
+    if (fallback.error || !fallback.data) return null;
+
+    return {
+      ...fallback.data,
+      view_count: 0,
+      category: (fallback.data as any).categories ?? null
+    } as Post;
   }
 
   if (error || !data) return null;
   return {
     ...data,
+    view_count: Number((data as any).view_count ?? 0),
     category: (data as any).categories ?? null
   } as Post;
 }
