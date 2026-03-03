@@ -11,10 +11,18 @@ export async function POST(req: Request) {
   const postId = String(body.postId ?? "").trim();
   const slug = String(body.slug ?? "").trim();
 
-  console.log("track-post hit", { postId, slug });
+  console.log("track-post hit");
 
   if (!postId && !slug) {
     return NextResponse.json({ ok: false, error: "postId 또는 slug가 필요합니다." }, { status: 400 });
+  }
+
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { ok: false, error: "SUPABASE_SERVICE_ROLE_KEY is missing in Vercel environment variables" },
+      { status: 500 }
+    );
   }
 
   const supabase = createAdminClient();

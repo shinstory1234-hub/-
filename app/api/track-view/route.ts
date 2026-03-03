@@ -39,20 +39,16 @@ async function incrementToday() {
   return readStats();
 }
 
-export async function GET() {
-  const result = await readStats();
-  if (!result.ok) {
-    return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
-  }
-
-  return NextResponse.json(
-    { ok: true, today: result.today, total: result.total },
-    { headers: { "Cache-Control": "no-store" } }
-  );
-}
-
 export async function POST() {
   console.log("track-view hit");
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { ok: false, error: "SUPABASE_SERVICE_ROLE_KEY is missing in Vercel environment variables" },
+      { status: 500 }
+    );
+  }
+
   const result = await incrementToday();
   if (!result.ok) {
     return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
