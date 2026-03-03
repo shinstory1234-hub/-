@@ -1,30 +1,46 @@
 import { CategoryItem } from "@/components/admin/category-item";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { createCategoryFormAction } from "@/app/admin/actions";
+import { CategoryCreateForm } from "@/components/admin/category-create-form";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin } from "@/lib/auth";
 
 export default async function AdminCategoriesPage() {
   await requireAdmin();
   const supabase = await createClient();
-  const { data: categories } = await supabase.from("categories").select("id,name,slug,description").order("name");
+  const categoryOrder = { ascending: true as const };
+  const createdOrder = { ascending: false as const };
+  let { data: categories, error } = await supabase
+    .from("categories")
+    .select("id,name,slug,description,sort_order,created_at")
+    .order("sort_order", categoryOrder)
+    .order("created_at", createdOrder);
+
+  if (error?.message?.includes("sort_order") && error.message.includes("schema cache")) {
+    const fallback = await supabase
+      .from("categories")
+      .select("id,name,slug,description,created_at")
+      .order("created_at", { ascending: false });
+    categories = fallback.data as any;
+    error = fallback.error;
+  }
+
+  const loadError = error?.message ?? null;
+  const categoryItems = categories ?? [];
 
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">카테고리 관리</h1>
 
-      <form action={createCategoryFormAction} className="space-y-3 rounded-lg border border-border bg-surface p-5 shadow-soft">
-        <h2 className="font-semibold">새 카테고리</h2>
-        <Input name="name" placeholder="예: 재테크" required />
-        <Textarea name="description" placeholder="설명" rows={3} />
-        <Button type="submit">생성</Button>
-      </form>
+      <CategoryCreateForm initialLoadError={loadError} />
 
-      {categories?.length ? (
+      {loadError ? (
+        <p className="rounded-lg border border-danger/20 bg-danger/10 p-4 text-sm text-danger">카테고리 조회 실패: {loadError}</p>
+      ) : null}
+
+      {categoryItems.length ? (
         <div className="grid gap-3 md:grid-cols-2">
-          {categories.map((category) => <CategoryItem key={category.id} category={category} />)}
+          {categoryItems.map((category, index) => (
+            <CategoryItem key={category.id} category={category} isFirst={index === 0} isLast={index === categoryItems.length - 1} />
+          ))}
         </div>
       ) : (
         <p className="rounded-lg border border-border bg-surface p-6 text-sm text-muted-foreground">아직 카테고리가 없습니다.</p>

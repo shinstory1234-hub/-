@@ -1,17 +1,21 @@
-import Link from "next/link";
+export const dynamic = "force-dynamic";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
-import { getCategories, getPosts, getVisitStats } from "@/lib/posts";
+import { getCategories, getPostsWithError, getVisitStats } from "@/lib/posts";
 import { VisitStats } from "@/components/site/visit-stats";
+import { VisitStatsTracker } from "@/components/site/visit-stats-tracker";
+import { PostSlugLink } from "@/components/post-slug-link";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
-  const [posts, categories, visitStats] = await Promise.all([getPosts(category), getCategories(), getVisitStats()]);
+  const [{ posts, error: postsError }, categories, visitStats] = await Promise.all([getPostsWithError(category), getCategories(), getVisitStats()]);
 
   return (
     <section className="space-y-8">
       <header className="space-y-2">
+        <VisitStatsTracker />
         <VisitStats initialToday={visitStats.today} initialTotal={visitStats.total} />
         <h1 className="text-xl font-bold md:text-2xl" aria-hidden="true">
           &nbsp;
@@ -24,6 +28,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ...categories.map((cat) => ({ href: `/?category=${cat.slug}`, label: cat.name, active: category === cat.slug }))
         ]}
       />
+
+      {postsError ? (
+        <Card>
+          <CardContent className="py-14 text-center text-sm text-danger">글 목록 조회 실패: {postsError}</CardContent>
+        </Card>
+      ) : null}
 
       {posts.length === 0 ? (
         <Card>
@@ -44,9 +54,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   </div>
                   <span className="text-xs text-muted-foreground">{post.published_at?.slice(0, 10) ?? "임시저장"}</span>
                 </div>
-                <Link href={`/posts/${post.slug}`} className="line-clamp-2 text-lg font-semibold leading-7 hover:text-accent">
+                <PostSlugLink slug={post.slug} className="line-clamp-2 text-left text-lg font-semibold leading-7 hover:text-accent">
                   {post.title}
-                </Link>
+                </PostSlugLink>
               </CardHeader>
               <CardContent>
                 <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{post.excerpt || "요약이 없습니다."}</p>

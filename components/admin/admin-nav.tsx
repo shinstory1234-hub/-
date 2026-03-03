@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
 
 const menus = [
   { href: "/admin", label: "대시보드" },
@@ -34,6 +35,7 @@ export function AdminNav() {
           );
         })}
       </nav>
+      <AdminLogoutButton />
     </aside>
   );
 }

@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
+import { PostViewCounter } from "@/components/post-view-counter";
+import { PostSlugLink } from "@/components/post-slug-link";
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -26,7 +27,12 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
               <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
             ))}
           </div>
-          <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
+            <div className="pt-1">
+              <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
@@ -36,16 +42,16 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
 
       <div className="grid gap-3 sm:grid-cols-2">
         {prev ? (
-          <Link href={`/posts/${prev.slug}`} className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground hover:text-foreground">
+          <PostSlugLink slug={prev.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground">
             이전 글<br />
             <span className="font-semibold text-foreground">{prev.title}</span>
-          </Link>
+          </PostSlugLink>
         ) : <div />}
         {next ? (
-          <Link href={`/posts/${next.slug}`} className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground hover:text-foreground sm:text-right">
+          <PostSlugLink slug={next.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground sm:text-right">
             다음 글<br />
             <span className="font-semibold text-foreground">{next.title}</span>
-          </Link>
+          </PostSlugLink>
         ) : null}
       </div>
     </article>

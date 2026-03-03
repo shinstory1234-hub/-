@@ -19,6 +19,7 @@ KAKAO_JS_KEY=YOUR_KAKAO_JS_KEY
 3. Authentication > Providers > Email 활성화
 4. Storage > Buckets 에서 `images` 버킷 확인
 5. 관리자 이메일(`ADMIN_EMAIL`) 계정으로 회원가입/로그인
+6. SQL Editor에서 관리자 이메일 설정: `alter role authenticator set app.admin_email = 'shinstory1234@gmail.com';`
 
 ## 3) 로컬 실행
 
@@ -94,3 +95,39 @@ npm run dev
 - [ ] 글쓰기에서 Ctrl+V 이미지 붙여넣기 시 자동 업로드 후 커서 위치에 삽입된다.
 - [ ] 수정 페이지(`/admin/posts/[id]/edit`)에서도 동일한 이미지 업로드/삽입이 동작한다.
 - [ ] 이미지 파일 형식/용량(10MB) 오류 시 토스트 에러 메시지가 표시된다.
+
+
+## 10) 관리자 로그아웃 + 카테고리 순서 + 조회수 테스트
+
+- [ ] `/admin` 사이드바의 **로그아웃** 버튼 클릭 시 홈(`/`)으로 이동하고, 다시 `/admin` 접속 시 로그인 페이지로 이동한다.
+- [ ] `/admin/categories`에서 카테고리 **위로/아래로** 버튼 클릭 시 순서가 즉시 바뀌고 새로고침 후에도 유지된다.
+- [ ] 홈의 카테고리 탭 순서가 관리자에서 바꾼 `sort_order`와 동일하게 보인다.
+- [ ] 홈 새로고침 3회 시 `Today`와 `Total` 숫자가 실제로 증가한다(0 고정 아님).
+- [ ] 글 상세 진입 시 `조회수 N`이 증가하고, 나갔다 다시 들어오면 값이 더 올라간다.
+
+
+## 11) Supabase SQL 실행 순서 + 테스트 순서 (10줄)
+
+1. Supabase SQL Editor에서 `supabase/schema.sql` 전체를 실행합니다.
+2. SQL Editor에서 `NOTIFY pgrst, 'reload schema';` 를 실행해 스키마 캐시를 즉시 갱신합니다.
+3. 대체 방법 1: Supabase Dashboard → Project Settings → API에서 PostgREST(또는 API) 재시작을 실행합니다.
+4. 대체 방법 2: Dashboard의 Database/Schema cache reload 기능으로 캐시를 갱신합니다.
+5. 관리자 이메일 설정 SQL 실행: `alter role authenticator set app.admin_email = 'shinstory1234@gmail.com';`.
+6. `/admin/categories`에서 이름 입력 후 생성 버튼을 누릅니다.
+7. 생성 실패 시 토스트에 원인 에러 메시지가 표시되는지 확인합니다(조용히 실패 금지).
+   - 예: `column categories.sort_order does not exist` 같은 원인이 그대로 보여야 합니다.
+8. Supabase Table Editor의 `categories`에서 row가 실제로 생성됐는지 확인합니다.
+9. 생성 직후 `/admin/categories` 목록에 새 항목이 새로고침 없이 나타나는지 확인합니다.
+10. 권한 없는 계정으로 생성 시 에러 토스트가 표시되는지 확인합니다.
+
+## 12) 카테고리 순서/상세 404 회귀 테스트 순서 (10줄)
+1. Supabase SQL Editor에서 `supabase/schema.sql` 전체를 다시 실행합니다.
+2. SQL Editor에서 `NOTIFY pgrst, 'reload schema';`를 실행합니다.
+3. NOTIFY가 반영되지 않으면 Dashboard API 재시작을 실행합니다.
+4. 또는 Dashboard의 schema reload 기능으로 캐시를 갱신합니다.
+5. `/admin/categories`에서 위/아래 화살표를 눌러 순서 변경을 실행합니다.
+6. 실패 토스트가 발생하면 원인 문자열이 그대로 노출되는지 확인합니다.
+7. 성공 후 페이지 새로고침 시 변경된 순서가 유지되는지 확인합니다.
+8. 홈에서 글 카드를 클릭해 `/posts/{slug}` 상세로 정상 이동하는지 확인합니다.
+9. 상세 페이지 새로고침 후에도 404 없이 같은 글이 유지되는지 확인합니다.
+10. slug가 비어 있는 글 카드 클릭 시 에러 토스트가 뜨고 앱이 크래시하지 않는지 확인합니다.

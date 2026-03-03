@@ -4,6 +4,7 @@ export type Category = {
   slug: string;
   description: string | null;
   created_at?: string;
+  sort_order?: number;
 };
 
 export type Post = {
@@ -20,6 +21,7 @@ export type Post = {
   published_at: string | null;
   created_at?: string;
   updated_at?: string;
+  view_count?: number;
 };
 
 export type Comment = {

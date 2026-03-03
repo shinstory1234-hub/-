@@ -7,7 +7,9 @@ returns boolean
 language sql
 stable
 as $$
-  select coalesce((auth.jwt() ->> 'email') = 'shinstory1234@gmail.com', false);
+  select
+    coalesce(nullif(current_setting('app.admin_email', true), ''), '') <> ''
+    and coalesce(auth.jwt() ->> 'email', '') = current_setting('app.admin_email', true);
 $$;
 
 create or replace function public.set_updated_at()
@@ -25,6 +27,7 @@ create table if not exists public.categories (
   name text not null,
   slug text not null unique,
   description text,
+  sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -42,7 +45,8 @@ create table if not exists public.posts (
   is_published boolean not null default false,
   published_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  view_count bigint not null default 0
 );
 
 create table if not exists public.likes (
@@ -67,6 +71,43 @@ alter table public.comments add column if not exists author_name text;
 alter table public.comments add column if not exists password_hash text;
 alter table public.comments add column if not exists author_email text;
 
+alter table public.categories add column if not exists description text;
+alter table public.categories add column if not exists updated_at timestamptz not null default now();
+
+-- sort_order is required for admin up/down ordering
+alter table public.categories add column if not exists sort_order integer not null default 0;
+update public.categories c
+set sort_order = seq.rn
+from (select id, row_number() over(order by created_at asc, id asc) as rn from public.categories) seq
+where c.id = seq.id and (c.sort_order is null or c.sort_order = 0);
+alter table public.categories alter column sort_order set default 0;
+alter table public.categories alter column sort_order set not null;
+
+do $$
+declare
+  total_count integer;
+  distinct_count integer;
+begin
+  select count(*)::integer, count(distinct sort_order)::integer
+  into total_count, distinct_count
+  from public.categories;
+
+  if distinct_count < total_count then
+    with ranked as (
+      select id, row_number() over(order by created_at asc, id asc) - 1 as new_sort_order
+      from public.categories
+    )
+    update public.categories c
+    set sort_order = ranked.new_sort_order
+    from ranked
+    where ranked.id = c.id;
+  end if;
+end
+$$;
+
+
+alter table public.posts add column if not exists view_count integer not null default 0;
+
 create or replace function public.hash_password(plain_password text)
 returns text
 language sql
@@ -85,7 +126,7 @@ $$;
 
 create table if not exists public.daily_stats (
   date date primary key,
-  visits integer not null default 0,
+  visits bigint not null default 0,
   updated_at timestamptz not null default now()
 );
 
@@ -101,8 +142,27 @@ begin
 end;
 $$;
 
+
+create or replace function public.increment_post_views(target_post_id uuid)
+returns bigint
+language plpgsql
+security definer
+as $$
+declare
+  next_count bigint;
+begin
+  update public.posts
+  set view_count = coalesce(view_count, 0) + 1
+  where id = target_post_id
+  returning view_count into next_count;
+
+  return coalesce(next_count, 0);
+end;
+$$;
+
 create index if not exists idx_posts_published_at on public.posts(published_at desc);
 create index if not exists idx_posts_category_id on public.posts(category_id);
+create index if not exists idx_categories_sort_order on public.categories(sort_order asc);
 create index if not exists idx_comments_post_id on public.comments(post_id);
 create index if not exists idx_likes_post_id on public.likes(post_id);
 
@@ -118,6 +178,9 @@ alter table public.comments enable row level security;
 alter table public.daily_stats enable row level security;
 
 drop policy if exists "anyone read categories" on public.categories;
+drop policy if exists "admin insert categories" on public.categories;
+drop policy if exists "admin update categories" on public.categories;
+drop policy if exists "admin delete categories" on public.categories;
 drop policy if exists "admin manage categories" on public.categories;
 drop policy if exists "anyone read published posts" on public.posts;
 drop policy if exists "admin read all posts" on public.posts;
@@ -142,12 +205,24 @@ for select
 to anon, authenticated
 using (true);
 
-create policy "admin manage categories"
+create policy "admin insert categories"
 on public.categories
-for all
+for insert
+to authenticated
+with check (public.is_admin());
+
+create policy "admin update categories"
+on public.categories
+for update
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
+
+create policy "admin delete categories"
+on public.categories
+for delete
+to authenticated
+using (public.is_admin());
 
 create policy "anyone read published posts"
 on public.posts
@@ -256,3 +331,6 @@ on storage.objects
 for delete
 to authenticated
 using (bucket_id = 'images' and public.is_admin());
+
+
+NOTIFY pgrst, 'reload schema';
