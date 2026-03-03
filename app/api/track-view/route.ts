@@ -6,7 +6,7 @@ async function readStats() {
   const today = new Date().toISOString().slice(0, 10);
 
   const [{ data: todayRow, error: todayError }, { data: totalRows, error: totalError }] = await Promise.all([
-    supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle(),
+    supabase.from("daily_stats").select("visits").eq("day", today).maybeSingle(),
     supabase.from("daily_stats").select("visits")
   ]);
 
@@ -21,18 +21,9 @@ async function incrementToday() {
   const supabase = createAdminClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data: currentRow, error: findError } = await supabase
-    .from("daily_stats")
-    .select("visits")
-    .eq("date", today)
-    .maybeSingle();
-
-  if (findError) return { ok: false as const, error: findError.message };
-
-  const nextVisits = Number(currentRow?.visits ?? 0) + 1;
   const { error: upsertError } = await supabase
     .from("daily_stats")
-    .upsert({ date: today, visits: nextVisits }, { onConflict: "date" });
+    .upsert({ day: today, visits: 1 }, { onConflict: "day" });
 
   if (upsertError) return { ok: false as const, error: upsertError.message };
 
