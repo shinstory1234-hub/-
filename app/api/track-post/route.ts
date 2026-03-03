@@ -43,8 +43,7 @@ export async function POST(req: Request) {
   }
 
   const { data: rpcData, error: rpcError } = await supabase
-    .rpc("increment_post_views", { target_post_id: targetPostId })
-    .maybeSingle();
+    .rpc("increment_post_view", { p_post_id: targetPostId });
 
   if (rpcError) return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
 

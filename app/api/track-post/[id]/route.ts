@@ -9,7 +9,7 @@ export async function POST(_request: Request, { params }: Params) {
   if (!id) return NextResponse.json({ ok: false, error: "post id가 없습니다." }, { status: 400 });
 
   const supabase = createAdminClient();
-  const { data: rpcData, error: rpcError } = await supabase.rpc("increment_post_views", { target_post_id: id }).maybeSingle();
+  const { data: rpcData, error: rpcError } = await supabase.rpc("increment_post_view", { p_post_id: id });
 
   if (rpcError) return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
 
