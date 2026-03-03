@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/l
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
+import { PostSlugLink } from "@/components/post-slug-link";
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -42,16 +42,16 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
 
       <div className="grid gap-3 sm:grid-cols-2">
         {prev ? (
-          <Link href={`/posts/${prev.slug}`} className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground hover:text-foreground">
+          <PostSlugLink slug={prev.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground">
             이전 글<br />
             <span className="font-semibold text-foreground">{prev.title}</span>
-          </Link>
+          </PostSlugLink>
         ) : <div />}
         {next ? (
-          <Link href={`/posts/${next.slug}`} className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground hover:text-foreground sm:text-right">
+          <PostSlugLink slug={next.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground sm:text-right">
             다음 글<br />
             <span className="font-semibold text-foreground">{next.title}</span>
-          </Link>
+          </PostSlugLink>
         ) : null}
       </div>
     </article>

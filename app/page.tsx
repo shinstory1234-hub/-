@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { getCategories, getPostsWithError, getVisitStats } from "@/lib/posts";
 import { VisitStats } from "@/components/site/visit-stats";
+import { PostSlugLink } from "@/components/post-slug-link";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
@@ -52,9 +52,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   </div>
                   <span className="text-xs text-muted-foreground">{post.published_at?.slice(0, 10) ?? "임시저장"}</span>
                 </div>
-                <Link href={`/posts/${post.slug}`} className="line-clamp-2 text-lg font-semibold leading-7 hover:text-accent">
+                <PostSlugLink slug={post.slug} className="line-clamp-2 text-left text-lg font-semibold leading-7 hover:text-accent">
                   {post.title}
-                </Link>
+                </PostSlugLink>
               </CardHeader>
               <CardContent>
                 <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{post.excerpt || "요약이 없습니다."}</p>

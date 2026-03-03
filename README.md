@@ -119,3 +119,15 @@ npm run dev
 8. Supabase Table Editor의 `categories`에서 row가 실제로 생성됐는지 확인합니다.
 9. 생성 직후 `/admin/categories` 목록에 새 항목이 새로고침 없이 나타나는지 확인합니다.
 10. 권한 없는 계정으로 생성 시 에러 토스트가 표시되는지 확인합니다.
+
+## 12) 카테고리 순서/상세 404 회귀 테스트 순서 (10줄)
+1. Supabase SQL Editor에서 `supabase/schema.sql` 전체를 다시 실행합니다.
+2. SQL Editor에서 `NOTIFY pgrst, 'reload schema';`를 실행합니다.
+3. NOTIFY가 반영되지 않으면 Dashboard API 재시작을 실행합니다.
+4. 또는 Dashboard의 schema reload 기능으로 캐시를 갱신합니다.
+5. `/admin/categories`에서 위/아래 화살표를 눌러 순서 변경을 실행합니다.
+6. 실패 토스트가 발생하면 원인 문자열이 그대로 노출되는지 확인합니다.
+7. 성공 후 페이지 새로고침 시 변경된 순서가 유지되는지 확인합니다.
+8. 홈에서 글 카드를 클릭해 `/posts/{slug}` 상세로 정상 이동하는지 확인합니다.
+9. 상세 페이지 새로고침 후에도 404 없이 같은 글이 유지되는지 확인합니다.
+10. slug가 비어 있는 글 카드 클릭 시 에러 토스트가 뜨고 앱이 크래시하지 않는지 확인합니다.
