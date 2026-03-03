@@ -92,8 +92,6 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const supabase = await createClient();
-  const categoryOrder = { ascending: true as const };
-  const createdOrder = { ascending: false as const };
   let decodedSlug = slugParam;
 
   try {
@@ -102,23 +100,44 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
     decodedSlug = slugParam;
   }
 
-  const query = () =>
-    supabase
-      .from("posts")
-      .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
-      .eq("is_published", true);
+  const selectFields =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)";
 
-  let { data, error } = await query().eq("slug", decodedSlug).maybeSingle();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(selectFields)
+    .eq("slug", decodedSlug)
+    .maybeSingle();
 
-  if ((!data || error) && decodedSlug !== slugParam) {
-    const fallback = await query().eq("slug", slugParam).maybeSingle();
-    data = fallback.data;
-    error = fallback.error;
+  if (error) {
+    throw new Error(`getPostBySlug failed: ${error.message}`);
   }
 
-  if (error || !data) return null;
+  if (!data && decodedSlug !== slugParam) {
+    const fallback = await supabase
+      .from("posts")
+      .select(selectFields)
+      .eq("slug", slugParam)
+      .maybeSingle();
+
+    if (fallback.error) {
+      throw new Error(`getPostBySlug failed: ${fallback.error.message}`);
+    }
+
+    if (!fallback.data) return null;
+
+    return {
+      ...fallback.data,
+      view_count: Number((fallback.data as any).view_count ?? 0),
+      category: (fallback.data as any).categories ?? null
+    } as Post;
+  }
+
+  if (!data) return null;
+
   return {
     ...data,
+    view_count: Number((data as any).view_count ?? 0),
     category: (data as any).categories ?? null
   } as Post;
 }

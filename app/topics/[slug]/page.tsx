@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PostSlugLink } from "@/components/post-slug-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { getCategories, getPosts } from "@/lib/posts";
@@ -41,9 +42,9 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
           {posts.map((post) => (
             <Card key={post.id}>
               <CardContent className="flex items-center justify-between py-5">
-                <Link href={`/posts/${post.slug}`} className="font-medium hover:text-accent">
+                <PostSlugLink slug={post.slug} className="font-medium hover:text-accent">
                   {post.title}
-                </Link>
+                </PostSlugLink>
                 <span className="text-xs text-muted-foreground">{post.published_at?.slice(0, 10)}</span>
               </CardContent>
             </Card>
