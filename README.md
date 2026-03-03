@@ -12,6 +12,13 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
 KAKAO_JS_KEY=YOUR_KAKAO_JS_KEY
 ```
 
+Vercel(Production/Preview) 환경변수 3개를 동일하게 설정하세요.
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+Production + Preview 둘 다 누락 없이 적용하세요.
+배포 후 Vercel Logs에서 track-post/track-view hit 로그를 확인하세요.
+
 ## 2) Supabase 설정 순서 (초보용)
 
 1. Supabase 프로젝트 생성

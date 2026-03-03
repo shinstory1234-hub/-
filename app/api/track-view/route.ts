@@ -43,14 +43,16 @@ export async function POST() {
   console.log("track-view hit");
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("track-view error", "missing SUPABASE_SERVICE_ROLE_KEY");
     return NextResponse.json(
-      { ok: false, error: "SUPABASE_SERVICE_ROLE_KEY is missing in Vercel environment variables" },
+      { ok: false, error: "missing SUPABASE_SERVICE_ROLE_KEY" },
       { status: 500 }
     );
   }
 
   const result = await incrementToday();
   if (!result.ok) {
+    console.error("track-view error", result.error);
     return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
   }
 

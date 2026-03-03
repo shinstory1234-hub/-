@@ -19,8 +19,9 @@ export async function POST(req: Request) {
 
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("track-post error", "missing SUPABASE_SERVICE_ROLE_KEY");
     return NextResponse.json(
-      { ok: false, error: "SUPABASE_SERVICE_ROLE_KEY is missing in Vercel environment variables" },
+      { ok: false, error: "missing SUPABASE_SERVICE_ROLE_KEY" },
       { status: 500 }
     );
   }
@@ -36,7 +37,10 @@ export async function POST(req: Request) {
       .eq("is_published", true)
       .maybeSingle();
 
-    if (findError) return NextResponse.json({ ok: false, error: findError.message }, { status: 500 });
+    if (findError) {
+      console.error("track-post error", findError.message);
+      return NextResponse.json({ ok: false, error: findError.message }, { status: 500 });
+    }
     if (!postBySlug?.id) return NextResponse.json({ ok: false, error: "글을 찾을 수 없습니다." }, { status: 404 });
 
     targetPostId = String(postBySlug.id);
@@ -45,7 +49,10 @@ export async function POST(req: Request) {
   const { data: rpcData, error: rpcError } = await supabase
     .rpc("increment_post_view", { p_post_id: targetPostId });
 
-  if (rpcError) return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
+  if (rpcError) {
+    console.error("track-post error", rpcError.message);
+    return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
+  }
 
   return NextResponse.json(
     { ok: true, view_count: Number(rpcData ?? 0) },
