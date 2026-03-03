@@ -92,8 +92,6 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const supabase = await createClient();
-  const categoryOrder = { ascending: true as const };
-  const createdOrder = { ascending: false as const };
   let decodedSlug = slugParam;
 
   try {
@@ -102,25 +100,87 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
     decodedSlug = slugParam;
   }
 
-  const query = () =>
-    supabase
-      .from("posts")
-      .select("id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)")
-      .eq("is_published", true);
+  const candidates = Array.from(
+    new Set(
+      [slugParam, decodedSlug, slugParam.trim(), decodedSlug.trim(), slugParam.toLowerCase(), decodedSlug.toLowerCase()]
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
 
-  let { data, error } = await query().eq("slug", decodedSlug).maybeSingle();
+  const isMissingViewCountError = (message?: string | null) =>
+    Boolean(message && message.includes("view_count") && (message.includes("does not exist") || message.includes("schema cache")));
 
-  if ((!data || error) && decodedSlug !== slugParam) {
-    const fallback = await query().eq("slug", slugParam).maybeSingle();
-    data = fallback.data;
-    error = fallback.error;
+  const isCategoryRelationError = (message?: string | null) =>
+    Boolean(message && message.includes("posts_category_id_fkey") && message.includes("relationship"));
+
+  const findBySlug = async (selectFields: string) => {
+    let lastError: string | null = null;
+    for (const candidate of candidates) {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(selectFields)
+        .eq("is_published", true)
+        .eq("slug", candidate)
+        .maybeSingle();
+
+      if (data && !error) return { data, error: null as string | null };
+      if (error) lastError = error.message;
+    }
+
+    return { data: null, error: lastError };
+  };
+
+  const normalizePost = (row: any, category: { name: string; slug: string } | null): Post =>
+    ({
+      ...row,
+      category,
+      is_published: Boolean(row?.is_published ?? false),
+      view_count: Number(row?.view_count ?? 0)
+    } as Post);
+
+  const mapWithCategory = async (row: any, includeJoinedCategory: boolean): Promise<Post> => {
+    if (includeJoinedCategory) {
+      return normalizePost(row, row.categories ?? null);
+    }
+
+    let category: { name: string; slug: string } | null = null;
+    if (row.category_id) {
+      const { data: categoryRow } = await supabase.from("categories").select("name,slug").eq("id", row.category_id).maybeSingle();
+      category = categoryRow ?? null;
+    }
+
+    return normalizePost(row, category);
+  };
+
+  const joinedWithViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)";
+  const joinedWithoutViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)";
+  const plainWithViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count";
+  const plainWithoutViewCount =
+    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at";
+
+  const first = await findBySlug(joinedWithViewCount);
+  if (first.data) return mapWithCategory(first.data, true);
+
+  if (isMissingViewCountError(first.error)) {
+    const second = await findBySlug(joinedWithoutViewCount);
+    if (second.data) return mapWithCategory(second.data, true);
   }
 
-  if (error || !data) return null;
-  return {
-    ...data,
-    category: (data as any).categories ?? null
-  } as Post;
+  if (isCategoryRelationError(first.error)) {
+    const third = await findBySlug(plainWithViewCount);
+    if (third.data) return mapWithCategory(third.data, false);
+
+    if (isMissingViewCountError(third.error)) {
+      const fourth = await findBySlug(plainWithoutViewCount);
+      if (fourth.data) return mapWithCategory(fourth.data, false);
+    }
+  }
+
+  return null;
 }
 
 export async function getPostLikesCount(postId: string): Promise<number> {
