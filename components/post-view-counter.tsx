@@ -14,8 +14,8 @@ export function PostViewCounter({ postId, initialCount }: Props) {
       console.log("track-post fired", postId);
       const res = await fetch("/api/track-post", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         cache: "no-store",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ postId })
       });
 
