@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const postId = String(body.postId ?? "").trim();
   const slug = String(body.slug ?? "").trim();
 
-  console.log("track-post hit");
+  console.log("track-post hit", postId);
 
   if (!postId && !slug) {
     return NextResponse.json({ ok: false, error: "postId 또는 slug가 필요합니다." }, { status: 400 });
