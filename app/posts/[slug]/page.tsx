@@ -34,6 +34,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
+          <p className="text-xs text-muted-foreground">VIEWCOUNTER_MARKER</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
         <PostShareButtons />
