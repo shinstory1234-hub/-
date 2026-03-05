@@ -1,5 +1,4 @@
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -13,6 +12,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   return (
     <section className="space-y-8">
+      <header className="space-y-2">
+        <h1 className="text-xl font-bold md:text-2xl">VC심사역 출신의 인사이트</h1>
+      </header>
 
       <Tabs
         items={[
