@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type TrackBody = {
   postId?: string;
@@ -10,39 +9,33 @@ function json(body: Record<string, unknown>) {
   return NextResponse.json(body, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
 
-async function trackPost(body?: TrackBody) {
+async function callTrackPost(body?: TrackBody) {
   const postId = String(body?.postId ?? "").trim();
-  const slug = String(body?.slug ?? "").trim();
-  const hasUrl = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const hasServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const hasServiceRole = Boolean(serviceRoleKey);
 
   console.log("track-post hit", postId, hasServiceRole);
 
-  if (!hasUrl) return { ok: false as const, error: "missing env: NEXT_PUBLIC_SUPABASE_URL" };
-  if (!hasServiceRole) return { ok: false as const, error: "missing env: SUPABASE_SERVICE_ROLE_KEY" };
-  if (!postId && !slug) return { ok: false as const, error: "postId 또는 slug가 필요합니다." };
+  if (!supabaseUrl) return { ok: false as const, error: "missing env: NEXT_PUBLIC_SUPABASE_URL" };
+  if (!serviceRoleKey) return { ok: false as const, error: "missing env: SUPABASE_SERVICE_ROLE_KEY" };
+  if (!postId) return { ok: false as const, error: "postId is required" };
 
   try {
-    const supabase = createAdminClient();
+    const res = await fetch(`${supabaseUrl}/functions/v1/track`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${serviceRoleKey}`
+      },
+      body: JSON.stringify({ type: "post", postId })
+    });
 
-    let targetPostId = postId;
-    if (!targetPostId && slug) {
-      const { data: postBySlug, error: findError } = await supabase
-        .from("posts")
-        .select("id")
-        .eq("slug", slug)
-        .eq("is_published", true)
-        .maybeSingle();
+    const payload = (await res.json().catch(() => null)) as { ok?: boolean; view_count?: number; error?: string } | null;
+    if (!payload?.ok) return { ok: false as const, error: payload?.error ?? "track function failed" };
 
-      if (findError) return { ok: false as const, error: findError.message };
-      if (!postBySlug?.id) return { ok: false as const, error: "글을 찾을 수 없습니다." };
-      targetPostId = String(postBySlug.id);
-    }
-
-    const { data: rpcData, error: rpcError } = await supabase.rpc("increment_post_view", { p_post_id: targetPostId });
-    if (rpcError) return { ok: false as const, error: rpcError.message };
-
-    return { ok: true as const, view_count: Number(rpcData ?? 0) };
+    return { ok: true as const, view_count: Number(payload.view_count ?? 0) };
   } catch (error) {
     return { ok: false as const, error: error instanceof Error ? error.message : "track-post failed" };
   }
@@ -50,12 +43,12 @@ async function trackPost(body?: TrackBody) {
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const result = await trackPost({ postId: searchParams.get("postId") ?? undefined, slug: searchParams.get("slug") ?? undefined });
+  const result = await callTrackPost({ postId: searchParams.get("postId") ?? undefined });
   return result.ok ? json({ ok: true, view_count: result.view_count }) : json({ ok: false, error: result.error });
 }
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as TrackBody;
-  const result = await trackPost(body);
+  const result = await callTrackPost(body);
   return result.ok ? json({ ok: true, view_count: result.view_count }) : json({ ok: false, error: result.error });
 }

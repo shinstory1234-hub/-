@@ -4,24 +4,15 @@ export const revalidate = 0;
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
-import { getCategories, getPostsWithError, getVisitStats } from "@/lib/posts";
-import { VisitStats } from "@/components/site/visit-stats";
-import { VisitStatsTracker } from "@/components/site/visit-stats-tracker";
+import { getCategories, getPostsWithError } from "@/lib/posts";
 import { PostSlugLink } from "@/components/post-slug-link";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
-  const [{ posts, error: postsError }, categories, visitStats] = await Promise.all([getPostsWithError(category), getCategories(), getVisitStats()]);
+  const [{ posts, error: postsError }, categories] = await Promise.all([getPostsWithError(category), getCategories()]);
 
   return (
     <section className="space-y-8">
-      <header className="space-y-2">
-        <VisitStats initialToday={visitStats.today} initialTotal={visitStats.total} />
-        <VisitStatsTracker />
-        <h1 className="text-xl font-bold md:text-2xl" aria-hidden="true">
-          &nbsp;
-        </h1>
-      </header>
 
       <Tabs
         items={[
