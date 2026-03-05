@@ -91,6 +91,7 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
 }
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
+  noStore();
   const supabase = await createClient();
   let decodedSlug = slugParam;
 
@@ -205,26 +206,3 @@ export async function getPostComments(postId: string): Promise<Comment[]> {
   return data ?? [];
 }
 
-export async function getTodayVisits(): Promise<number> {
-  const supabase = await createClient();
-  const categoryOrder = { ascending: true as const };
-  const createdOrder = { ascending: false as const };
-  const today = new Date().toISOString().slice(0, 10);
-  const { data } = await supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle();
-  return data?.visits ?? 0;
-}
-
-
-export async function getVisitStats(): Promise<{ today: number; total: number }> {
-  const supabase = await createClient();
-  const categoryOrder = { ascending: true as const };
-  const createdOrder = { ascending: false as const };
-  const today = new Date().toISOString().slice(0, 10);
-  const [{ data: todayRow }, { data: rows }] = await Promise.all([
-    supabase.from("daily_stats").select("visits").eq("date", today).maybeSingle(),
-    supabase.from("daily_stats").select("visits")
-  ]);
-
-  const total = (rows ?? []).reduce((sum, row: any) => sum + Number(row.visits ?? 0), 0);
-  return { today: Number(todayRow?.visits ?? 0), total };
-}
