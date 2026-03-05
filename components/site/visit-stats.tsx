@@ -1,3 +1,1 @@
-export function VisitStats() {
-  return null;
-}
+export {};
