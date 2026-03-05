@@ -91,6 +91,7 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
 }
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
+  noStore();
   const supabase = await createClient();
   let decodedSlug = slugParam;
 

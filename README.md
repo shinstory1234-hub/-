@@ -146,3 +146,13 @@ npm run dev
 4. Open `/posts/{slug}` and refresh.
 5. Confirm `/api/track-post` is `POST 200` in Network.
 6. Confirm `조회수 N` increases and does not reset after refresh.
+
+## Deploy-only 500 Checklist (8 lines)
+1. Verify Vercel env `NEXT_PUBLIC_SUPABASE_URL` exists in Production and Preview.
+2. Verify Vercel env `NEXT_PUBLIC_SUPABASE_ANON_KEY` exists in Production and Preview.
+3. Verify Vercel env `SUPABASE_SERVICE_ROLE_KEY` exists in Production and Preview.
+4. Redeploy after any env change.
+5. Open `/` and check Network has `/api/track-view` returning `200` JSON.
+6. Open `/posts/{slug}` and check Network has `/api/track-post` returning `200` JSON.
+7. Confirm Vercel Logs include `track-view hit` and `track-post hit` lines.
+8. Confirm repeated refresh increases counters without reset.
