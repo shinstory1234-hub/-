@@ -138,3 +138,21 @@ npm run dev
 8. 홈에서 글 카드를 클릭해 `/posts/{slug}` 상세로 정상 이동하는지 확인합니다.
 9. 상세 페이지 새로고침 후에도 404 없이 같은 글이 유지되는지 확인합니다.
 10. slug가 비어 있는 글 카드 클릭 시 에러 토스트가 뜨고 앱이 크래시하지 않는지 확인합니다.
+
+## Deploy Counter Verification (6 lines)
+1. Run `npm run dev` and open `/` in a browser.
+2. Refresh Home and confirm `/api/track-view` is `POST 200` in Network.
+3. Confirm `Today` and `Total` increase after each Home refresh.
+4. Open `/posts/{slug}` and refresh.
+5. Confirm `/api/track-post` is `POST 200` in Network.
+6. Confirm `조회수 N` increases and does not reset after refresh.
+
+## Deploy-only 500 Checklist (8 lines)
+1. Verify Vercel env `NEXT_PUBLIC_SUPABASE_URL` exists in Production and Preview.
+2. Verify Vercel env `NEXT_PUBLIC_SUPABASE_ANON_KEY` exists in Production and Preview.
+3. Verify Vercel env `SUPABASE_SERVICE_ROLE_KEY` exists in Production and Preview.
+4. Redeploy after any env change.
+5. Open `/` and check Network has `/api/track-view` returning `200` JSON.
+6. Open `/posts/{slug}` and check Network has `/api/track-post` returning `200` JSON.
+7. Confirm Vercel Logs include `track-view hit` and `track-post hit` lines.
+8. Confirm repeated refresh increases counters without reset.
