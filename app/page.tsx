@@ -16,6 +16,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <section className="space-y-8">
       <header className="space-y-2">
         <VisitStatsTracker />
+        <p className="text-xs text-muted-foreground">deploy-marker: trackers-active-v1</p>
         <VisitStats initialToday={visitStats.today} initialTotal={visitStats.total} />
         <h1 className="text-xl font-bold md:text-2xl" aria-hidden="true">
           &nbsp;
