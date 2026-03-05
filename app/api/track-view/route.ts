@@ -21,9 +21,19 @@ async function incrementToday() {
   const supabase = createAdminClient();
   const todayStr = new Date().toISOString().slice(0, 10);
 
+  const { data: existingRow, error: existingError } = await supabase
+    .from("daily_stats")
+    .select("visits")
+    .eq("day", todayStr)
+    .maybeSingle();
+
+  if (existingError) return { ok: false as const, error: existingError.message };
+
+  const nextVisits = Number(existingRow?.visits ?? 0) + 1;
+
   const { error: upsertError } = await supabase
     .from("daily_stats")
-    .upsert({ day: todayStr, date: todayStr, visits: 1 }, { onConflict: "day" });
+    .upsert({ day: todayStr, date: todayStr, visits: nextVisits }, { onConflict: "day" });
 
   if (upsertError) return { ok: false as const, error: upsertError.message };
 
