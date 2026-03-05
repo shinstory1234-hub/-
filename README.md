@@ -138,3 +138,11 @@ npm run dev
 8. 홈에서 글 카드를 클릭해 `/posts/{slug}` 상세로 정상 이동하는지 확인합니다.
 9. 상세 페이지 새로고침 후에도 404 없이 같은 글이 유지되는지 확인합니다.
 10. slug가 비어 있는 글 카드 클릭 시 에러 토스트가 뜨고 앱이 크래시하지 않는지 확인합니다.
+
+## Deploy Counter Verification (6 lines)
+1. Run `npm run dev` and open `/` in a browser.
+2. Refresh Home and confirm `/api/track-view` is `POST 200` in Network.
+3. Confirm `Today` and `Total` increase after each Home refresh.
+4. Open `/posts/{slug}` and refresh.
+5. Confirm `/api/track-post` is `POST 200` in Network.
+6. Confirm `조회수 N` increases and does not reset after refresh.
