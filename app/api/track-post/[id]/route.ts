@@ -1,17 +1,18 @@
-import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { GET as trackPostGet, POST as trackPostPost } from "@/app/api/track-post/route";
 
 type Params = { params: Promise<{ id: string }> };
 
+export async function GET(_request: Request, { params }: Params) {
+  const { id } = await params;
+  const url = new URL(`/api/track-post?postId=${encodeURIComponent(id)}`, "http://localhost");
+  return trackPostGet(new Request(url.toString(), { method: "GET" }));
+}
 
 export async function POST(_request: Request, { params }: Params) {
   const { id } = await params;
-  if (!id) return NextResponse.json({ ok: false, error: "post id가 없습니다." }, { status: 400 });
-
-  const supabase = createAdminClient();
-  const { data: rpcData, error: rpcError } = await supabase.rpc("increment_post_view", { p_post_id: id });
-
-  if (rpcError) return NextResponse.json({ ok: false, error: rpcError.message }, { status: 500 });
-
-  return NextResponse.json({ ok: true, view_count: Number(rpcData ?? 0) });
+  return trackPostPost(new Request("http://localhost/api/track-post", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ postId: id })
+  }));
 }
