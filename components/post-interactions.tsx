@@ -28,6 +28,18 @@ type CommentsResponse = {
   error?: string;
 };
 
+function formatKST(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function PostInteractions({ postId, initialLikes, initialComments }: Props) {
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
@@ -161,7 +173,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
           {comments.map((comment) => (
             <div key={comment.id} className="rounded-md border border-border bg-surface p-3 text-sm">
               <div className="flex items-center justify-between">
-                <p className="font-medium">{comment.author_name ?? comment.author_email ?? "사용자"}</p>
+                <div>
+                  <p className="font-medium">{comment.author_name ?? comment.author_email ?? "사용자"}</p>
+                  <p className="text-xs text-muted-foreground">{formatKST(comment.created_at)}</p>
+                </div>
                 <button type="button" className="text-xs text-danger" onClick={() => requestDelete(comment.id)}>
                   삭제
                 </button>
