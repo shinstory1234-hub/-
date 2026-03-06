@@ -86,10 +86,16 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   }, [postId]);
 
   const toggleLike = async () => {
-    const res = await fetch(`/api/likes/${postId}`, { method: myLiked ? "DELETE" : "POST" });
+    const newLiked = !myLiked;
+    setMyLiked(newLiked);
+    setLikes((prev) => prev + (newLiked ? 1 : -1));
+
+    const res = await fetch(`/api/likes/${postId}`, { method: newLiked ? "POST" : "DELETE" });
     const json = await safeJson<LikesResponse>(res);
 
     if (!json?.ok) {
+      setMyLiked(!newLiked);
+      setLikes((prev) => prev + (newLiked ? -1 : 1));
       show(json?.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
       return;
     }
