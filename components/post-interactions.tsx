@@ -178,6 +178,8 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
           <Button type="button" variant="danger" onClick={confirmDelete}>삭제 확인</Button>
         </div>
       </Modal>
+
+      <p className="text-xs text-muted-foreground mt-6">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
     </div>
   );
 }
