@@ -1,16 +1,15 @@
 "use client";
-
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type Props = { postId?: string | null; initialCount: number };
 
 export function PostViewCounter({ postId, initialCount }: Props) {
   const [count, setCount] = useState(initialCount);
-  const router = useRouter();
+  const tracked = useRef(false);
 
   useEffect(() => {
-    if (!postId) return;
+    if (!postId || tracked.current) return;
+    tracked.current = true;
 
     const run = async () => {
       try {
@@ -20,22 +19,14 @@ export function PostViewCounter({ postId, initialCount }: Props) {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ postId })
         });
-
-        const json = (await res.json().catch(() => null)) as { ok?: boolean; view_count?: number; error?: string } | null;
-        if (!res.ok || !json?.ok) {
-          console.error("track-post failed", json?.error ?? res.statusText);
-          return;
-        }
-
-        setCount(Number(json.view_count ?? initialCount));
-        router.refresh();
+        const json = await res.json().catch(() => null);
+        if (json?.ok) setCount(Number(json.view_count ?? initialCount));
       } catch (error) {
         console.error("track-post fetch failed", error);
       }
     };
-
     run();
-  }, [postId, initialCount, router]);
+  }, [postId, initialCount]);
 
   return <p className="text-sm text-muted-foreground">조회수 {count}</p>;
 }
