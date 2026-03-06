@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -9,17 +8,14 @@ import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
-
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
-
   const [all, likes, comments] = await Promise.all([getPosts(), getPostLikesCount(post.id), getPostComments(post.id)]);
   const index = all.findIndex((item) => item.slug === post.slug);
   const prev = index >= 0 ? all[index + 1] : undefined;
   const next = index > 0 ? all[index - 1] : undefined;
-
   return (
     <article className="mx-auto max-w-content space-y-6">
       <Card className="p-8 md:p-10">
@@ -37,12 +33,12 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
+          <p className="text-xs text-muted-foreground">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
         <PostShareButtons />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </Card>
-
       <div className="grid gap-3 sm:grid-cols-2">
         {prev ? (
           <PostSlugLink slug={prev.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground">
