@@ -33,7 +33,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
-          <p className="text-xs text-muted-foreground">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
+          <p className="text-sm font-semibold text-red-500">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
         <PostShareButtons />
