@@ -1,3 +1,4 @@
+// force redeploy
 export const dynamic = "force-dynamic";
 
 import { Badge } from "@/components/ui/badge";
