@@ -1,35 +1,30 @@
-// force redeploy
 export const dynamic = "force-dynamic";
-
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { getCategories, getPostsWithError } from "@/lib/posts";
 import { PostSlugLink } from "@/components/post-slug-link";
-
+import { VisitCounter } from "@/components/visit-counter";
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
   const [{ posts, error: postsError }, categories] = await Promise.all([getPostsWithError(category), getCategories()]);
-
   return (
     <section className="space-y-8">
       <header className="space-y-2">
         <h1 className="text-xl font-bold md:text-2xl">VC심사역 출신의 인사이트</h1>
+        <VisitCounter />
       </header>
-
       <Tabs
         items={[
           { href: "/", label: "전체", active: !category },
           ...categories.map((cat) => ({ href: `/?category=${cat.slug}`, label: cat.name, active: category === cat.slug }))
         ]}
       />
-
       {postsError ? (
         <Card>
           <CardContent className="py-14 text-center text-sm text-danger">글 목록 조회 실패: {postsError}</CardContent>
         </Card>
       ) : null}
-
       {posts.length === 0 ? (
         <Card>
           <CardContent className="py-14 text-center text-sm text-muted-foreground">아직 글이 없습니다. 첫 글을 발행해보세요.</CardContent>
