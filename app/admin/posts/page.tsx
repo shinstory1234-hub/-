@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
-import { PostRowActions } from "@/components/admin/post-row-actions";
+import { AdminPostList } from "@/components/admin/admin-post-list";
 
 export default async function AdminPostsPage() {
   await requireAdmin();
@@ -23,30 +21,7 @@ export default async function AdminPostsPage() {
           <Button>새 글 작성</Button>
         </Link>
       </div>
-
-      <div className="space-y-3">
-        {posts?.map((post: any) => (
-          <Card key={post.id}>
-            <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <p className="text-base font-semibold">{post.title}</p>
-                <p className="text-xs text-muted-foreground">/{post.slug}</p>
-                <div className="flex gap-2">
-                  <Badge>{post.is_published ? "발행" : "임시저장"}</Badge>
-                  <Badge>{post.categories?.name ?? "미분류"}</Badge>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-muted-foreground">{(post.published_at ?? post.created_at)?.slice(0, 10)}</span>
-                <Link href={`/admin/posts/${post.id}/edit`}>
-                  <Button variant="outline" type="button">수정</Button>
-                </Link>
-                <PostRowActions id={post.id} isPublished={post.is_published} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <AdminPostList posts={posts ?? []} />
     </section>
   );
 }
