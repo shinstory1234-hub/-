@@ -9,7 +9,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const { category } = await searchParams;
   const [{ posts, error: postsError }, categories] = await Promise.all([getPostsWithError(category), getCategories()]);
   return (
-    <section className="space-y-8 max-w-4xl mx-auto">
+     <section className="space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold md:text-3xl">VC심사역 출신의 인사이트</h1>
         <VisitCounter />
