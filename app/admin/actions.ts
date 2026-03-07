@@ -389,32 +389,3 @@ export async function moveToEdgeAction(_prev: ActionState, formData: FormData): 
   revalidatePath("/");
   return { ok: true };
 }
-export async function moveToEdgeAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin();
-  const id = String(getText(formData, "id") ?? "").trim();
-  const direction = String(getText(formData, "direction") ?? "").trim();
-
-  if (!id || !["first", "last"].includes(direction)) {
-    return { ok: false, error: "잘못된 요청입니다." };
-  }
-
-  const supabase = await createClient();
-  const { data: all } = await supabase
-    .from("categories")
-    .select("id,sort_order")
-    .order("sort_order", { ascending: true });
-
-  if (!all || all.length === 0) return { ok: false, error: "카테고리가 없습니다." };
-
-  const minOrder = all[0].sort_order ?? 0;
-  const maxOrder = all[all.length - 1].sort_order ?? 0;
-
-  const newOrder = direction === "first" ? minOrder - 1 : maxOrder + 1;
-
-  const { error } = await supabase.from("categories").update({ sort_order: newOrder }).eq("id", id);
-  if (error) return { ok: false, error: error.message };
-
-  revalidatePath("/admin/categories");
-  revalidatePath("/");
-  return { ok: true };
-}
