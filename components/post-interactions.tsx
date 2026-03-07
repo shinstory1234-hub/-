@@ -91,13 +91,23 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     localStorage.setItem(`liked_${postId}`, String(newLiked));
   };
 
-  const toggleCommentLike = async (commentId: string) => {
-    const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
-    const json = await safeJson<CommentLikeResponse>(res);
-    if (json?.ok) {
-      setCommentLikes((prev) => ({ ...prev, [commentId]: { count: json.likes_count ?? 0, liked: json.liked ?? false } }));
-    }
-  };
+const toggleCommentLike = async (commentId: string) => {
+  const current = commentLikes[commentId] ?? { count: 0, liked: false };
+  const newLiked = !current.liked;
+  // 바로 UI 업데이트
+  setCommentLikes((prev) => ({
+    ...prev,
+    [commentId]: { count: current.count + (newLiked ? 1 : -1), liked: newLiked }
+  }));
+  const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
+  const json = await safeJson<CommentLikeResponse>(res);
+  if (json?.ok) {
+    setCommentLikes((prev) => ({ ...prev, [commentId]: { count: json.likes_count ?? 0, liked: json.liked ?? false } }));
+  } else {
+    // 실패하면 원래대로 되돌리기
+    setCommentLikes((prev) => ({ ...prev, [commentId]: current }));
+  }
+};
 
   const submitComment = async () => {
     if (!authorName.trim() || !commentPassword.trim() || !content.trim()) {
