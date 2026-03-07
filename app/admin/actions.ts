@@ -197,6 +197,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   const excerpt = String(getText(formData, "excerpt") ?? "").trim();
   const categoryId = String(getText(formData, "category_id") ?? "").trim() || null;
   const intent = String(getText(formData, "intent") || "draft").trim();
+  const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
 
   const slug = makePostSlug(slugRaw, title);
   const isPublished = intent === "publish";
@@ -217,14 +218,14 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
       content,
       category_id: categoryId,
       is_published: isPublished,
-      published_at: isPublished ? new Date().toISOString() : null
+      published_at: isPublished ? new Date().toISOString() : null,
+      cover_url: coverUrl,
     })
     .select("id")
     .single();
 
   if (error) return { ok: false, error: error.message };
 
-  // 첨부파일 DB 저장
   const attachmentsRaw = String(getText(formData, "attachments") ?? "").trim();
   if (attachmentsRaw && attachmentsRaw !== "[]") {
     try {
@@ -255,6 +256,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   const excerpt = String(getText(formData, "excerpt") ?? "").trim();
   const categoryId = String(getText(formData, "category_id") ?? "").trim() || null;
   const intent = String(getText(formData, "intent") || "save").trim();
+  const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
 
   const slug = makePostSlug(slugRaw, title);
 
@@ -285,7 +287,8 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
       content,
       category_id: categoryId,
       is_published: nextPublished,
-      published_at: nextPublishedAt
+      published_at: nextPublishedAt,
+      cover_url: coverUrl,
     })
     .eq("id", id);
 
@@ -360,6 +363,7 @@ export async function deleteCategoryFormAction(formData: FormData): Promise<void
 export async function moveCategoryOrderFormAction(formData: FormData): Promise<void> {
   await swapCategoryOrderAction(formData);
 }
+
 export async function moveToEdgeAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
   const id = String(getText(formData, "id") ?? "").trim();
