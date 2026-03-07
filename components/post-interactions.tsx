@@ -57,13 +57,18 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   setMyLiked(Boolean(likesJson.likedByMe));
 }
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
-      if (commentsJson?.ok) {
-        setComments(commentsJson.comments ?? []);
-        const initial: Record<string, { count: number; liked: boolean }> = {};
-        (commentsJson.comments ?? []).forEach((c) => { initial[c.id] = { count: c.likes_count ?? 0, liked: false }; });
-        setCommentLikes(initial);
-      }
-    };
+if (commentsJson?.ok) {
+  setComments(commentsJson.comments ?? []);
+  const initial: Record<string, { count: number; liked: boolean }> = {};
+  await Promise.all(
+    (commentsJson.comments ?? []).map(async (c) => {
+      const likeRes = await fetch(`/api/comment-likes/${c.id}`, { cache: "no-store" });
+      const likeJson = await safeJson<CommentLikeResponse>(likeRes);
+      initial[c.id] = { count: c.likes_count ?? 0, liked: likeJson?.liked ?? false };
+    })
+  );
+  setCommentLikes(initial);
+}
     load();
   }, [postId]);
 
