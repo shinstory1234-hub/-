@@ -1,6 +1,3 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -10,6 +7,14 @@ import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { createClient } from "@supabase/supabase-js";
+
+export async function generateStaticParams() {
+  const posts = await getPosts();
+  return posts.map((p) => ({ slug: p.slug }));
+}
+
+export const revalidate = 60;
+
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -85,7 +90,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             <p className="text-sm font-semibold">첨부파일 ({attachments.length})</p>
             <div className="space-y-1">
               {attachments.map((a) => (
-                <a key={a.id} href={a.url} download={a.name} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm hover:bg-surface-muted transition">
+                <a key={a.id} href={a.url} download={a.name} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm hover:bg-surface-muted transition">
                   {a.name}
                 </a>
               ))}
