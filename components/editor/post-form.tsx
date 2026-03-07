@@ -129,7 +129,10 @@ export function PostForm({ categories }: Props) {
           <option key={category.id} value={category.id}>{category.name}</option>
         ))}
       </select>
-
+<div className="space-y-2">
+  <label className="text-sm font-medium text-muted-foreground">커버 이미지 (선택)</label>
+  <input name="cover_url" type="url" placeholder="이미지 URL 입력" className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm" />
+</div>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" loading={uploading} onClick={() => fileInputRef.current?.click()}>
