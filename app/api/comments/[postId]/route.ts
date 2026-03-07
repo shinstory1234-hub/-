@@ -8,7 +8,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ postId:
 
   const { data, error } = await supabase
     .from("comments")
-    .select("id,post_id,author_name,author_email,content,created_at")
+    .select("id,post_id,author_name,author_email,content,created_at,likes_count")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
 
