@@ -5,14 +5,60 @@ import { Tabs } from "@/components/ui/tabs";
 import { getCategories, getPostsWithError } from "@/lib/posts";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { VisitCounter } from "@/components/visit-counter";
+import { headers } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
+
+const COOLDOWN_MS = 3 * 60 * 1000;
+
+async function trackAndGetStats(ip: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const since = new Date(Date.now() - COOLDOWN_MS).toISOString();
+  const { data: recentVisit } = await supabase
+    .from("visit_logs")
+    .select("id")
+    .eq("ip", ip)
+    .gte("visited_at", since)
+    .maybeSingle();
+
+  const today = new Date().toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }).replace(/\. /g, "-").replace(".", "");
+
+  if (!recentVisit) {
+    await supabase.from("visit_logs").insert({ ip });
+    const { data, error } = await supabase
+      .from("daily_stats").select("visits").eq("day", today).single();
+    if (error || !data) {
+      await supabase.from("daily_stats").insert({ day: today, date: today, visits: 1 });
+    } else {
+      await supabase.from("daily_stats").update({ visits: data.visits + 1 }).eq("day", today);
+    }
+  }
+
+  const { data: allStats } = await supabase.from("daily_stats").select("visits");
+  const total = allStats?.reduce((sum, row) => sum + (row.visits ?? 0), 0) ?? 0;
+  const { data: todayStats } = await supabase.from("daily_stats").select("visits").eq("day", today).single();
+  return { today: todayStats?.visits ?? 0, total };
+}
+
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
-  const [{ posts, error: postsError }, categories] = await Promise.all([getPostsWithError(category), getCategories()]);
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+
+  const [{ posts, error: postsError }, categories, stats] = await Promise.all([
+    getPostsWithError(category),
+    getCategories(),
+    trackAndGetStats(ip),
+  ]);
+
   return (
-     <section className="space-y-8">
+    <section className="space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold md:text-3xl">VC심사역 출신의 인사이트</h1>
-        <VisitCounter />
+        <VisitCounter today={stats.today} total={stats.total} />
       </header>
       <Tabs
         items={[
@@ -43,24 +89,24 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                     ))}
                   </div>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
-  {(() => {
-    if (!post.published_at) return "임시저장";
-    const date = new Date(post.published_at);
-    const now = new Date();
-    const isNew = now.getTime() - date.getTime() < 24 * 60 * 60 * 1000;
-    const formatted = date.toLocaleString("ko-KR", {
-      timeZone: "Asia/Seoul",
-      year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit",
-    });
-    return (
-      <>
-        {isNew && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">NEW</span>}
-        {formatted}
-      </>
-    );
-  })()}
-</span>
+                    {(() => {
+                      if (!post.published_at) return "임시저장";
+                      const date = new Date(post.published_at);
+                      const now = new Date();
+                      const isNew = now.getTime() - date.getTime() < 24 * 60 * 60 * 1000;
+                      const formatted = date.toLocaleString("ko-KR", {
+                        timeZone: "Asia/Seoul",
+                        year: "numeric", month: "2-digit", day: "2-digit",
+                        hour: "2-digit", minute: "2-digit",
+                      });
+                      return (
+                        <>
+                          {isNew && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">NEW</span>}
+                          {formatted}
+                        </>
+                      );
+                    })()}
+                  </span>
                 </div>
                 <PostSlugLink slug={post.slug} className="line-clamp-2 text-left text-lg font-semibold leading-7 hover:text-accent">
                   {post.title}
