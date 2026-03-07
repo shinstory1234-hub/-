@@ -52,23 +52,24 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
         fetch(`/api/comments/${postId}`, { cache: "no-store" })
       ]);
       const likesJson = await safeJson<LikesResponse>(likesRes);
-    if (likesJson?.ok) {
-  setLikes(likesJson.count ?? 0);
-  setMyLiked(Boolean(likesJson.likedByMe));
-}
+      if (likesJson?.ok) {
+        setLikes(likesJson.count ?? 0);
+        setMyLiked(Boolean(likesJson.likedByMe));
+      }
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
-if (commentsJson?.ok) {
-  setComments(commentsJson.comments ?? []);
-  const initial: Record<string, { count: number; liked: boolean }> = {};
-  await Promise.all(
-    (commentsJson.comments ?? []).map(async (c) => {
-      const likeRes = await fetch(`/api/comment-likes/${c.id}`, { cache: "no-store" });
-      const likeJson = await safeJson<CommentLikeResponse>(likeRes);
-      initial[c.id] = { count: c.likes_count ?? 0, liked: likeJson?.liked ?? false };
-    })
-  );
-  setCommentLikes(initial);
-}
+      if (commentsJson?.ok) {
+        setComments(commentsJson.comments ?? []);
+        const initial: Record<string, { count: number; liked: boolean }> = {};
+        await Promise.all(
+          (commentsJson.comments ?? []).map(async (c) => {
+            const likeRes = await fetch(`/api/comment-likes/${c.id}`, { cache: "no-store" });
+            const likeJson = await safeJson<CommentLikeResponse>(likeRes);
+            initial[c.id] = { count: c.likes_count ?? 0, liked: likeJson?.liked ?? false };
+          })
+        );
+        setCommentLikes(initial);
+      }
+    };
     load();
   }, [postId]);
 
@@ -93,26 +94,23 @@ if (commentsJson?.ok) {
     }
     setLikes(json.count ?? 0);
     setMyLiked(newLiked);
-    localStorage.setItem(`liked_${postId}`, String(newLiked));
   };
 
-const toggleCommentLike = async (commentId: string) => {
-  const current = commentLikes[commentId] ?? { count: 0, liked: false };
-  const newLiked = !current.liked;
-  // 바로 UI 업데이트
-  setCommentLikes((prev) => ({
-    ...prev,
-    [commentId]: { count: current.count + (newLiked ? 1 : -1), liked: newLiked }
-  }));
-  const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
-  const json = await safeJson<CommentLikeResponse>(res);
-  if (json?.ok) {
-    setCommentLikes((prev) => ({ ...prev, [commentId]: { count: json.likes_count ?? 0, liked: json.liked ?? false } }));
-  } else {
-    // 실패하면 원래대로 되돌리기
-    setCommentLikes((prev) => ({ ...prev, [commentId]: current }));
-  }
-};
+  const toggleCommentLike = async (commentId: string) => {
+    const current = commentLikes[commentId] ?? { count: 0, liked: false };
+    const newLiked = !current.liked;
+    setCommentLikes((prev) => ({
+      ...prev,
+      [commentId]: { count: current.count + (newLiked ? 1 : -1), liked: newLiked }
+    }));
+    const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
+    const json = await safeJson<CommentLikeResponse>(res);
+    if (json?.ok) {
+      setCommentLikes((prev) => ({ ...prev, [commentId]: { count: json.likes_count ?? 0, liked: json.liked ?? false } }));
+    } else {
+      setCommentLikes((prev) => ({ ...prev, [commentId]: current }));
+    }
+  };
 
   const submitComment = async () => {
     if (!authorName.trim() || !commentPassword.trim() || !content.trim()) {
