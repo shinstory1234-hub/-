@@ -15,13 +15,14 @@ function getSupabase() {
 
 export async function POST(req: Request, { params }: { params: Promise<{ commentId: string }> }) {
   const { commentId } = await params;
+  const commentIdNum = Number(commentId);
   const ip = getIP(req);
   const supabase = getSupabase();
 
   const { data: existing } = await supabase
     .from("comment_likes")
     .select("id")
-    .eq("comment_id", commentId)
+    .eq("comment_id", commentIdNum)
     .eq("ip_address", ip)
     .maybeSingle();
 
@@ -30,16 +31,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ comment
     const { count } = await supabase
       .from("comment_likes")
       .select("id", { count: "exact", head: true })
-      .eq("comment_id", commentId);
-    await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentId);
+      .eq("comment_id", commentIdNum);
+    await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentIdNum);
     return NextResponse.json({ ok: true, liked: false, likes_count: count ?? 0 });
   }
 
-  await supabase.from("comment_likes").insert({ comment_id: commentId, ip_address: ip });
+  await supabase.from("comment_likes").insert({ comment_id: commentIdNum, ip_address: ip });
   const { count } = await supabase
     .from("comment_likes")
     .select("id", { count: "exact", head: true })
-    .eq("comment_id", commentId);
-  await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentId);
+    .eq("comment_id", commentIdNum);
+  await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentIdNum);
   return NextResponse.json({ ok: true, liked: true, likes_count: count ?? 0 });
 }
