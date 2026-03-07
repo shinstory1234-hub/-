@@ -8,11 +8,31 @@ import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
+import { createClient } from "@supabase/supabase-js";
+
+async function getAttachments(postId: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data } = await supabase
+    .from("attachments")
+    .select("*")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+  return data ?? [];
+}
+
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
-  const [all, likes, comments] = await Promise.all([getPosts(), getPostLikesCount(post.id), getPostComments(post.id)]);
+  const [all, likes, comments, attachments] = await Promise.all([
+    getPosts(),
+    getPostLikesCount(post.id),
+    getPostComments(post.id),
+    getAttachments(post.id),
+  ]);
   const index = all.findIndex((item) => item.slug === post.slug);
   const prev = index >= 0 ? all[index + 1] : undefined;
   const next = index > 0 ? all[index - 1] : undefined;
@@ -36,6 +56,28 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <p className="text-base font-semibold text-red-500">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
         </div>
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+        {/* 첨부파일 목록 */}
+        {attachments.length > 0 && (
+          <div className="mt-8 space-y-2">
+            <p className="text-sm font-semibold">📎 첨부파일 ({attachments.length})</p>
+            <div className="space-y-1">
+              {attachments.map((a: { id: string; name: string; url: string }) => (
+                
+                  key={a.id}
+                  href={a.url}
+                  download={a.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm hover:bg-surface-muted transition"
+                >
+                  📄 {a.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         <PostShareButtons />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </Card>
