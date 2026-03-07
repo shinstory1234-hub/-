@@ -99,4 +99,134 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       if (!user) throw new Error("로그인이 필요합니다.");
       const ext = file.name.split(".").pop() || "png";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("images").upload(path, file, { upsert: f
+      const { error } = await supabase.storage.from("images").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("images").getPublicUrl(path);
+      insertImageAtCursor(data.publicUrl);
+      onImageInserted?.(data.publicUrl);
+      show("이미지를 삽입했습니다.");
+      setProgress(100);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "업로드 실패";
+      setUploadError(message);
+      show(message, "error");
+    } finally {
+      window.clearInterval(progressTimer);
+      setTimeout(() => { setUploading(false); setProgress(0); }, 250);
+    }
+  };
+
+  const insertTable = () => {
+    editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* 툴바 */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-t-lg border border-border bg-surface-muted p-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => editor?.chain().focus().toggleBold().run()}>
+          Bold
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+          List
+        </Button>
+
+        {/* 글자 색 */}
+        <div className="relative">
+          <Button type="button" variant="outline" size="sm" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); }}>
+            글자색
+          </Button>
+          {showColorPicker && (
+            <div className="absolute top-9 left-0 z-50 flex gap-1 rounded-lg border border-border bg-surface p-2 shadow-lg">
+              {COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className="h-6 w-6 rounded-full border border-border"
+                  style={{ backgroundColor: color }}
+                  onClick={() => { editor?.chain().focus().setColor(color).run(); setShowColorPicker(false); }}
+                />
+              ))}
+              <button
+                type="button"
+                className="rounded px-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => { editor?.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
+              >
+                기본
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 형광펜 */}
+        <div className="relative">
+          <Button type="button" variant="outline" size="sm" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); }}>
+            형광펜
+          </Button>
+          {showHighlightPicker && (
+            <div className="absolute top-9 left-0 z-50 flex gap-1 rounded-lg border border-border bg-surface p-2 shadow-lg">
+              {HIGHLIGHTS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className="h-6 w-6 rounded-full border border-border"
+                  style={{ backgroundColor: color }}
+                  onClick={() => { editor?.chain().focus().setHighlight({ color }).run(); setShowHighlightPicker(false); }}
+                />
+              ))}
+              <button
+                type="button"
+                className="rounded px-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => { editor?.chain().focus().unsetHighlight().run(); setShowHighlightPicker(false); }}
+              >
+                제거
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 표 */}
+        <Button type="button" variant="outline" size="sm" onClick={insertTable}>
+          표 삽입
+        </Button>
+        {editor?.isActive("table") && (
+          <>
+            <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()}>열 추가</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().addRowAfter().run()}>행 추가</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteColumn().run()}>열 삭제</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteRow().run()}>행 삭제</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteTable().run()}>표 삭제</Button>
+          </>
+        )}
+
+        {/* 이미지 */}
+        <Button type="button" variant="outline" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}>
+          이미지 첨부
+        </Button>
+        <input ref={fileRef} type="file" className="hidden" accept="image/*"
+          onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadAndInsert(file); e.currentTarget.value = ""; }}
+        />
+      </div>
+
+      <EditorContent editor={editor} />
+      <input type="hidden" name={name} value={html} readOnly />
+
+      {uploading && (
+        <div className="space-y-1">
+          <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
+            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="text-xs text-muted-foreground">이미지 업로드 중... {progress}%</p>
+        </div>
+      )}
+      {uploadError && (
+        <div className="flex items-center gap-2 text-xs text-danger">
+          <span>{uploadError}</span>
+          {lastFile && (
+            <Button type="button" size="sm" variant="outline" onClick={() => uploadAndInsert(lastFile)}>재시도</Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
