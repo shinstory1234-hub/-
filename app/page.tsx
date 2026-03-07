@@ -79,12 +79,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {posts.map((post) => (
             <Card key={post.id} className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
-  <div className="h-44 w-full bg-surface-muted flex items-center justify-center overflow-hidden">
-    {post.cover_url
-      ? <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${post.cover_url})` }} />
-      : <span className="text-4xl font-black text-border">{post.category?.name?.[0] ?? "M"}</span>
-    }
-  </div>
+  <div className="h-44 w-full overflow-hidden">
+  {post.cover_url
+    ? <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${post.cover_url})` }} />
+    : <div className="h-full w-full flex items-center justify-center"
+        style={{ background: `hsl(${(post.title.charCodeAt(0) * 37) % 360}, 60%, 85%)` }}>
+        <span className="text-5xl font-black text-white/60">{post.category?.name?.[0] ?? "M"}</span>
+      </div>
+  }
+</div>
   <CardHeader className="space-y-2 pt-4">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-2">
