@@ -22,7 +22,8 @@ export async function POST(req: Request) {
 
   // 한글 파일명 처리
   const originalName = file.name;
-  const safeName = `${Date.now()}_${originalName}`;
+  const ext = originalName.split(".").pop() ?? "";
+const safeName = `${Date.now()}.${ext}`;
 
   const { error } = await supabase.storage
     .from("attachments")
