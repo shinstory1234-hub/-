@@ -116,9 +116,14 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     }
   };
 
-  const insertTable = () => {
-    editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-  };
+  const [tableHover, setTableHover] = useState<{ rows: number; cols: number } | null>(null);
+const [showTableGrid, setShowTableGrid] = useState(false);
+
+const insertTable = (rows: number, cols: number) => {
+  editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+  setShowTableGrid(false);
+  setTableHover(null);
+};
 
   return (
     <div className="space-y-2">
@@ -186,9 +191,35 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
         </div>
 
         {/* 표 */}
-        <Button type="button" variant="outline" size="sm" onClick={insertTable}>
-          표 삽입
-        </Button>
+<div className="relative">
+  <Button type="button" variant="outline" size="sm" onClick={() => setShowTableGrid(!showTableGrid)}>
+    표 삽입
+  </Button>
+  {showTableGrid && (
+    <div className="absolute top-9 left-0 z-50 rounded-lg border border-border bg-surface p-2 shadow-lg">
+      <p className="mb-1 text-xs text-muted-foreground">
+        {tableHover ? `${tableHover.rows} × ${tableHover.cols}` : "표 크기 선택"}
+      </p>
+      <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
+        {Array.from({ length: 64 }, (_, i) => {
+          const row = Math.floor(i / 8) + 1;
+          const col = (i % 8) + 1;
+          const isActive = tableHover && row <= tableHover.rows && col <= tableHover.cols;
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`h-5 w-5 border rounded-sm transition ${isActive ? "bg-accent border-accent" : "border-border hover:border-accent"}`}
+              onMouseEnter={() => setTableHover({ rows: row, cols: col })}
+              onMouseLeave={() => setTableHover(null)}
+              onClick={() => insertTable(row, col)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  )}
+</div>
         {editor?.isActive("table") && (
           <>
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()}>열 추가</Button>
