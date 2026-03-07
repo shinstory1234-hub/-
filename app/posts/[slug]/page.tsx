@@ -43,7 +43,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   const next = index > 0 ? all[index - 1] : undefined;
 
   return (
-    <article className="mx-auto max-w-content space-y-6">
+    <article className="mx-auto max-w-screen-2xl space-y-6">
       <Card className="p-8 md:p-10">
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
