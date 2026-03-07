@@ -11,6 +11,8 @@ import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { createClient } from "@supabase/supabase-js";
 
+type Attachment = { id: string; name: string; url: string };
+
 async function getAttachments(postId: string) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,10 +23,8 @@ async function getAttachments(postId: string) {
     .select("*")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as Attachment[];
 }
-
-type Attachment = { id: string; name: string; url: string };
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -66,18 +66,11 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
 
         {attachments.length > 0 && (
           <div className="mt-8 space-y-2">
-            <p className="text-sm font-semibold">📎 첨부파일 ({attachments.length})</p>
+            <p className="text-sm font-semibold">첨부파일 ({attachments.length})</p>
             <div className="space-y-1">
-              {attachments.map((a: Attachment) => (
-                
-                  key={a.id}
-                  href={a.url}
-                  download={a.name}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm hover:bg-surface-muted transition"
-                >
-                  📄 {a.name}
+              {attachments.map((a) => (
+                <a key={a.id} href={a.url} download={a.name} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm hover:bg-surface-muted transition">
+                  {a.name}
                 </a>
               ))}
             </div>
