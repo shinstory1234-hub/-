@@ -90,9 +90,9 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       show(json?.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
       return;
     }
-    setLikes(json.count ?? 0);
-    setMyLiked(Boolean(json.likedByMe));
-  };
+  setLikes(json.count ?? 0);
+setMyLiked(newLiked);
+localStorage.setItem(`liked_${postId}`, String(newLiked));
 
   const toggleCommentLike = async (commentId: string) => {
     const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
