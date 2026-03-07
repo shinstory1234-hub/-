@@ -11,11 +11,54 @@ import { RichEditor } from "@/components/editor/rich-editor";
 import { useToast } from "@/components/ui/toast";
 import { createPostAction, type ActionState } from "@/app/admin/actions";
 
+function CoverImageUploader({ onUpload }: { onUpload: (url: string) => void }) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [coverUrl, setCoverUrl] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
+  const { show } = useToast();
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/attachments", { method: "POST", body: formData });
+      const json = await res.json();
+      if (json.ok) {
+        setPreview(json.url);
+        onUpload(json.url);
+      } else {
+        show("커버 이미지 업로드 실패", "error");
+      }
+    } catch {
+      show("커버 이미지 업로드 오류", "error");
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div
+      className="relative flex h-40 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border bg-surface-muted hover:bg-surface transition overflow-hidden"
+      onClick={() => ref.current?.click()}
+    >
+      {preview
+        ? <img src={preview} alt="커버" className="h-full w-full object-cover" />
+        : <div className="text-center text-sm text-muted-foreground">
+            {uploading ? "업로드 중..." : "🖼️ 커버 이미지 클릭해서 업로드"}
+          </div>
+      }
+      <input ref={ref} type="file" accept="image/*" className="hidden"
+        onChange={(e) => {  f = e.target.files?.[0]; if (f) handleFile(f); }} />
+    </div>
+  );
+}
+
 type Props = { categories: Category[] };
-const initialState: ActionState = { ok: false };
+ initialState: ActionState = { ok: false };
 
 function SubmitActions({ intentRef }: { intentRef: RefObject<HTMLInputElement | null> }) {
-  const { pending } = useFormStatus();
+   { pending } = useFormStatus();
   return (
     <div className="flex gap-2">
       <Button type="submit" variant="outline" loading={pending} onClick={() => { if (intentRef.current) intentRef.current.value = "draft"; }}>임시저장</Button>
@@ -35,14 +78,14 @@ function slugify(v: string) {
 type Attachment = { name: string; url: string };
 
 export function PostForm({ categories }: Props) {
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [state, action] = useActionState(createPostAction, initialState);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { show } = useToast();
-  const router = useRouter();
+   [title, setTitle] = ("");
+   [slug, setSlug] = ("");
+   [state, action] = useActionState(createPostAction, initialState);
+   [attachments, setAttachments] = <Attachment[]>([]);
+   [uploading, setUploading] = useState(false);
+   fileInputRef = useRef<HTMLInputElement>(null);
+   { show } = useToast();
+   router = useRouter();
   const intentRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setSlug(slugify(title)); }, [title]);
@@ -130,8 +173,8 @@ export function PostForm({ categories }: Props) {
         ))}
       </select>
 <div className="space-y-2">
-  <label className="text-sm font-medium text-muted-foreground">커버 이미지 (선택)</label>
-  <input name="cover_url" type="url" placeholder="이미지 URL 입력" className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm" />
+  <CoverImageUploader onUpload={(url) => setCoverUrl(url)} />
+  <input type="hidden" name="cover_url" value={coverUrl} />
 </div>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
