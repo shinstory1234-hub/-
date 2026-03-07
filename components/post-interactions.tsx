@@ -88,7 +88,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
         setComments(commentsJson.comments ?? []);
         const initial: Record<string, { count: number; liked: boolean }> = {};
         (commentsJson.comments ?? []).forEach((c) => {
-          initial[c.id] = { count: (c as Comment & { likes_count?: number }).likes_count ?? 0, liked: false };
+          initial[c.id] = { count: c.likes_count ?? 0, liked: false };
         });
         setCommentLikes(initial);
       }
@@ -215,7 +215,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
               <button
                 type="button"
                 onClick={() => toggleCommentLike(comment.id)}
-                className={`mt-2 text-xs ${commentLikes[comment.id]?.liked ? "text-accent font-semibold" : "text-muted-foreground"}`}
+                className={`mt-2 text-base cursor-pointer ${commentLikes[comment.id]?.liked ? "text-red-500 font-semibold" : "text-muted-foreground hover:text-red-400"}`}
               >
                 ♥ {commentLikes[comment.id]?.count ?? 0}
               </button>
