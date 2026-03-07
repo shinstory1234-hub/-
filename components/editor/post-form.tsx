@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useActionState, useEffect, useRef, useState, type RefObject } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Category } from "@/lib/types";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { RichEditor } from "@/components/editor/rich-editor";
 import { useToast } from "@/components/ui/toast";
 import { createPostAction, type ActionState } from "@/app/admin/actions";
-import { useActionState } from "react";
 
 type Props = { categories: Category[] };
 const initialState: ActionState = { ok: false };
@@ -42,7 +41,6 @@ export function PostForm({ categories }: Props) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const attachmentsRef = useRef<HTMLInputElement>(null);
   const { show } = useToast();
   const router = useRouter();
   const intentRef = useRef<HTMLInputElement>(null);
@@ -50,20 +48,27 @@ export function PostForm({ categories }: Props) {
   useEffect(() => { setSlug(slugify(title)); }, [title]);
 
   useEffect(() => {
-    if (attachmentsRef.current) {
-      attachmentsRef.current.value = JSON.stringify(attachments);
-    }
-  }, [attachments]);
-
-  useEffect(() => {
-    if (state?.ok && state.redirectTo) {
-      show("글이 저장되었습니다.");
-      router.push(state.redirectTo);
-      router.refresh();
+    if (state?.ok && state.redirectTo && state.id) {
+      // 글 발행 성공 후 첨부파일 DB 저장
+      if (attachments.length > 0) {
+        fetch("/api/attachments/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postId: state.id, attachments }),
+        }).finally(() => {
+          show("글이 저장되었습니다.");
+          router.push(state.redirectTo!);
+          router.refresh();
+        });
+      } else {
+        show("글이 저장되었습니다.");
+        router.push(state.redirectTo);
+        router.refresh();
+      }
       return;
     }
     if (state?.error) show(state.error, "error");
-  }, [router, show, state]);
+  }, [state]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -111,7 +116,6 @@ export function PostForm({ categories }: Props) {
       />
       <input ref={intentRef} type="hidden" name="intent" defaultValue="draft" />
       <input type="hidden" name="slug" value={slug} readOnly />
-      <input ref={attachmentsRef} type="hidden" name="attachments" defaultValue="[]" />
       <p className="text-xs text-muted-foreground">slug: {slug || "제목을 입력하면 자동 생성"}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" />
 
