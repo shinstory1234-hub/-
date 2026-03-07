@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-
 export function VisitCounter() {
   const [today, setToday] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
-
   useEffect(() => {
     const run = async () => {
       try {
@@ -23,12 +21,10 @@ export function VisitCounter() {
     };
     run();
   }, []);
-
   if (today === null || total === null) return null;
-
   return (
-    <p className="text-sm text-muted-foreground">
-      Today {today}, Total {total}
+    <p className="text-base font-semibold text-muted-foreground">
+      Today {today}&nbsp;&nbsp;Total {total}
     </p>
   );
 }
