@@ -15,7 +15,6 @@ export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  // 3분 이내 같은 IP 방문 확인
   const since = new Date(Date.now() - COOLDOWN_MS).toISOString();
   const { data: recentVisit } = await supabase
     .from("visit_logs")
@@ -27,7 +26,6 @@ export async function POST(req: Request) {
   const today = new Date().toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }).replace(/\. /g, "-").replace(".", "");
 
   if (!recentVisit) {
-    // 3분 지났으면 카운트 + 로그 저장
     await supabase.from("visit_logs").insert({ ip });
 
     const { data, error } = await supabase
