@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Category } from "@/lib/types";
@@ -10,11 +10,9 @@ import { Button } from "@/components/ui/button";
 import { RichEditor } from "@/components/editor/rich-editor";
 import { useToast } from "@/components/ui/toast";
 import { createPostAction, type ActionState } from "@/app/admin/actions";
+import { useActionState } from "react";
 
-type Props = {
-  categories: Category[];
-};
-
+type Props = { categories: Category[] };
 const initialState: ActionState = { ok: false };
 
 function SubmitActions({ intentRef }: { intentRef: RefObject<HTMLInputElement | null> }) {
@@ -44,11 +42,18 @@ export function PostForm({ categories }: Props) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentsRef = useRef<HTMLInputElement>(null);
   const { show } = useToast();
   const router = useRouter();
   const intentRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setSlug(slugify(title)); }, [title]);
+
+  useEffect(() => {
+    if (attachmentsRef.current) {
+      attachmentsRef.current.value = JSON.stringify(attachments);
+    }
+  }, [attachments]);
 
   useEffect(() => {
     if (state?.ok && state.redirectTo) {
@@ -63,10 +68,8 @@ export function PostForm({ categories }: Props) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
-
     setUploading(true);
     const results: Attachment[] = [];
-
     for (const file of files) {
       const formData = new FormData();
       formData.append("file", file);
@@ -82,7 +85,6 @@ export function PostForm({ categories }: Props) {
         show(`${file.name} 업로드 중 오류 발생`, "error");
       }
     }
-
     setAttachments((prev) => [...prev, ...results]);
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -109,7 +111,7 @@ export function PostForm({ categories }: Props) {
       />
       <input ref={intentRef} type="hidden" name="intent" defaultValue="draft" />
       <input type="hidden" name="slug" value={slug} readOnly />
-      <input type="hidden" name="attachments" value={JSON.stringify(attachments)} readOnly />
+      <input ref={attachmentsRef} type="hidden" name="attachments" defaultValue="[]" />
       <p className="text-xs text-muted-foreground">slug: {slug || "제목을 입력하면 자동 생성"}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" />
 
@@ -124,7 +126,6 @@ export function PostForm({ categories }: Props) {
         ))}
       </select>
 
-      {/* 첨부파일 업로드 */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" loading={uploading} onClick={() => fileInputRef.current?.click()}>
