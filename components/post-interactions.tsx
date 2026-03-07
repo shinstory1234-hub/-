@@ -33,15 +33,12 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   const [myLiked, setMyLiked] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [sort, setSort] = useState<SortType>("latest");
-
   const [authorName, setAuthorName] = useState("");
   const [commentPassword, setCommentPassword] = useState("");
   const [content, setContent] = useState("");
-
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [targetCommentId, setTargetCommentId] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
-
   const { show } = useToast();
 
   const safeJson = async <T,>(res: Response): Promise<T | null> => {
@@ -56,11 +53,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       ]);
       const likesJson = await safeJson<LikesResponse>(likesRes);
       if (likesJson?.ok) {
-  setLikes(likesJson.count ?? 0);
-  const savedLiked = localStorage.getItem(`liked_${postId}`) === "true";
-  setMyLiked(savedLiked);
-};
-      
+        setLikes(likesJson.count ?? 0);
+        const savedLiked = localStorage.getItem(`liked_${postId}`) === "true";
+        setMyLiked(savedLiked);
+      }
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
       if (commentsJson?.ok) {
         setComments(commentsJson.comments ?? []);
@@ -91,9 +87,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       show(json?.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
       return;
     }
-  setLikes(json.count ?? 0);
-setMyLiked(newLiked);
-localStorage.setItem(`liked_${postId}`, String(newLiked));
+    setLikes(json.count ?? 0);
+    setMyLiked(newLiked);
+    localStorage.setItem(`liked_${postId}`, String(newLiked));
+  };
 
   const toggleCommentLike = async (commentId: string) => {
     const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
