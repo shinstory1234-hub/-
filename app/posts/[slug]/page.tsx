@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -23,19 +24,24 @@ async function getAttachments(postId: string) {
   return data ?? [];
 }
 
+type Attachment = { id: string; name: string; url: string };
+
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
+
   const [all, likes, comments, attachments] = await Promise.all([
     getPosts(),
     getPostLikesCount(post.id),
     getPostComments(post.id),
     getAttachments(post.id),
   ]);
+
   const index = all.findIndex((item) => item.slug === post.slug);
   const prev = index >= 0 ? all[index + 1] : undefined;
   const next = index > 0 ? all[index - 1] : undefined;
+
   return (
     <article className="mx-auto max-w-content space-y-6">
       <Card className="p-8 md:p-10">
@@ -55,14 +61,14 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <p className="text-sm text-muted-foreground">{post.published_at?.slice(0, 10)}</p>
           <p className="text-base font-semibold text-red-500">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
         </div>
+
         <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
 
-        {/* 첨부파일 목록 */}
         {attachments.length > 0 && (
           <div className="mt-8 space-y-2">
             <p className="text-sm font-semibold">📎 첨부파일 ({attachments.length})</p>
             <div className="space-y-1">
-              {attachments.map((a: { id: string; name: string; url: string }) => (
+              {attachments.map((a: Attachment) => (
                 
                   key={a.id}
                   href={a.url}
@@ -81,6 +87,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
         <PostShareButtons />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </Card>
+
       <div className="grid gap-3 sm:grid-cols-2">
         {prev ? (
           <PostSlugLink slug={prev.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground">
