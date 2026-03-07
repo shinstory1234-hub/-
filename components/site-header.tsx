@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,15 +12,14 @@ const menus = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-20 w-full max-w-6xl items-center justify-between gap-3 px-4 py-2">
-        <Link href="/" className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+      <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center justify-between px-6">
+        <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
           머니NPC
         </Link>
-        <div className="flex items-center gap-2">
-          <nav className="flex items-center gap-1 rounded-full border border-border bg-surface-muted p-1">
+        <div className="flex items-center gap-3">
+          <nav className="flex items-center gap-1">
             {menus.map((menu) => {
               const active = pathname === menu.href || (menu.href !== "/" && pathname.startsWith(menu.href));
               return (
@@ -29,8 +27,10 @@ export function SiteHeader() {
                   key={menu.href}
                   href={menu.href}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-semibold transition sm:text-sm",
-                    active ? "bg-surface text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
+                    "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground hover:bg-surface-muted"
                   )}
                 >
                   {menu.label}
