@@ -26,16 +26,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ comment
     .maybeSingle();
 
   if (existing?.id) {
-    // 이미 좋아요 누름 -> 취소
     await supabase.from("comment_likes").delete().eq("id", existing.id);
-    await supabase.rpc("decrement_comment_likes", { comment_id_input: Number(commentId) });
-    const { data } = await supabase.from("comments").select("likes_count").eq("id", commentId).single();
-    return NextResponse.json({ ok: true, liked: false, likes_count: data?.likes_count ?? 0 });
+    await supabase.from("comments").update({ likes_count: supabase.rpc as never }).eq("id", commentId);
+    const { count } = await supabase
+      .from("comment_likes")
+      .select("id", { count: "exact", head: true })
+      .eq("comment_id", commentId);
+    await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentId);
+    return NextResponse.json({ ok: true, liked: false, likes_count: count ?? 0 });
   }
 
-  // 좋아요 추가
-  await supabase.from("comment_likes").insert({ comment_id: Number(commentId), ip_address: ip });
-  await supabase.rpc("increment_comment_likes", { comment_id_input: Number(commentId) });
-  const { data } = await supabase.from("comments").select("likes_count").eq("id", commentId).single();
-  return NextResponse.json({ ok: true, liked: true, likes_count: data?.likes_count ?? 0 });
+  await supabase.from("comment_likes").insert({ comment_id: commentId, ip_address: ip });
+  const { count } = await supabase
+    .from("comment_likes")
+    .select("id", { count: "exact", head: true })
+    .eq("comment_id", commentId);
+  await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentId);
+  return NextResponse.json({ ok: true, liked: true, likes_count: count ?? 0 });
 }
