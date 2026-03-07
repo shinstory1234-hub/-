@@ -22,7 +22,6 @@ function makePostSlug(raw: string, title: string) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
-
   if (base) return base;
   return `post-${Date.now().toString(36)}`;
 }
@@ -30,14 +29,12 @@ function makePostSlug(raw: string, title: string) {
 function getText(formData: FormData, key: string) {
   const exact = formData.get(key);
   if (typeof exact === "string" && exact.trim()) return exact;
-
   for (const [k, v] of formData.entries()) {
     const isMatchedKey = k === key || k.endsWith(`_${key}`) || k.endsWith(`:${key}`);
     if (isMatchedKey && typeof v === "string" && v.trim()) return v;
   }
   return "";
 }
-
 
 function isSortOrderSchemaError(message?: string | null) {
   if (!message) return false;
@@ -123,7 +120,6 @@ export async function deleteCategoryAction(formData: FormData): Promise<ActionSt
   return { ok: true };
 }
 
-
 export async function swapCategoryOrderAction(formData: FormData): Promise<ActionState> {
   await requireAdmin();
 
@@ -181,10 +177,8 @@ export async function swapCategoryOrderAction(formData: FormData): Promise<Actio
   revalidatePath("/admin/categories");
   revalidatePath("/");
   revalidatePath("/admin/posts/new");
-
   return { ok: true };
 }
-
 
 export async function moveCategoryOrderStateAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   return swapCategoryOrderAction(formData);
@@ -208,10 +202,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   const isPublished = intent === "publish";
 
   if (!title || !slug || !content) {
-    return {
-      ok: false,
-      error: "제목, slug, 본문은 필수입니다."
-    };
+    return { ok: false, error: "제목, slug, 본문은 필수입니다." };
   }
   if (!categoryId) return { ok: false, error: "카테고리를 먼저 선택해 주세요." };
 
@@ -231,11 +222,19 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
     .select("id")
     .single();
 
-  if (error) {
-    return {
-      ok: false,
-      error: error.message
-    };
+  if (error) return { ok: false, error: error.message };
+
+  // 첨부파일 DB 저장
+  const attachmentsRaw = String(getText(formData, "attachments") ?? "").trim();
+  if (attachmentsRaw && attachmentsRaw !== "[]") {
+    try {
+      const attachments = JSON.parse(attachmentsRaw) as { name: string; url: string }[];
+      if (attachments.length > 0) {
+        await supabase.from("attachments").insert(
+          attachments.map((a) => ({ post_id: data.id, name: a.name, url: a.url }))
+        );
+      }
+    } catch {}
   }
 
   revalidatePath("/");
@@ -243,13 +242,8 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   revalidatePath("/admin/posts/new");
   revalidatePath("/topics/all");
 
-  return {
-    ok: true,
-    id: data.id,
-    redirectTo: "/admin/posts"
-  };
+  return { ok: true, id: data.id, redirectTo: "/admin/posts" };
 }
-
 
 export async function updatePostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
@@ -343,7 +337,6 @@ export async function togglePublishAction(_prev: ActionState, formData: FormData
   return { ok: true };
 }
 
-
 export async function deletePostFormAction(formData: FormData): Promise<void> {
   await deletePostAction({ ok: false }, formData);
 }
@@ -351,7 +344,6 @@ export async function deletePostFormAction(formData: FormData): Promise<void> {
 export async function togglePublishFormAction(formData: FormData): Promise<void> {
   await togglePublishAction({ ok: false }, formData);
 }
-
 
 export async function createCategoryFormAction(formData: FormData): Promise<void> {
   await createCategoryStateAction({ ok: false }, formData);
