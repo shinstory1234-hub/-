@@ -14,7 +14,6 @@ import { createPostAction, type ActionState } from "@/app/admin/actions";
 function CoverImageUploader({ onUpload }: { onUpload: (url: string) => void }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [coverUrl, setCoverUrl] = useState("");
   const ref = useRef<HTMLInputElement>(null);
   const { show } = useToast();
 
@@ -49,16 +48,16 @@ function CoverImageUploader({ onUpload }: { onUpload: (url: string) => void }) {
           </div>
       }
       <input ref={ref} type="file" accept="image/*" className="hidden"
-        onChange={(e) => {  f = e.target.files?.[0]; if (f) handleFile(f); }} />
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
     </div>
   );
 }
 
 type Props = { categories: Category[] };
- initialState: ActionState = { ok: false };
+const initialState: ActionState = { ok: false };
 
 function SubmitActions({ intentRef }: { intentRef: RefObject<HTMLInputElement | null> }) {
-   { pending } = useFormStatus();
+  const { pending } = useFormStatus();
   return (
     <div className="flex gap-2">
       <Button type="submit" variant="outline" loading={pending} onClick={() => { if (intentRef.current) intentRef.current.value = "draft"; }}>임시저장</Button>
@@ -78,21 +77,21 @@ function slugify(v: string) {
 type Attachment = { name: string; url: string };
 
 export function PostForm({ categories }: Props) {
-   [title, setTitle] = ("");
-   [slug, setSlug] = ("");
-   [state, action] = useActionState(createPostAction, initialState);
-   [attachments, setAttachments] = <Attachment[]>([]);
-   [uploading, setUploading] = useState(false);
-   fileInputRef = useRef<HTMLInputElement>(null);
-   { show } = useToast();
-   router = useRouter();
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [state, action] = useActionState(createPostAction, initialState);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { show } = useToast();
+  const router = useRouter();
   const intentRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setSlug(slugify(title)); }, [title]);
 
   useEffect(() => {
     if (state?.ok && state.redirectTo && state.id) {
-      // 글 발행 성공 후 첨부파일 DB 저장
       if (attachments.length > 0) {
         fetch("/api/attachments/save", {
           method: "POST",
@@ -172,10 +171,12 @@ export function PostForm({ categories }: Props) {
           <option key={category.id} value={category.id}>{category.name}</option>
         ))}
       </select>
-<div className="space-y-2">
-  <CoverImageUploader onUpload={(url) => setCoverUrl(url)} />
-  <input type="hidden" name="cover_url" value={coverUrl} />
-</div>
+
+      <div className="space-y-2">
+        <CoverImageUploader onUpload={(url) => setCoverUrl(url)} />
+        <input type="hidden" name="cover_url" value={coverUrl} />
+      </div>
+
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" loading={uploading} onClick={() => fileInputRef.current?.click()}>
