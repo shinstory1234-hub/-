@@ -44,3 +44,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ comment
   await supabase.from("comments").update({ likes_count: count ?? 0 }).eq("id", commentIdNum);
   return NextResponse.json({ ok: true, liked: true, likes_count: count ?? 0 });
 }
+
+export async function GET(req: Request, { params }: { params: Promise<{ commentId: string }> }) {
+  const { commentId } = await params;
+  const commentIdNum = Number(commentId);
+  const ip = getIP(req);
+  const supabase = getSupabase();
+
+  const { data } = await supabase
+    .from("comment_likes")
+    .select("id")
+    .eq("comment_id", commentIdNum)
+    .eq("ip_address", ip)
+    .maybeSingle();
+
+  return NextResponse.json({ ok: true, liked: Boolean(data?.id) });
+}
