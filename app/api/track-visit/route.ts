@@ -5,28 +5,31 @@ function json(body: Record<string, unknown>) {
   return NextResponse.json(body, { status: 200, headers: { "Cache-Control": "no-store" } });
 }
 
-// 메모리에 IP별 마지막 방문 시간 저장 (3분 쿨다운)
-const ipCache = new Map<string, number>();
 const COOLDOWN_MS = 3 * 60 * 1000;
 
 export async function POST(req: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    return json({ ok: false, error: "missing env" });
-  }
+  if (!supabaseUrl || !serviceRoleKey) return json({ ok: false, error: "missing env" });
 
-  // IP 추출
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-  const now = Date.now();
-  const lastVisit = ipCache.get(ip) ?? 0;
-  const shouldCount = now - lastVisit > COOLDOWN_MS;
-
   const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  // 3분 이내 같은 IP 방문 확인
+  const since = new Date(Date.now() - COOLDOWN_MS).toISOString();
+  const { data: recentVisit } = await supabase
+    .from("visit_logs")
+    .select("id")
+    .eq("ip", ip)
+    .gte("visited_at", since)
+    .maybeSingle();
+
   const today = new Date().toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }).replace(/\. /g, "-").replace(".", "");
 
-  if (shouldCount) {
-    ipCache.set(ip, now);
+  if (!recentVisit) {
+    // 3분 지났으면 카운트 + 로그 저장
+    await supabase.from("visit_logs").insert({ ip });
+
     const { data, error } = await supabase
       .from("daily_stats")
       .select("visits")
