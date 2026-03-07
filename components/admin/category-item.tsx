@@ -1,11 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, MoreHorizontal } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowLeftToLine, ArrowRightToLine, MoreHorizontal } from "lucide-react";
 import {
   updateCategoryFormAction,
   deleteCategoryFormAction,
   moveCategoryOrderStateAction,
+  moveToEdgeAction,
   type ActionState
 } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
@@ -27,58 +28,64 @@ const initialMoveState: ActionState = { ok: false, error: "" };
 export function CategoryItem({ category, isFirst, isLast }: CategoryItemProps) {
   const [open, setOpen] = useState(false);
   const [moveState, moveAction, movePending] = useActionState(moveCategoryOrderStateAction, initialMoveState);
+  const [edgeState, edgeAction, edgePending] = useActionState(moveToEdgeAction, initialMoveState);
   const submittedRef = useRef(false);
   const { show } = useToast();
   const router = useRouter();
 
   useEffect(() => {
     if (!submittedRef.current) return;
-
-    if (moveState?.error) {
-      show(moveState.error, "error");
-      submittedRef.current = false;
-      return;
-    }
-
-    if (moveState?.ok) {
-      router.refresh();
-      submittedRef.current = false;
-    }
+    if (moveState?.error) { show(moveState.error, "error"); submittedRef.current = false; return; }
+    if (moveState?.ok) { router.refresh(); submittedRef.current = false; }
   }, [moveState, router, show]);
+
+  useEffect(() => {
+    if (!submittedRef.current) return;
+    if (edgeState?.error) { show(edgeState.error, "error"); submittedRef.current = false; return; }
+    if (edgeState?.ok) { router.refresh(); submittedRef.current = false; }
+  }, [edgeState, router, show]);
+
+  const pending = movePending || edgePending;
 
   return (
     <div className="space-y-3 rounded-lg border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold">카테고리 편집</p>
         <div className="flex items-center gap-1">
+          {/* 맨 위로 */}
+          <form action={edgeAction}>
+            <input type="hidden" name="id" value={category.id} />
+            <input type="hidden" name="direction" value="first" />
+            <button type="submit" disabled={isFirst || pending} onClick={() => { submittedRef.current = true; }}
+              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40" title="맨 위로">
+              <ArrowLeftToLine className="h-4 w-4" />
+            </button>
+          </form>
+          {/* 위로 */}
           <form action={moveAction}>
             <input type="hidden" name="id" value={category.id} />
             <input type="hidden" name="direction" value="up" />
-            <button
-              type="submit"
-              disabled={isFirst || movePending}
-              onClick={() => {
-                submittedRef.current = true;
-              }}
-              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              title="위로"
-            >
+            <button type="submit" disabled={isFirst || pending} onClick={() => { submittedRef.current = true; }}
+              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40" title="위로">
               <ArrowUp className="h-4 w-4" />
             </button>
           </form>
+          {/* 아래로 */}
           <form action={moveAction}>
             <input type="hidden" name="id" value={category.id} />
             <input type="hidden" name="direction" value="down" />
-            <button
-              type="submit"
-              disabled={isLast || movePending}
-              onClick={() => {
-                submittedRef.current = true;
-              }}
-              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              title="아래로"
-            >
+            <button type="submit" disabled={isLast || pending} onClick={() => { submittedRef.current = true; }}
+              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40" title="아래로">
               <ArrowDown className="h-4 w-4" />
+            </button>
+          </form>
+          {/* 맨 아래로 */}
+          <form action={edgeAction}>
+            <input type="hidden" name="id" value={category.id} />
+            <input type="hidden" name="direction" value="last" />
+            <button type="submit" disabled={isLast || pending} onClick={() => { submittedRef.current = true; }}
+              className="rounded-md border border-border p-1.5 text-muted-foreground transition hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40" title="맨 아래로">
+              <ArrowRightToLine className="h-4 w-4" />
             </button>
           </form>
           <Dropdown trigger={<MoreHorizontal className="h-4 w-4 text-muted-foreground" />}>
@@ -91,18 +98,9 @@ export function CategoryItem({ category, isFirst, isLast }: CategoryItemProps) {
         <input type="hidden" name="id" value={category.id} />
         <Input name="name" defaultValue={category.name} required />
         <Textarea name="description" defaultValue={category.description ?? ""} rows={2} />
-        <Button type="submit" variant="outline">
-          수정 저장
-        </Button>
-
+        <Button type="submit" variant="outline">수정 저장</Button>
         <Modal open={open} onClose={() => setOpen(false)} title="카테고리 삭제" description="삭제하면 연결된 글은 미분류가 됩니다.">
-          <button
-            type="submit"
-            formAction={deleteCategoryFormAction}
-            className="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white"
-          >
-            삭제 계속하기
-          </button>
+          <button type="submit" formAction={deleteCategoryFormAction} className="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-white">삭제 계속하기</button>
         </Modal>
       </form>
     </div>
