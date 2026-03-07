@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth";
@@ -11,7 +13,7 @@ export default async function AdminPostsPage() {
     .from("posts")
     .select("id,title,slug,is_published,published_at,created_at,categories!posts_category_id_fkey(name,slug)")
     .order("created_at", { ascending: false })
-    .limit(30);
+    .limit(100);
 
   const posts = (rawPosts ?? []).map((p: any) => ({
     id: p.id,
