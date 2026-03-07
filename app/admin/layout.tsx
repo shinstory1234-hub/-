@@ -5,7 +5,7 @@ import { AdminNav } from "@/components/admin/admin-nav";
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   await requireAdmin();
   return (
-    <div className="grid gap-6 md:grid-cols-[220px_1fr] max-w-screen-2xl mx-auto w-full">
+    <div className="grid gap-6 md:grid-cols-[220px_1fr] max-w-7xl mx-auto w-full">
       <AdminNav />
       <div>{children}</div>
     </div>
