@@ -28,6 +28,12 @@ type CommentsResponse = {
   error?: string;
 };
 
+type CommentLikeResponse = {
+  ok: boolean;
+  liked?: boolean;
+  likes_count?: number;
+};
+
 function formatKST(dateStr: string) {
   const date = new Date(dateStr);
   return date.toLocaleString("ko-KR", {
@@ -44,6 +50,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
   const [myLiked, setMyLiked] = useState(false);
+  const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
 
   const [authorName, setAuthorName] = useState("");
   const [commentPassword, setCommentPassword] = useState("");
@@ -79,6 +86,11 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
       if (commentsJson?.ok) {
         setComments(commentsJson.comments ?? []);
+        const initial: Record<string, { count: number; liked: boolean }> = {};
+        (commentsJson.comments ?? []).forEach((c) => {
+          initial[c.id] = { count: (c as Comment & { likes_count?: number }).likes_count ?? 0, liked: false };
+        });
+        setCommentLikes(initial);
       }
     };
 
@@ -104,6 +116,17 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     setMyLiked(Boolean(json.likedByMe));
   };
 
+  const toggleCommentLike = async (commentId: string) => {
+    const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
+    const json = await safeJson<CommentLikeResponse>(res);
+    if (json?.ok) {
+      setCommentLikes((prev) => ({
+        ...prev,
+        [commentId]: { count: json.likes_count ?? 0, liked: json.liked ?? false }
+      }));
+    }
+  };
+
   const submitComment = async () => {
     if (!authorName.trim() || !commentPassword.trim() || !content.trim()) {
       show("이름/비밀번호/댓글 내용을 모두 입력해 주세요.", "error");
@@ -123,6 +146,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     }
 
     setComments((prev) => [json.comment as Comment, ...prev]);
+    setCommentLikes((prev) => ({ ...prev, [json.comment!.id]: { count: 0, liked: false } }));
     setContent("");
     show("댓글이 등록되었습니다.");
   };
@@ -188,6 +212,13 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
                 </button>
               </div>
               <p className="mt-1 text-muted-foreground">{comment.content}</p>
+              <button
+                type="button"
+                onClick={() => toggleCommentLike(comment.id)}
+                className={`mt-2 text-xs ${commentLikes[comment.id]?.liked ? "text-accent font-semibold" : "text-muted-foreground"}`}
+              >
+                ♥ {commentLikes[comment.id]?.count ?? 0}
+              </button>
             </div>
           ))}
         </div>

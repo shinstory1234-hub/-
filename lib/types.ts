@@ -6,7 +6,6 @@ export type Category = {
   created_at?: string;
   sort_order?: number;
 };
-
 export type Post = {
   id: string;
   title: string;
@@ -23,7 +22,6 @@ export type Post = {
   updated_at?: string;
   view_count?: number;
 };
-
 export type Comment = {
   id: string;
   post_id: string;
@@ -33,4 +31,5 @@ export type Comment = {
   password_hash?: string | null;
   content: string;
   created_at: string;
+  likes_count?: number;
 };
