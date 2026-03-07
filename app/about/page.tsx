@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function AboutPage() {
   return (
-    <section className="mx-auto max-w-content">
+    <section>
       <Card>
         <CardHeader>
           <h1 className="text-2xl font-bold tracking-tight">머니NPC 소개</h1>
