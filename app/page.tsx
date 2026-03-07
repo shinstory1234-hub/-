@@ -42,7 +42,25 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                       <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground">{post.published_at?.slice(0, 10) ?? "임시저장"}</span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+  {(() => {
+    if (!post.published_at) return "임시저장";
+    const date = new Date(post.published_at);
+    const now = new Date();
+    const isNew = now.getTime() - date.getTime() < 24 * 60 * 60 * 1000;
+    const formatted = date.toLocaleString("ko-KR", {
+      timeZone: "Asia/Seoul",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit",
+    });
+    return (
+      <>
+        {isNew && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">NEW</span>}
+        {formatted}
+      </>
+    );
+  })()}
+</span>
                 </div>
                 <PostSlugLink slug={post.slug} className="line-clamp-2 text-left text-lg font-semibold leading-7 hover:text-accent">
                   {post.title}
