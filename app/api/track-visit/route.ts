@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const shouldCount = now - lastVisit > COOLDOWN_MS;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" }).replace(/\. /g, "-").replace(".", "");
 
   if (shouldCount) {
     ipCache.set(ip, now);
