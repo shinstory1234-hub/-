@@ -27,7 +27,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ comment
 
   if (existing?.id) {
     await supabase.from("comment_likes").delete().eq("id", existing.id);
-    await supabase.from("comments").update({ likes_count: supabase.rpc as never }).eq("id", commentId);
     const { count } = await supabase
       .from("comment_likes")
       .select("id", { count: "exact", head: true })
