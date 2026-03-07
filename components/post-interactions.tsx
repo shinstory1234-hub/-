@@ -59,7 +59,8 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   setLikes(likesJson.count ?? 0);
   const savedLiked = localStorage.getItem(`liked_${postId}`) === "true";
   setMyLiked(savedLiked);
-}
+};
+      
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
       if (commentsJson?.ok) {
         setComments(commentsJson.comments ?? []);
