@@ -139,3 +139,23 @@
 .ProseMirror.resize-cursor {
   cursor: col-resize;
 }
+/* 게시글 본문 표 스타일 */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.prose table td,
+.prose table th {
+  border: 1px solid hsl(var(--border));
+  padding: 8px 12px;
+  min-width: 80px;
+  vertical-align: top;
+}
+
+.prose table th {
+  background-color: hsl(var(--surface-muted));
+  font-weight: 600;
+  text-align: left;
+}
