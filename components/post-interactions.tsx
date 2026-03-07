@@ -52,11 +52,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
         fetch(`/api/comments/${postId}`, { cache: "no-store" })
       ]);
       const likesJson = await safeJson<LikesResponse>(likesRes);
-      if (likesJson?.ok) {
-        setLikes(likesJson.count ?? 0);
-        const savedLiked = localStorage.getItem(`liked_${postId}`) === "true";
-        setMyLiked(savedLiked);
-      }
+    if (likesJson?.ok) {
+  setLikes(likesJson.count ?? 0);
+  setMyLiked(Boolean(likesJson.likedByMe));
+}
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
       if (commentsJson?.ok) {
         setComments(commentsJson.comments ?? []);
