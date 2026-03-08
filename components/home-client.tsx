@@ -60,13 +60,19 @@ export function HomeClient({ posts, categories }: Props) {
             const isNew = post.published_at
               ? new Date().getTime() - new Date(post.published_at).getTime() < 24 * 60 * 60 * 1000
               : false;
-            const formatted = post.published_at
-              ? new Date(post.published_at).toLocaleString("ko-KR", {
-                  timeZone: "Asia/Seoul",
-                  year: "numeric", month: "2-digit", day: "2-digit",
-                  hour: "2-digit", minute: "2-digit",
-                })
-              : "임시저장";
+           const formatted = post.published_at
+  ? (() => {
+      const date = new Date(post.published_at!);
+      const now = new Date();
+      const sameYear = date.getFullYear() === now.getFullYear();
+      return date.toLocaleString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        ...(sameYear ? {} : { year: "numeric" }),
+        month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit",
+      });
+    })()
+  : "임시저장";
 
             return (
               <PostSlugLink key={post.id} slug={post.slug} className="block group">
