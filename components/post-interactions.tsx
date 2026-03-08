@@ -30,11 +30,7 @@ function formatKST(dateStr: string) {
 export function PostInteractions({ postId, initialLikes, initialComments }: Props) {
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
-  const [myLiked, setMyLiked] = useState(() => {
-  if (typeof window === "undefined") return false;
-  const liked = localStorage.getItem(`liked_${postId}`);
-  return liked === "true";
-});
+  const [myLiked, setMyLiked] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [sort, setSort] = useState<SortType>("latest");
   const [authorName, setAuthorName] = useState("");
@@ -50,11 +46,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   };
 
   useEffect(() => {
-  const saved = localStorage.getItem(`liked_${postId}`);
-  if (saved === "true") setMyLiked(true);
-}, [postId]);
-  
-  useEffect(() => {
+    // localStorage 먼저 읽기
+    const saved = localStorage.getItem(`liked_${postId}`);
+    if (saved === "true") setMyLiked(true);
+
     const load = async () => {
       const [likesRes, commentsRes] = await Promise.all([
         fetch(`/api/likes/${postId}`, { cache: "no-store" }),
@@ -63,7 +58,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       const likesJson = await safeJson<LikesResponse>(likesRes);
       if (likesJson?.ok) {
         setLikes(likesJson.count ?? 0);
-        setMyLiked(Boolean(likesJson.likedByMe));
+        // localStorage가 true면 서버 응답으로 덮어쓰지 않음
+        if (saved !== "true") {
+          setMyLiked(Boolean(likesJson.likedByMe));
+        }
       }
       const commentsJson = await safeJson<CommentsResponse>(commentsRes);
       if (commentsJson?.ok) {
@@ -89,22 +87,21 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     return 0;
   });
 
-const toggleLike = async () => {
-  const newLiked = !myLiked;
-  setMyLiked(newLiked);
-  localStorage.setItem(`liked_${postId}`, String(newLiked));
-  setLikes((prev) => prev + (newLiked ? 1 : -1));
-  localStorage.setItem(`liked_${postId}`, String(newLiked));
+  const toggleLike = async () => {
+    const newLiked = !myLiked;
+    setMyLiked(newLiked);
+    localStorage.setItem(`liked_${postId}`, String(newLiked));
+    setLikes((prev) => prev + (newLiked ? 1 : -1));
     const res = await fetch(`/api/likes/${postId}`, { method: newLiked ? "POST" : "DELETE" });
     const json = await safeJson<LikesResponse>(res);
     if (!json?.ok) {
       setMyLiked(!newLiked);
+      localStorage.setItem(`liked_${postId}`, String(!newLiked));
       setLikes((prev) => prev + (newLiked ? -1 : 1));
       show(json?.error ?? "좋아요 처리 중 오류가 발생했습니다.", "error");
       return;
     }
     setLikes(json.count ?? 0);
-    setMyLiked(newLiked);
   };
 
   const toggleCommentLike = async (commentId: string) => {
