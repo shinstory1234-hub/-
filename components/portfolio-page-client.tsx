@@ -1,5 +1,4 @@
 "use client";
-
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 type Snapshot = {
@@ -7,7 +6,7 @@ type Snapshot = {
   total_eval_amt: number;
   stock_eval_amt: number;
   cash_amt: number;
-  future_amt: number;
+  future_amt?: number;
   profit_loss_amt: number;
   profit_loss_rate: number;
 } | null;
@@ -23,16 +22,14 @@ export function PortfolioPageClient({ snapshot }: { snapshot: Snapshot }) {
     );
   }
 
-  const { total_eval_amt, stock_eval_amt, cash_amt, profit_loss_amt, profit_loss_rate, snapshot_at } = snapshot;
+  const { total_eval_amt, stock_eval_amt, cash_amt, future_amt, profit_loss_amt, profit_loss_rate, snapshot_at } = snapshot;
   const isPlus = profit_loss_rate >= 0;
 
-const { total_eval_amt, stock_eval_amt, cash_amt, future_amt, profit_loss_amt, profit_loss_rate, snapshot_at } = snapshot;
-
-const pieData = [
-  { name: "주식", value: stock_eval_amt },
-  { name: "선물", value: future_amt ?? 0 },
-  { name: "현금", value: cash_amt },
-].filter((d) => d.value > 0);
+  const pieData = [
+    { name: "주식", value: stock_eval_amt },
+    { name: "선물", value: future_amt ?? 0 },
+    { name: "현금", value: cash_amt },
+  ].filter((d) => d.value > 0);
 
   const updatedAt = new Date(snapshot_at).toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
@@ -52,10 +49,14 @@ const pieData = [
           <p className="text-lg font-bold">₩{stock_eval_amt.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
-          <p className="text-xs text-muted-foreground">현금</p>
-          <p className="text-lg font-bold">₩{cash_amt.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">선물 예탁금</p>
+          <p className="text-lg font-bold">₩{(future_amt ?? 0).toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">현금(주식계좌)</p>
+          <p className="text-lg font-bold">₩{cash_amt.toLocaleString()}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 space-y-1 col-span-2 sm:col-span-1">
           <p className="text-xs text-muted-foreground">수익률</p>
           <p className={`text-lg font-bold ${isPlus ? "text-red-500" : "text-blue-500"}`}>
             {isPlus ? "+" : ""}{profit_loss_rate.toFixed(2)}%
