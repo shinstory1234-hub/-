@@ -97,12 +97,13 @@ if (futureBalance?.output2) {
     );
 
     await supabase.from("portfolio_snapshots").insert({
-      total_eval_amt: totalEvalAmt,
-      stock_eval_amt: stockEvalAmt,
-      cash_amt: cashAmt,
-      profit_loss_amt: profitLossAmt,
-      profit_loss_rate: profitLossRate,
-    });
+  total_eval_amt: totalEvalAmt,
+  stock_eval_amt: stockEvalAmt,
+  cash_amt: cashAmt,
+  future_amt: futureTotalAmt,
+  profit_loss_amt: profitLossAmt,
+  profit_loss_rate: profitLossRate,
+});
 
     return NextResponse.json({
       ok: true,
