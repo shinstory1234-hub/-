@@ -47,6 +47,7 @@ export default async function HomePage() {
         <h1 className="text-2xl font-bold md:text-3xl">VC심사역 출신의 인사이트</h1>
         <VisitCounter today={stats.today} total={stats.total} />
       </header>
+      import { PortfolioChart } from "@/components/portfolio-chart";
       <HomeClient posts={posts} categories={categories} />
     </section>
   );
