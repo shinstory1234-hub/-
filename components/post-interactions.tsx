@@ -30,7 +30,11 @@ function formatKST(dateStr: string) {
 export function PostInteractions({ postId, initialLikes, initialComments }: Props) {
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
-  const [myLiked, setMyLiked] = useState(false);
+  const [myLiked, setMyLiked] = useState(() => {
+  if (typeof window === "undefined") return false;
+  const liked = localStorage.getItem(`liked_${postId}`);
+  return liked === "true";
+});
   const [commentLikes, setCommentLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [sort, setSort] = useState<SortType>("latest");
   const [authorName, setAuthorName] = useState("");
