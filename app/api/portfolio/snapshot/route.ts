@@ -37,9 +37,9 @@ async function getStockBalance(token: string, appKey: string, appSecret: string,
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
 
   try {
     const token = await getToken(process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!);
