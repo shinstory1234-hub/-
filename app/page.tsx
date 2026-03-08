@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 import { getCategories, getPostsWithError } from "@/lib/posts";
-import { PostSlugLink } from "@/components/post-slug-link";
 import { VisitCounter } from "@/components/visit-counter";
 import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { HomeClient } from "@/components/home-client";
+import { PortfolioChart } from "@/components/portfolio-chart";
 
 const COOLDOWN_MS = 3 * 60 * 1000;
 
@@ -40,14 +40,13 @@ export default async function HomePage() {
     getCategories(),
     trackAndGetStats(ip),
   ]);
-
   return (
     <section className="space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold md:text-3xl">VC심사역 출신의 인사이트</h1>
         <VisitCounter today={stats.today} total={stats.total} />
       </header>
-      import { PortfolioChart } from "@/components/portfolio-chart";
+      <PortfolioChart />
       <HomeClient posts={posts} categories={categories} />
     </section>
   );
