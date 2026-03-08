@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -7,8 +10,6 @@ import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { createClient } from "@supabase/supabase-js";
-
-export const dynamic = "force-dynamic";
 
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
