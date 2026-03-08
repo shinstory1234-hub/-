@@ -83,9 +83,9 @@ export function HomeClient({ posts, categories }: Props) {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge key={idx} className="text-xs">#{tag}</Badge>
-                        {post.tags?.slice(0, 1).map((tag, idx) => (
-                          <Badge key={idx} className="text-xs">#{tag}</Badge>
-                        ))}
+                        {post.tags?.slice(0, 1).map((tag, i) => (
+  <Badge key={i} className="text-xs">#{tag}</Badge>
+))}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {isNew && (
