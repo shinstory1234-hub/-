@@ -71,7 +71,7 @@ export function HomeClient({ posts, categories }: Props) {
             return (
               <PostSlugLink key={post.id} slug={post.slug} className="block group">
                 <Card className="overflow-hidden h-full transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg">
-                  <div className="aspect-square w-full max-h-48 overflow-hidden border-b border-border">
+                  <div className="h-36 w-full overflow-hidden border-b border-border">
                     {post.cover_url
                       ? <div className="h-full w-full bg-cover bg-center transition-transform duration-300 group-hover:scale-105" style={{ backgroundImage: `url(${post.cover_url})` }} />
                       : <div className="h-full w-full flex flex-col items-center justify-center bg-surface-muted">
@@ -94,9 +94,9 @@ export function HomeClient({ posts, categories }: Props) {
                         <span className="text-xs text-muted-foreground">{formatted}</span>
                       </div>
                     </div>
-                    <p className="line-clamp-2 text-base font-semibold leading-snug text-foreground group-hover:text-accent transition-colors">
-                      {post.title}
-                    </p>
+                    <p className="line-clamp-2 text-lg font-bold leading-snug text-foreground group-hover:text-accent transition-colors">
+  {post.title}
+</p>
                   </CardHeader>
                   <CardContent className="pb-4 pt-0">
                     <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{post.excerpt || "요약이 없습니다."}</p>
