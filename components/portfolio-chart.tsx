@@ -38,7 +38,7 @@ export function PortfolioChart() {
     <div className="rounded-xl border border-border bg-surface p-5 space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">내 포트폴리오</p>
+          <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">내 포트폴리오 (모의투자)</p>
           <p className="text-2xl font-bold tracking-tight">₩{totalAmt}</p>
         </div>
         <div className={`text-lg font-bold ${isPlus ? "text-red-500" : "text-blue-500"}`}>
