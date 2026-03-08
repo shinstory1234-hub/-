@@ -71,7 +71,7 @@ export function HomeClient({ posts, categories }: Props) {
             return (
               <PostSlugLink key={post.id} slug={post.slug} className="block group">
                 <Card className="overflow-hidden h-full transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg">
-                  <div className="h-40 w-full overflow-hidden border-b border-border">
+                  <div className="aspect-square w-full overflow-hidden border-b border-border">
                     {post.cover_url
                       ? <div className="h-full w-full bg-cover bg-center transition-transform duration-300 group-hover:scale-105" style={{ backgroundImage: `url(${post.cover_url})` }} />
                       : <div className="h-full w-full flex flex-col items-center justify-center bg-surface-muted">
