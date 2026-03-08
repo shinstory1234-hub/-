@@ -46,7 +46,7 @@ async function getFutureBalance(token: string, appKey: string, appSecret: string
         authorization: `Bearer ${token}`,
         appkey: appKey,
         appsecret: appSecret,
-        tr_id: "VFAO310200",
+        tr_id: "VTFO6118R",
         custtype: "P",
       },
     }
