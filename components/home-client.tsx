@@ -74,7 +74,7 @@ export function HomeClient({ posts, categories }: Props) {
                   <div className="h-40 w-full overflow-hidden border-b border-border">
                     {post.cover_url
                       ? <div className="h-full w-full bg-cover bg-center transition-transform duration-300 group-hover:scale-105" style={{ backgroundImage: `url(${post.cover_url})` }} />
-                      : <div className="h-full w-full flex flex-col items-center justify-center gap-1 bg-surface-muted">
+                      : <div className="h-full w-full flex flex-col items-center justify-center bg-surface-muted">
                           <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">{post.category?.name ?? "UNCATEGORIZED"}</span>
                         </div>
                     }
@@ -82,10 +82,10 @@ export function HomeClient({ posts, categories }: Props) {
                   <CardHeader className="space-y-2 pt-4 pb-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge key={idx} className="text-xs">#{tag}</Badge>
+                        <Badge className="text-xs">{post.category?.name ?? "미분류"}</Badge>
                         {post.tags?.slice(0, 1).map((tag, i) => (
-  <Badge key={i} className="text-xs">#{tag}</Badge>
-))}
+                          <Badge key={i} className="text-xs">#{tag}</Badge>
+                        ))}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {isNew && (
