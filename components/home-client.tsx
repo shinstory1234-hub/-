@@ -56,54 +56,55 @@ export function HomeClient({ posts, categories }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((post) => (
-            <Card key={post.id} className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
-              <div className="h-44 w-full overflow-hidden">
-                {post.cover_url
-                  ? <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${post.cover_url})` }} />
-                  : <div className="h-full w-full flex items-center justify-center"
-                      style={{ background: `hsl(${(post.title.charCodeAt(0) * 37) % 360}, 60%, 85%)` }}>
-                      <span className="text-5xl font-black text-white/60">{post.category?.name?.[0] ?? "M"}</span>
-                    </div>
-                }
-              </div>
-              <CardHeader className="space-y-2 pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
-                    {post.category?.name ? <Badge>{post.category.name}</Badge> : <Badge>미분류</Badge>}
-                    {post.tags?.slice(0, 2).map((tag, idx) => (
-                      <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
-                    ))}
+          {filtered.map((post) => {
+            const isNew = post.published_at
+              ? new Date().getTime() - new Date(post.published_at).getTime() < 24 * 60 * 60 * 1000
+              : false;
+            const formatted = post.published_at
+              ? new Date(post.published_at).toLocaleString("ko-KR", {
+                  timeZone: "Asia/Seoul",
+                  year: "numeric", month: "2-digit", day: "2-digit",
+                  hour: "2-digit", minute: "2-digit",
+                })
+              : "임시저장";
+
+            return (
+              <PostSlugLink key={post.id} slug={post.slug} className="block group">
+                <Card className="overflow-hidden h-full transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg">
+                  <div className="h-40 w-full overflow-hidden border-b border-border">
+                    {post.cover_url
+                      ? <div className="h-full w-full bg-cover bg-center transition-transform duration-300 group-hover:scale-105" style={{ backgroundImage: `url(${post.cover_url})` }} />
+                      : <div className="h-full w-full flex flex-col items-center justify-center gap-1 bg-surface-muted">
+                          <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">{post.category?.name ?? "UNCATEGORIZED"}</span>
+                        </div>
+                    }
                   </div>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    {(() => {
-                      if (!post.published_at) return "임시저장";
-                      const date = new Date(post.published_at);
-                      const now = new Date();
-                      const isNew = now.getTime() - date.getTime() < 24 * 60 * 60 * 1000;
-                      const formatted = date.toLocaleString("ko-KR", {
-                        timeZone: "Asia/Seoul",
-                        year: "numeric", month: "2-digit", day: "2-digit",
-                        hour: "2-digit", minute: "2-digit",
-                      });
-                      return (
-                        <>
-                          {isNew && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">NEW</span>}
-                          {formatted}
-                        </>
-                      );
-                    })()}
-                  </span>
-                </div>
-                <PostSlugLink slug={post.slug} className="line-clamp-2 text-left text-lg font-semibold leading-7 hover:text-accent">
-                  {post.title}
-                </PostSlugLink>
-              </CardHeader>
-              <CardContent>
-                <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{post.excerpt || "요약이 없습니다."}</p>
-              </CardContent>
-            </Card>
-          ))}
+                  <CardHeader className="space-y-2 pt-4 pb-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="outline" className="text-xs">{post.category?.name ?? "미분류"}</Badge>
+                        {post.tags?.slice(0, 1).map((tag, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">#{tag}</Badge>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isNew && (
+                          <span className="rounded-sm bg-foreground px-1.5 py-0.5 text-xs font-semibold text-background tracking-wide">NEW</span>
+                        )}
+                        <span className="text-xs text-muted-foreground">{formatted}</span>
+                      </div>
+                    </div>
+                    <p className="line-clamp-2 text-base font-semibold leading-snug text-foreground group-hover:text-accent transition-colors">
+                      {post.title}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pb-4 pt-0">
+                    <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{post.excerpt || "요약이 없습니다."}</p>
+                  </CardContent>
+                </Card>
+              </PostSlugLink>
+            );
+          })}
         </div>
       )}
     </>
