@@ -15,10 +15,11 @@ export default function AboutPage() {
           <div className="rounded-lg border border-border bg-surface p-5 space-y-2">
             <p className="text-sm font-bold text-foreground">🧪 머니NPC 액티브 ETF란?</p>
             <div className="text-sm leading-7 text-muted-foreground space-y-2">
-  <p>이 블로그는 단순한 투자 기록을 넘어, <strong className="text-foreground">나만의 액티브 ETF</strong>를 설계하고 운용하는 실험적 프로젝트입니다.</p>
-  <p>국내주식, 미국주식, 매크로, 파생상품 등 다양한 자산군을 분석하고, 그 인사이트를 바탕으로 포트폴리오를 직접 구성·운용합니다.</p>
-  <p>모든 매매는 <strong className="text-foreground">모의투자</strong>로 진행되며, 실제 수익률과 포트폴리오 현황은 포트폴리오 탭에서 실시간으로 확인할 수 있습니다.</p>
-</div>
+              <p>이 블로그는 단순한 투자 기록을 넘어, <strong className="text-foreground">나만의 액티브 ETF</strong>를 설계하고 운용하는 실험적 프로젝트입니다.</p>
+              <p>국내주식, 미국주식, 매크로, 파생상품 등 다양한 자산군을 분석하고, 그 인사이트를 바탕으로 포트폴리오를 직접 구성·운용합니다.</p>
+              <p>모든 매매는 <strong className="text-foreground">모의투자</strong>로 진행되며, 실제 수익률과 포트폴리오 현황은 포트폴리오 탭에서 실시간으로 확인할 수 있습니다.</p>
+            </div>
+          </div>
 
           <div className="rounded-lg border border-border bg-surface p-5 space-y-2">
             <p className="text-sm font-bold text-foreground">📋 운용 철학</p>
