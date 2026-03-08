@@ -14,7 +14,18 @@ type Snapshot = {
 const STOCK_COLORS = ["#3b82f6", "#e5e7eb"];
 const FUTURE_COLORS = ["#f59e0b", "#e5e7eb"];
 
-export function PortfolioPageClient({ snapshot }: { snapshot: Snapshot }) {
+type Holding = {
+  pdno: string;
+  prdt_name: string;
+  hldg_qty: string;
+  pchs_avg_pric: string;
+  prpr: string;
+  evlu_pfls_amt: string;
+  evlu_pfls_rt: string;
+  evlu_amt: string;
+};
+
+export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Snapshot; holdings?: Holding[] }) {
   if (!snapshot) {
     return (
       <div className="rounded-xl border border-border bg-surface p-10 text-center text-sm text-muted-foreground">
@@ -101,7 +112,45 @@ export function PortfolioPageClient({ snapshot }: { snapshot: Snapshot }) {
           </ResponsiveContainer>
         </div>
       </div>
-
+{holdings.length > 0 ? (
+  <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
+    <p className="text-sm font-semibold">보유 종목</p>
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="text-left text-xs text-muted-foreground border-b border-border">
+          <th className="pb-2">종목명</th>
+          <th className="pb-2 text-right">수량</th>
+          <th className="pb-2 text-right">평균단가</th>
+          <th className="pb-2 text-right">현재가</th>
+          <th className="pb-2 text-right">평가금액</th>
+          <th className="pb-2 text-right">손익</th>
+        </tr>
+      </thead>
+      <tbody>
+        {holdings.map((h, i) => {
+          const pfls = parseInt(h.evlu_pfls_amt);
+          const isUp = pfls >= 0;
+          return (
+            <tr key={i} className="border-b border-border/50 last:border-0">
+              <td className="py-3 font-medium">{h.prdt_name}</td>
+              <td className="py-3 text-right">{parseInt(h.hldg_qty).toLocaleString()}주</td>
+              <td className="py-3 text-right">₩{parseInt(h.pchs_avg_pric).toLocaleString()}</td>
+              <td className="py-3 text-right">₩{parseInt(h.prpr).toLocaleString()}</td>
+              <td className="py-3 text-right">₩{parseInt(h.evlu_amt).toLocaleString()}</td>
+              <td className={`py-3 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
+                {isUp ? "+" : ""}{pfls.toLocaleString()}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+) : (
+  <div className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
+    보유 종목 없음 (현금 100%)
+  </div>
+)}
       <p className="text-xs text-muted-foreground text-right">마지막 업데이트: {updatedAt} (모의투자)</p>
     </div>
   );
