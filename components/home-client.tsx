@@ -89,7 +89,7 @@ export function HomeClient({ posts, categories }: Props) {
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {isNew && (
-                          <span className="rounded-sm bg-foreground px-1.5 py-0.5 text-xs font-semibold text-background tracking-wide">NEW</span>
+                          <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">NEW</span>
                         )}
                         <span className="text-xs text-muted-foreground">{formatted}</span>
                       </div>
