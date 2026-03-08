@@ -96,7 +96,7 @@ if (futureBalance?.output2) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    await supabase.from("portfolio_snapshots").insert({
+await supabase.from("portfolio_snapshots").insert({
   total_eval_amt: totalEvalAmt,
   stock_eval_amt: stockEvalAmt,
   cash_amt: cashAmt,
