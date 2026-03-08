@@ -43,7 +43,7 @@ export default async function HomePage() {
   return (
     <section className="space-y-8">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold md:text-3xl">VC심사역 출신의 인사이트</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">머니NPC의 액티브 ETF</h1>
         <VisitCounter today={stats.today} total={stats.total} />
       </header>
       <PortfolioChart />
