@@ -35,24 +35,63 @@ async function getStockBalance(token: string, appKey: string, appSecret: string,
   return res.json();
 }
 
-export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+async function getFutureBalance(token: string, appKey: string, appSecret: string, accountNo: string) {
+  const cano = accountNo.slice(0, 8);
+  const acntPrdtCd = accountNo.slice(8);
+  const res = await fetch(
+    `${KIS_MOCK_URL}/uapi/domestic-futureoption/v1/trading/inquire-balance?CANO=${cano}&ACNT_PRDT_CD=${acntPrdtCd}&MGNA_DVSN=01&EXCC_STAT_CD=1&CTX_AREA_FK200=&CTX_AREA_NK200=`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${token}`,
+        appkey: appKey,
+        appsecret: appSecret,
+        tr_id: "VFAO310200",
+        custtype: "P",
+      },
+    }
+  );
+  const data = await res.json();
+  console.log("future raw:", JSON.stringify(data));
+  return data;
 }
 
+export async function GET(req: Request) {
+  const authHeader = req.headers.get("authorization");
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const token = await getToken(process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!);
-    const balance = await getStockBalance(token, process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!, process.env.KIS_ACCOUNT_STOCK!);
+    const [tokenStock, tokenFuture] = await Promise.all([
+      getToken(process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!),
+      getToken(process.env.KIS_APP_KEY_FUTURE!, process.env.KIS_APP_SECRET_FUTURE!),
+    ]);
 
-    const output2 = balance.output2?.[0];
-    if (!output2) return NextResponse.json({ error: "No data" }, { status: 500 });
+    const [stockBalance, futureBalance] = await Promise.all([
+      getStockBalance(tokenStock, process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!, process.env.KIS_ACCOUNT_STOCK!),
+      getFutureBalance(tokenFuture, process.env.KIS_APP_KEY_FUTURE!, process.env.KIS_APP_SECRET_FUTURE!, process.env.KIS_ACCOUNT_FUTURE!),
+    ]);
 
-    const totalEvalAmt = parseInt(output2.tot_evlu_amt ?? "0");
+    const output2 = stockBalance.output2?.[0];
+    if (!output2) return NextResponse.json({ error: "No stock data" }, { status: 500 });
+
+    const stockTotalAmt = parseInt(output2.tot_evlu_amt ?? "0");
     const cashAmt = parseInt(output2.dnca_tot_amt ?? "0");
     const stockEvalAmt = parseInt(output2.scts_evlu_amt ?? "0");
-    const profitLossAmt = parseInt(output2.asst_icdc_amt ?? "0");
-    const profitLossRate = parseFloat(output2.asst_icdc_erng_rt ?? "0");
+    const stockProfitLossAmt = parseInt(output2.asst_icdc_amt ?? "0");
+
+    // 선물 잔고 - output1 배열에서 예탁금 합산
+    let futureTotalAmt = 0;
+    if (futureBalance?.output2) {
+      futureTotalAmt = parseInt(futureBalance.output2?.dnca_tot_amt ?? futureBalance.output2?.tot_evlu_amt ?? "0");
+    } else if (futureBalance?.output1?.length > 0) {
+      futureTotalAmt = parseInt(futureBalance.output1[0]?.evlu_amt ?? "0");
+    }
+
+    const totalEvalAmt = stockTotalAmt + futureTotalAmt;
+    const profitLossAmt = stockProfitLossAmt;
+    const profitLossRate = totalEvalAmt > 0 ? (profitLossAmt / (totalEvalAmt - profitLossAmt)) * 100 : 0;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,7 +106,14 @@ if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}
       profit_loss_rate: profitLossRate,
     });
 
-    return NextResponse.json({ ok: true, total: totalEvalAmt, cash: cashAmt, stock: stockEvalAmt });
+    return NextResponse.json({
+      ok: true,
+      total: totalEvalAmt,
+      stock: stockTotalAmt,
+      future: futureTotalAmt,
+      cash: cashAmt,
+      futureRaw: futureBalance,
+    });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
   }
