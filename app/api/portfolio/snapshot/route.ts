@@ -81,11 +81,16 @@ export async function GET(req: Request) {
     const stockEvalAmt = parseInt(output2.scts_evlu_amt ?? "0");
     const stockProfitLossAmt = parseInt(output2.asst_icdc_amt ?? "0");
 
-    // 선물 잔고 - output1 배열에서 예탁금 합산
-    let futureTotalAmt = 0;
-if (futureBalance?.output2) {
-  futureTotalAmt = parseInt(futureBalance.output2?.tot_dncl_amt ?? "0");
-}
+    // 선물 예탁금
+    const futureTotalAmt = parseInt(futureBalance?.output2?.tot_dncl_amt ?? "0");
+
+    // 선물 포지션 평가금액: output1 배열에서 evlu_amt 합산
+    let futureEvalAmt = 0;
+    if (Array.isArray(futureBalance?.output1)) {
+      futureEvalAmt = futureBalance.output1.reduce((sum: number, item: Record<string, string>) => {
+        return sum + parseInt(item.evlu_amt ?? "0");
+      }, 0);
+    }
 
     const totalEvalAmt = stockTotalAmt + futureTotalAmt;
     const profitLossAmt = stockProfitLossAmt;
@@ -96,20 +101,22 @@ if (futureBalance?.output2) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-await supabase.from("portfolio_snapshots").insert({
-  total_eval_amt: totalEvalAmt,
-  stock_eval_amt: stockEvalAmt,
-  cash_amt: cashAmt,
-  future_amt: futureTotalAmt,
-  profit_loss_amt: profitLossAmt,
-  profit_loss_rate: profitLossRate,
-});
+    await supabase.from("portfolio_snapshots").insert({
+      total_eval_amt: totalEvalAmt,
+      stock_eval_amt: stockEvalAmt,
+      cash_amt: cashAmt,
+      future_amt: futureTotalAmt,
+      future_eval_amt: futureEvalAmt,
+      profit_loss_amt: profitLossAmt,
+      profit_loss_rate: profitLossRate,
+    });
 
     return NextResponse.json({
       ok: true,
       total: totalEvalAmt,
       stock: stockTotalAmt,
       future: futureTotalAmt,
+      futureEval: futureEvalAmt,
       cash: cashAmt,
       futureRaw: futureBalance,
     });
