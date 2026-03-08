@@ -6,8 +6,3 @@
     }
   ]
 }
-```
-
-그리고 Vercel 환경변수에 하나 더 추가해주세요:
-```
-CRON_SECRET = 아무거나랜덤문자열 (예: moneynpc2026secret)
