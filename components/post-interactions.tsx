@@ -50,6 +50,11 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   };
 
   useEffect(() => {
+  const saved = localStorage.getItem(`liked_${postId}`);
+  if (saved === "true") setMyLiked(true);
+}, [postId]);
+  
+  useEffect(() => {
     const load = async () => {
       const [likesRes, commentsRes] = await Promise.all([
         fetch(`/api/likes/${postId}`, { cache: "no-store" }),
@@ -87,6 +92,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
 const toggleLike = async () => {
   const newLiked = !myLiked;
   setMyLiked(newLiked);
+  localStorage.setItem(`liked_${postId}`, String(newLiked));
   setLikes((prev) => prev + (newLiked ? 1 : -1));
   localStorage.setItem(`liked_${postId}`, String(newLiked));
     const res = await fetch(`/api/likes/${postId}`, { method: newLiked ? "POST" : "DELETE" });
