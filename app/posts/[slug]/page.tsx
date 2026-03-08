@@ -8,12 +8,7 @@ import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { createClient } from "@supabase/supabase-js";
 
-export async function generateStaticParams() {
-  const posts = await getPosts();
-  return posts.map((p) => ({ slug: p.slug }));
-}
-
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
