@@ -83,11 +83,9 @@ export async function GET(req: Request) {
 
     // 선물 잔고 - output1 배열에서 예탁금 합산
     let futureTotalAmt = 0;
-    if (futureBalance?.output2) {
-      futureTotalAmt = parseInt(futureBalance.output2?.dnca_tot_amt ?? futureBalance.output2?.tot_evlu_amt ?? "0");
-    } else if (futureBalance?.output1?.length > 0) {
-      futureTotalAmt = parseInt(futureBalance.output1[0]?.evlu_amt ?? "0");
-    }
+if (futureBalance?.output2) {
+  futureTotalAmt = parseInt(futureBalance.output2?.tot_dncl_amt ?? "0");
+}
 
     const totalEvalAmt = stockTotalAmt + futureTotalAmt;
     const profitLossAmt = stockProfitLossAmt;
