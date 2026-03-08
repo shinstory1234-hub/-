@@ -7,11 +7,12 @@ type Snapshot = {
   total_eval_amt: number;
   stock_eval_amt: number;
   cash_amt: number;
+  future_amt: number;
   profit_loss_amt: number;
   profit_loss_rate: number;
 } | null;
 
-const COLORS = ["#3b82f6", "#e5e7eb"];
+const COLORS = ["#3b82f6", "#f59e0b", "#e5e7eb"];
 
 export function PortfolioPageClient({ snapshot }: { snapshot: Snapshot }) {
   if (!snapshot) {
@@ -25,10 +26,13 @@ export function PortfolioPageClient({ snapshot }: { snapshot: Snapshot }) {
   const { total_eval_amt, stock_eval_amt, cash_amt, profit_loss_amt, profit_loss_rate, snapshot_at } = snapshot;
   const isPlus = profit_loss_rate >= 0;
 
-  const pieData = [
-    { name: "주식", value: stock_eval_amt },
-    { name: "현금", value: cash_amt },
-  ].filter((d) => d.value > 0);
+const { total_eval_amt, stock_eval_amt, cash_amt, future_amt, profit_loss_amt, profit_loss_rate, snapshot_at } = snapshot;
+
+const pieData = [
+  { name: "주식", value: stock_eval_amt },
+  { name: "선물", value: future_amt ?? 0 },
+  { name: "현금", value: cash_amt },
+].filter((d) => d.value > 0);
 
   const updatedAt = new Date(snapshot_at).toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
