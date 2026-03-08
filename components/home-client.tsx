@@ -82,9 +82,9 @@ export function HomeClient({ posts, categories }: Props) {
                   <CardHeader className="space-y-2 pt-4 pb-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge variant="outline" className="text-xs">{post.category?.name ?? "미분류"}</Badge>
+                        <Badge key={idx} className="text-xs">#{tag}</Badge>
                         {post.tags?.slice(0, 1).map((tag, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">#{tag}</Badge>
+                          <Badge key={idx} className="text-xs">#{tag}</Badge>
                         ))}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
