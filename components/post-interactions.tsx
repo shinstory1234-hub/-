@@ -165,7 +165,7 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
                 key={s}
                 type="button"
                 onClick={() => setSort(s)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition ${sort === s ? "bg-primary text-white" : "bg-surface-muted text-muted-foreground hover:text-foreground"}`}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition ${sort === s ? "bg-foreground text-background" : "bg-surface-muted text-muted-foreground hover:text-foreground"}`}
               >
                 {s === "latest" ? "최신순" : s === "oldest" ? "오래된순" : "좋아요순"}
               </button>
