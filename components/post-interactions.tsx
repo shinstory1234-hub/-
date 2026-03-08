@@ -84,10 +84,11 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
     return 0;
   });
 
-  const toggleLike = async () => {
-    const newLiked = !myLiked;
-    setMyLiked(newLiked);
-    setLikes((prev) => prev + (newLiked ? 1 : -1));
+const toggleLike = async () => {
+  const newLiked = !myLiked;
+  setMyLiked(newLiked);
+  setLikes((prev) => prev + (newLiked ? 1 : -1));
+  localStorage.setItem(`liked_${postId}`, String(newLiked));
     const res = await fetch(`/api/likes/${postId}`, { method: newLiked ? "POST" : "DELETE" });
     const json = await safeJson<LikesResponse>(res);
     if (!json?.ok) {
