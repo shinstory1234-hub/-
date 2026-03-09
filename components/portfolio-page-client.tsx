@@ -51,15 +51,15 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
   const futureEvalAmt = future_eval_amt ?? 0;
 
   // 주식 손익률: (주식평가금액 - 주식현금 기준 원금) / 주식 원금
-  const stockInitial = INITIAL_AMT / 2;
-  const futureInitial = INITIAL_AMT / 2;
+const stockInitial = 500000000;
+  const futureInitial = 500000000;
   const stockProfitRate = ((stock_eval_amt + cash_amt - stockInitial) / stockInitial) * 100;
   const futureProfitRate = ((futureAmt - futureInitial) / futureInitial) * 100;
   const isPlus = profit_loss_rate >= 0;
   const isStockPlus = stockProfitRate >= 0;
   const isFuturePlus = futureProfitRate >= 0;
 
-  const activeHoldings = holdings.filter((h) => parseInt(h.hldg_qty) > 0);
+  const activeHoldings = holdings.filter((h) => parseInt(h.hldg_qty) > 0 && parseInt(h.evlu_amt) > 0);
 
   const stockPieData = [
     { name: "주식", value: stock_eval_amt },
