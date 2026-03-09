@@ -26,6 +26,8 @@ type Holding = {
   evlu_amt: string;
 };
 
+const INITIAL_AMT = 1000000000;
+
 export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Snapshot; holdings?: Holding[] }) {
   if (!snapshot) {
     return (
@@ -41,14 +43,23 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
     cash_amt,
     future_amt,
     future_eval_amt,
-    profit_loss_amt,
     profit_loss_rate,
     snapshot_at,
   } = snapshot;
 
-  const isPlus = profit_loss_rate >= 0;
   const futureAmt = future_amt ?? 0;
   const futureEvalAmt = future_eval_amt ?? 0;
+
+  // 주식 손익률: (주식평가금액 - 주식현금 기준 원금) / 주식 원금
+  const stockInitial = INITIAL_AMT / 2;
+  const futureInitial = INITIAL_AMT / 2;
+  const stockProfitRate = ((stock_eval_amt + cash_amt - stockInitial) / stockInitial) * 100;
+  const futureProfitRate = ((futureAmt - futureInitial) / futureInitial) * 100;
+  const isPlus = profit_loss_rate >= 0;
+  const isStockPlus = stockProfitRate >= 0;
+  const isFuturePlus = futureProfitRate >= 0;
+
+  const activeHoldings = holdings.filter((h) => parseInt(h.hldg_qty) > 0);
 
   const stockPieData = [
     { name: "주식", value: stock_eval_amt },
@@ -64,28 +75,46 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
 
   const updatedAt = new Date(snapshot_at).toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
   });
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      {/* 1행: 총 평가금액 + 수익률 */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">총 평가금액</p>
           <p className="text-lg font-bold">₩{total_eval_amt.toLocaleString()}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">전체 수익률</p>
+          <p className={`text-lg font-bold ${isPlus ? "text-red-500" : "text-blue-500"}`}>
+            {isPlus ? "+" : ""}{profit_loss_rate.toFixed(2)}%
+          </p>
+        </div>
+      </div>
+
+      {/* 2행: 주식 현금 + 주식 평가금액 + 주식 손익률 */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">주식 현금</p>
+          <p className="text-lg font-bold">₩{cash_amt.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">주식 평가금액</p>
           <p className="text-lg font-bold">₩{stock_eval_amt.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
-          <p className="text-xs text-muted-foreground">주식 현금</p>
-          <p className="text-lg font-bold">₩{cash_amt.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground">주식 손익률</p>
+          <p className={`text-lg font-bold ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
+            {isStockPlus ? "+" : ""}{stockProfitRate.toFixed(2)}%
+          </p>
         </div>
+      </div>
+
+      {/* 3행: 선물 예탁금 + 선물 평가금액 + 선물 손익률 */}
+      <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">선물 예탁금</p>
           <p className="text-lg font-bold">₩{futureAmt.toLocaleString()}</p>
@@ -95,13 +124,14 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
           <p className="text-lg font-bold">₩{futureEvalAmt.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
-          <p className="text-xs text-muted-foreground">수익률</p>
-          <p className={`text-lg font-bold ${isPlus ? "text-red-500" : "text-blue-500"}`}>
-            {isPlus ? "+" : ""}{profit_loss_rate.toFixed(2)}%
+          <p className="text-xs text-muted-foreground">선물 손익률</p>
+          <p className={`text-lg font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
+            {isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(2)}%
           </p>
         </div>
       </div>
 
+      {/* 파이차트 */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface p-6">
           <p className="text-sm font-semibold mb-4">주식계좌 구성</p>
@@ -134,7 +164,8 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
         </div>
       </div>
 
-      {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 ? (
+      {/* 보유 종목 */}
+      {activeHoldings.length > 0 ? (
         <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
           <p className="text-sm font-semibold">보유 종목</p>
           <table className="w-full text-sm">
@@ -149,7 +180,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
               </tr>
             </thead>
             <tbody>
-              {holdings.filter((h) => parseInt(h.hldg_qty) > 0).map((h, i) => {
+              {activeHoldings.map((h, i) => {
                 const pfls = parseInt(h.evlu_pfls_amt);
                 const isUp = pfls >= 0;
                 return (
@@ -175,6 +206,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
       )}
 
       <p className="text-xs text-muted-foreground text-right">마지막 업데이트: {updatedAt} (모의투자)</p>
+      <p className="text-xs text-muted-foreground text-center">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
     </div>
   );
 }
