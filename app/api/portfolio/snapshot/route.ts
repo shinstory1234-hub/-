@@ -92,9 +92,10 @@ export async function GET(req: Request) {
       }, 0);
     }
 
-    const totalEvalAmt = stockTotalAmt + futureTotalAmt;
-    const profitLossAmt = stockProfitLossAmt;
-    const profitLossRate = totalEvalAmt > 0 ? (profitLossAmt / 1000000000) * 100 : 0;
+const totalEvalAmt = stockTotalAmt + futureTotalAmt;
+const futureProfitLossAmt = parseInt(futureBalance?.output2?.futr_trad_pfls_amt ?? "0");
+const profitLossAmt = stockProfitLossAmt + futureProfitLossAmt;
+const profitLossRate = totalEvalAmt > 0 ? (profitLossAmt / 1000000000) * 100 : 0;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
