@@ -94,7 +94,7 @@ export async function GET(req: Request) {
 
     const totalEvalAmt = stockTotalAmt + futureTotalAmt;
     const profitLossAmt = stockProfitLossAmt;
-    const profitLossRate = totalEvalAmt > 0 ? (profitLossAmt / (totalEvalAmt - profitLossAmt)) * 100 : 0;
+    const profitLossRate = totalEvalAmt > 0 ? (profitLossAmt / 1000000000) * 100 : 0;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
