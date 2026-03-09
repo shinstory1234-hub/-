@@ -95,7 +95,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">현금</p>
-              <p className="text-sm font-bold">₩{cash_amt.toLocaleString()}</p>
+              <p className="text-sm font-bold">₩{(cash_amt - stock_eval_amt).toLocaleString()}</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">평가금액</p>
