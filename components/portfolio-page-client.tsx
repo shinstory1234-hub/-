@@ -134,7 +134,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
         </div>
       </div>
 
-      {holdings.length > 0 ? (
+      {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 ? (
         <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
           <p className="text-sm font-semibold">보유 종목</p>
           <table className="w-full text-sm">
@@ -149,7 +149,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
               </tr>
             </thead>
             <tbody>
-              {holdings.map((h, i) => {
+              {holdings.filter((h) => parseInt(h.hldg_qty) > 0).map((h, i) => {
                 const pfls = parseInt(h.evlu_pfls_amt);
                 const isUp = pfls >= 0;
                 return (
