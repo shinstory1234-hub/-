@@ -52,7 +52,6 @@ async function getFutureBalance(token: string, appKey: string, appSecret: string
     }
   );
   const data = await res.json();
-  console.log("future raw:", JSON.stringify(data));
   return data;
 }
 
@@ -79,12 +78,9 @@ export async function GET(req: Request) {
     const stockTotalAmt = parseInt(output2.tot_evlu_amt ?? "0");
     const cashAmt = parseInt(output2.dnca_tot_amt ?? "0");
     const stockEvalAmt = parseInt(output2.scts_evlu_amt ?? "0");
-    const stockProfitLossAmt = parseInt(output2.asst_icdc_amt ?? "0");
 
-    // 선물 예탁금
     const futureTotalAmt = parseInt(futureBalance?.output2?.tot_dncl_amt ?? "0");
 
-    // 선물 포지션 평가금액: output1 배열에서 evlu_amt 합산
     let futureEvalAmt = 0;
     if (Array.isArray(futureBalance?.output1)) {
       futureEvalAmt = futureBalance.output1.reduce((sum: number, item: Record<string, string>) => {
@@ -92,10 +88,10 @@ export async function GET(req: Request) {
       }, 0);
     }
 
-const totalEvalAmt = stockTotalAmt + futureTotalAmt;
-const INITIAL_AMT = 1000000000;
-const profitLossAmt = totalEvalAmt - INITIAL_AMT;
-const profitLossRate = (profitLossAmt / INITIAL_AMT) * 100;
+    const INITIAL_AMT = 1000000000;
+    const totalEvalAmt = stockTotalAmt + futureTotalAmt;
+    const profitLossAmt = totalEvalAmt - INITIAL_AMT;
+    const profitLossRate = (profitLossAmt / INITIAL_AMT) * 100;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -115,11 +111,11 @@ const profitLossRate = (profitLossAmt / INITIAL_AMT) * 100;
     return NextResponse.json({
       ok: true,
       total: totalEvalAmt,
+      profitLoss: profitLossAmt,
+      profitLossRate: profitLossRate,
       stock: stockTotalAmt,
       future: futureTotalAmt,
-      futureEval: futureEvalAmt,
       cash: cashAmt,
-      futureRaw: futureBalance,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
