@@ -26,8 +26,6 @@ type Holding = {
   evlu_amt: string;
 };
 
-const INITIAL_AMT = 1000000000;
-
 export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Snapshot; holdings?: Holding[] }) {
   if (!snapshot) {
     return (
@@ -50,16 +48,13 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
   const futureAmt = future_amt ?? 0;
   const futureEvalAmt = future_eval_amt ?? 0;
 
-  // 주식 손익률: (주식평가금액 - 주식현금 기준 원금) / 주식 원금
-const stockInitial = 500000000;
+  const stockInitial = 500000000;
   const futureInitial = 500000000;
   const stockProfitRate = ((stock_eval_amt + cash_amt - stockInitial) / stockInitial) * 100;
   const futureProfitRate = ((futureAmt - futureInitial) / futureInitial) * 100;
   const isPlus = profit_loss_rate >= 0;
   const isStockPlus = stockProfitRate >= 0;
   const isFuturePlus = futureProfitRate >= 0;
-
-  const activeHoldings = holdings.filter((h) => parseInt(h.hldg_qty) > 0 && parseInt(h.evlu_amt) > 0);
 
   const stockPieData = [
     { name: "주식", value: stock_eval_amt },
@@ -81,7 +76,6 @@ const stockInitial = 500000000;
 
   return (
     <div className="space-y-6">
-      {/* 1행: 총 평가금액 + 수익률 */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">총 평가금액</p>
@@ -95,7 +89,6 @@ const stockInitial = 500000000;
         </div>
       </div>
 
-      {/* 2행: 주식 현금 + 주식 평가금액 + 주식 손익률 */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">주식 현금</p>
@@ -113,7 +106,6 @@ const stockInitial = 500000000;
         </div>
       </div>
 
-      {/* 3행: 선물 예탁금 + 선물 평가금액 + 선물 손익률 */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">선물 예탁금</p>
@@ -131,7 +123,6 @@ const stockInitial = 500000000;
         </div>
       </div>
 
-      {/* 파이차트 */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface p-6">
           <p className="text-sm font-semibold mb-4">주식계좌 구성</p>
@@ -164,8 +155,7 @@ const stockInitial = 500000000;
         </div>
       </div>
 
-      {/* 보유 종목 */}
-      {activeHoldings.length > 0 ? (
+      {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 ? (
         <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
           <p className="text-sm font-semibold">보유 종목</p>
           <table className="w-full text-sm">
@@ -180,7 +170,7 @@ const stockInitial = 500000000;
               </tr>
             </thead>
             <tbody>
-              {activeHoldings.map((h, i) => {
+              {holdings.filter((h) => parseInt(h.hldg_qty) > 0).map((h, i) => {
                 const pfls = parseInt(h.evlu_pfls_amt);
                 const isUp = pfls >= 0;
                 return (
