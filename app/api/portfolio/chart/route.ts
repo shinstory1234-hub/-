@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export async function GET() {
   const supabase = createClient(
