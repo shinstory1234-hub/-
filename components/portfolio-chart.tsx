@@ -1,17 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-
 type Snapshot = {
   snapshot_at: string;
   total_eval_amt: number;
   profit_loss_rate: number;
 };
-
 export function PortfolioChart() {
   const [data, setData] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetch("/api/portfolio/chart")
       .then((r) => r.json())
@@ -20,20 +17,16 @@ export function PortfolioChart() {
         setLoading(false);
       });
   }, []);
-
   if (loading) return (
     <div className="h-32 flex items-center justify-center text-sm text-muted-foreground">
       포트폴리오 로딩 중...
     </div>
   );
-
   if (data.length === 0) return null;
-
   const latest = data[data.length - 1];
   const totalAmt = latest.total_eval_amt.toLocaleString("ko-KR");
   const rate = latest.profit_loss_rate;
   const isPlus = rate >= 0;
-
   return (
     <div className="rounded-xl border border-border bg-surface p-5 space-y-3">
       <div className="flex items-center justify-between">
@@ -54,7 +47,7 @@ export function PortfolioChart() {
             labelFormatter={(label) => new Date(label).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
             contentStyle={{ fontSize: "12px" }}
           />
-          <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+          <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" strokeWidth={1.5} />
           <Line
             type="monotone"
             dataKey="profit_loss_rate"
@@ -64,6 +57,7 @@ export function PortfolioChart() {
           />
         </LineChart>
       </ResponsiveContainer>
+      <p className="text-xs text-muted-foreground text-center pt-1">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
     </div>
   );
 }
