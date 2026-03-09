@@ -206,7 +206,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
       )}
 
       <p className="text-xs text-muted-foreground text-right">마지막 업데이트: {updatedAt} (모의투자)</p>
-      <p className="text-xs text-muted-foreground text-center">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
+      <p className="text-xs text-muted-foreground text-center">본 블로그는 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
     </div>
   );
 }
