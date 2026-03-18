@@ -11,6 +11,7 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
+import { Extension } from "@tiptap/core";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -25,6 +26,33 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const COLORS = ["#000000", "#e03131", "#2f9e44", "#1971c2", "#f08c00", "#7048e8"];
 const HIGHLIGHTS = ["#fff3bf", "#d3f9d8", "#d0ebff", "#ffe8cc", "#f3d9fa"];
+const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
+
+const FontSize = Extension.create({
+  name: "fontSize",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el) => el.style.fontSize || null,
+            renderHTML: (attrs) => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: string) => ({ chain }: any) =>
+        chain().setMark("textStyle", { fontSize: size }).run(),
+      unsetFontSize: () => ({ chain }: any) =>
+        chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+    };
+  },
+});
 
 export function RichEditor({ name, initialValue = "", onImageInserted }: Props) {
   const [uploading, setUploading] = useState(false);
@@ -34,6 +62,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
   const [html, setHtml] = useState(initialValue);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
+  const [showFontSizePicker, setShowFontSizePicker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { show } = useToast();
 
@@ -43,6 +72,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       Image,
       TextStyle,
       Color,
+      FontSize,
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
       TableRow,
@@ -117,13 +147,13 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
   };
 
   const [tableHover, setTableHover] = useState<{ rows: number; cols: number } | null>(null);
-const [showTableGrid, setShowTableGrid] = useState(false);
+  const [showTableGrid, setShowTableGrid] = useState(false);
 
-const insertTable = (rows: number, cols: number) => {
-  editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
-  setShowTableGrid(false);
-  setTableHover(null);
-};
+  const insertTable = (rows: number, cols: number) => {
+    editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    setShowTableGrid(false);
+    setTableHover(null);
+  };
 
   return (
     <div className="space-y-2">
@@ -136,9 +166,38 @@ const insertTable = (rows: number, cols: number) => {
           List
         </Button>
 
+        {/* 글자 크기 */}
+        <div className="relative">
+          <Button type="button" variant="outline" size="sm" onClick={() => { setShowFontSizePicker(!showFontSizePicker); setShowColorPicker(false); setShowHighlightPicker(false); }}>
+            글자크기
+          </Button>
+          {showFontSizePicker && (
+            <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface p-2 shadow-lg">
+              {FONT_SIZES.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  className="px-3 py-1 text-left hover:bg-surface-muted rounded"
+                  style={{ fontSize: size }}
+                  onClick={() => { (editor?.chain().focus() as any).setFontSize(size).run(); setShowFontSizePicker(false); }}
+                >
+                  {size}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="rounded px-3 py-1 text-left text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => { (editor?.chain().focus() as any).unsetFontSize().run(); setShowFontSizePicker(false); }}
+              >
+                기본
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* 글자 색 */}
         <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); }}>
+          <Button type="button" variant="outline" size="sm" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); setShowFontSizePicker(false); }}>
             글자색
           </Button>
           {showColorPicker && (
@@ -165,7 +224,7 @@ const insertTable = (rows: number, cols: number) => {
 
         {/* 형광펜 */}
         <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); }}>
+          <Button type="button" variant="outline" size="sm" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); setShowFontSizePicker(false); }}>
             형광펜
           </Button>
           {showHighlightPicker && (
@@ -191,35 +250,35 @@ const insertTable = (rows: number, cols: number) => {
         </div>
 
         {/* 표 */}
-<div className="relative">
-  <Button type="button" variant="outline" size="sm" onClick={() => setShowTableGrid(!showTableGrid)}>
-    표 삽입
-  </Button>
-  {showTableGrid && (
-    <div className="absolute top-9 left-0 z-50 rounded-lg border border-border bg-surface p-2 shadow-lg">
-      <p className="mb-1 text-xs text-muted-foreground">
-        {tableHover ? `${tableHover.rows} × ${tableHover.cols}` : "표 크기 선택"}
-      </p>
-      <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
-        {Array.from({ length: 64 }, (_, i) => {
-          const row = Math.floor(i / 8) + 1;
-          const col = (i % 8) + 1;
-          const isActive = tableHover && row <= tableHover.rows && col <= tableHover.cols;
-          return (
-            <button
-              key={i}
-              type="button"
-              className={`h-5 w-5 border rounded-sm transition ${isActive ? "bg-accent border-accent" : "border-border hover:border-accent"}`}
-              onMouseEnter={() => setTableHover({ rows: row, cols: col })}
-              onMouseLeave={() => setTableHover(null)}
-              onClick={() => insertTable(row, col)}
-            />
-          );
-        })}
-      </div>
-    </div>
-  )}
-</div>
+        <div className="relative">
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowTableGrid(!showTableGrid)}>
+            표 삽입
+          </Button>
+          {showTableGrid && (
+            <div className="absolute top-9 left-0 z-50 rounded-lg border border-border bg-surface p-2 shadow-lg">
+              <p className="mb-1 text-xs text-muted-foreground">
+                {tableHover ? `${tableHover.rows} × ${tableHover.cols}` : "표 크기 선택"}
+              </p>
+              <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
+                {Array.from({ length: 64 }, (_, i) => {
+                  const row = Math.floor(i / 8) + 1;
+                  const col = (i % 8) + 1;
+                  const isActive = tableHover && row <= tableHover.rows && col <= tableHover.cols;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`h-5 w-5 border rounded-sm transition ${isActive ? "bg-accent border-accent" : "border-border hover:border-accent"}`}
+                      onMouseEnter={() => setTableHover({ rows: row, cols: col })}
+                      onMouseLeave={() => setTableHover(null)}
+                      onClick={() => insertTable(row, col)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
         {editor?.isActive("table") && (
           <>
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()}>열 추가</Button>
