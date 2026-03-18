@@ -50,7 +50,7 @@ const FontSize = Extension.create({
         chain().setMark("textStyle", { fontSize: size }).run(),
       unsetFontSize: () => ({ chain }: any) =>
         chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
-    };
+ } as any;
   },
 });
 
