@@ -24,8 +24,16 @@ export function VisitCounter() {
   if (today === null || total === null) return null;
 
   return (
-    <p className="text-base font-semibold text-muted-foreground">
-      Today {today}&nbsp;&nbsp;Total {total}
-    </p>
+    <div className="flex items-center gap-3">
+      <div className="text-right">
+        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Today</p>
+        <p className="text-sm font-bold tabular-nums leading-tight">{today.toLocaleString("ko-KR")}</p>
+      </div>
+      <div className="h-6 w-px bg-border" />
+      <div className="text-right">
+        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Total</p>
+        <p className="text-sm font-bold tabular-nums leading-tight">{total.toLocaleString("ko-KR")}</p>
+      </div>
+    </div>
   );
 }

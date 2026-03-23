@@ -8,6 +8,23 @@ type Snapshot = {
   profit_loss_rate: number;
 };
 
+function CustomTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as Snapshot;
+  const isPlus = d.profit_loss_rate >= 0;
+  return (
+    <div className="rounded-xl border border-border bg-surface px-4 py-3 shadow-soft text-xs space-y-1">
+      <p className="text-muted-foreground">
+        {new Date(label).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "short", day: "numeric" })}
+      </p>
+      <p className="font-bold">₩{d.total_eval_amt.toLocaleString("ko-KR")}</p>
+      <p className="font-semibold" style={{ color: isPlus ? "#ef4444" : "#3b82f6" }}>
+        {isPlus ? "+" : ""}{d.profit_loss_rate.toFixed(2)}%
+      </p>
+    </div>
+  );
+}
+
 export function PortfolioChart() {
   const [data, setData] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +53,7 @@ export function PortfolioChart() {
   const rateColor = isPlus ? "#ef4444" : "#3b82f6";
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 space-y-4">
+    <div className="rounded-2xl border border-border bg-surface px-8 py-6 space-y-4 shadow-soft">
       <div className="flex items-end justify-between">
         <div className="space-y-0.5">
           <p className="text-xs text-muted-foreground">모의투자 포트폴리오</p>
@@ -50,19 +67,7 @@ export function PortfolioChart() {
         <LineChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <XAxis dataKey="snapshot_at" hide />
           <YAxis hide domain={["auto", "auto"]} />
-          <Tooltip
-            formatter={(value: number) => [`${value.toFixed(2)}%`, "수익률"]}
-            labelFormatter={(label) =>
-              new Date(label).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "short", day: "numeric" })
-            }
-            contentStyle={{
-              fontSize: "12px",
-              borderRadius: "8px",
-              border: "1px solid hsl(var(--border))",
-              background: "hsl(var(--surface))",
-              color: "hsl(var(--foreground))",
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" strokeWidth={1} />
           <Line
             type="monotone"

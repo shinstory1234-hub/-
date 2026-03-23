@@ -11,6 +11,32 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
+
+const CustomTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      height: {
+        default: null,
+        parseHTML: (el) => el.style.height || null,
+        renderHTML: (attrs) => attrs.height ? { style: `height: ${attrs.height}` } : {},
+      },
+    };
+  },
+});
+
+const CustomTableHeader = TableHeader.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      height: {
+        default: null,
+        parseHTML: (el) => el.style.height || null,
+        renderHTML: (attrs) => attrs.height ? { style: `height: ${attrs.height}` } : {},
+      },
+    };
+  },
+});
 import { Extension } from "@tiptap/core";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
@@ -76,8 +102,8 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
       TableRow,
-      TableHeader,
-      TableCell,
+      CustomTableHeader,
+      CustomTableCell,
     ],
     content: initialValue,
     onCreate: ({ editor }) => setHtml(editor.getHTML()),
@@ -298,6 +324,22 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
                     const val = parseInt((e.target as HTMLInputElement).value);
                     if (val > 0) {
                       editor.chain().focus().setCellAttribute("colwidth", [val]).run();
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }
+                }}
+              />
+              <input
+                type="number"
+                min="20"
+                max="500"
+                placeholder="행 높이(px)"
+                className="h-8 w-20 rounded-md border border-border bg-surface px-2 text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const val = parseInt((e.target as HTMLInputElement).value);
+                    if (val > 0) {
+                      editor.chain().focus().setCellAttribute("height", `${val}px`).run();
                       (e.target as HTMLInputElement).value = "";
                     }
                   }

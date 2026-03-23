@@ -45,10 +45,10 @@ export function HomeClient({ posts, categories }: Props) {
         <button
           type="button"
           onClick={() => setActiveCategory(null)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 ${
             !activeCategory
-              ? "bg-foreground text-background"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-foreground text-background scale-105"
+              : "text-muted-foreground hover:text-foreground hover:scale-105"
           }`}
         >
           전체
@@ -58,10 +58,10 @@ export function HomeClient({ posts, categories }: Props) {
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.slug)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 ${
               activeCategory === cat.slug
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-foreground text-background scale-105"
+                : "text-muted-foreground hover:text-foreground hover:scale-105"
             }`}
           >
             {cat.name}
