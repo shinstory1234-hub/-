@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -180,6 +180,81 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setShowTableGrid(false);
     setTableHover(null);
   };
+
+  // 행 높이 드래그 리사이즈
+  useEffect(() => {
+    if (!editor) return;
+    const el = editor.view.dom as HTMLElement;
+    let resizing = false;
+    let startY = 0;
+    let startH = 0;
+    let cells: HTMLElement[] = [];
+
+    const getRowCells = (cell: HTMLElement): HTMLElement[] => {
+      const row = cell.closest('tr');
+      return row ? (Array.from(row.querySelectorAll('td, th')) as HTMLElement[]) : [];
+    };
+
+    const onDown = (e: MouseEvent) => {
+      const cell = (e.target as HTMLElement).closest('td, th') as HTMLElement | null;
+      if (!cell) return;
+      const rect = cell.getBoundingClientRect();
+      if (e.clientY < rect.bottom - 6) return;
+      e.preventDefault();
+      resizing = true;
+      startY = e.clientY;
+      cells = getRowCells(cell);
+      startH = cell.getBoundingClientRect().height;
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+    };
+
+    const onMove = (e: MouseEvent) => {
+      if (resizing) {
+        const newH = Math.max(32, startH + (e.clientY - startY));
+        cells.forEach(c => { c.style.height = newH + 'px'; });
+        return;
+      }
+      const cell = (e.target as HTMLElement).closest('td, th') as HTMLElement | null;
+      if (cell) {
+        const rect = cell.getBoundingClientRect();
+        el.style.cursor = e.clientY >= rect.bottom - 6 ? 'row-resize' : '';
+      } else {
+        el.style.cursor = '';
+      }
+    };
+
+    const onUp = () => {
+      if (!resizing) return;
+      resizing = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      if (!cells.length) return;
+      const h = Math.round(cells[0].getBoundingClientRect().height) + 'px';
+      const { state, dispatch } = editor.view;
+      const tr = state.tr;
+      let changed = false;
+      state.doc.descendants((node: any, pos: number) => {
+        if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return;
+        const dom = editor.view.nodeDOM(pos);
+        if (dom && cells.includes(dom as HTMLElement)) {
+          tr.setNodeMarkup(pos, undefined, { ...node.attrs, height: h });
+          changed = true;
+        }
+      });
+      if (changed) dispatch(tr);
+      cells = [];
+    };
+
+    el.addEventListener('mousedown', onDown);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    return () => {
+      el.removeEventListener('mousedown', onDown);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+  }, [editor]);
 
   return (
     <div className="space-y-2">
