@@ -11,6 +11,10 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
+import { Extension } from "@tiptap/core";
+import { createClient } from "@/lib/supabase-browser";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 
 const CustomTableCell = TableCell.extend({
   addAttributes() {
@@ -37,10 +41,6 @@ const CustomTableHeader = TableHeader.extend({
     };
   },
 });
-import { Extension } from "@tiptap/core";
-import { createClient } from "@/lib/supabase-browser";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/toast";
 
 type Props = {
   name: string;

@@ -74,7 +74,7 @@
   line-height: 1.9;
   color: hsl(var(--muted-foreground));
   margin-top: 0;
-  margin-bottom: 1.25em;
+  margin-bottom: 1.25rem;
 }
 .prose p:last-child {
   margin-bottom: 0;
@@ -166,7 +166,7 @@
 
 /* 에디터 문단 간격 (게시글 뷰와 통일) */
 .ProseMirror p {
-  margin-bottom: 1.25em;
+  margin-bottom: 1.25rem;
   line-height: 1.9;
 }
 .ProseMirror p:last-child {
