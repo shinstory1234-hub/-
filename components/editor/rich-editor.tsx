@@ -286,6 +286,25 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteColumn().run()}>열 삭제</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteRow().run()}>행 삭제</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteTable().run()}>표 삭제</Button>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min="40"
+                max="1000"
+                placeholder="열 너비(px)"
+                className="h-8 w-20 rounded-md border border-border bg-surface px-2 text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const val = parseInt((e.target as HTMLInputElement).value);
+                    if (val > 0) {
+                      editor.chain().focus().setCellAttribute("colwidth", [val]).run();
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }
+                }}
+              />
+              <span className="text-xs text-muted-foreground">Enter↵</span>
+            </div>
           </>
         )}
 

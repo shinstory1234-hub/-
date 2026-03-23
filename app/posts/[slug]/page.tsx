@@ -66,7 +66,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           <span>{formatPostDate(post.published_at ?? "")}</span>
           <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
         </div>
-        <p className="text-xs text-muted-foreground border-l-2 border-border pl-3">
+        <p className="text-sm font-semibold text-red-500">
           본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.
         </p>
       </header>

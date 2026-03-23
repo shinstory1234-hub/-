@@ -70,19 +70,36 @@
 .prose {
   color: hsl(var(--foreground));
 }
-.prose p,
+.prose p {
+  line-height: 1.9;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0;
+  margin-bottom: 1.25em;
+}
+.prose p:last-child {
+  margin-bottom: 0;
+}
 .prose li {
   line-height: 1.9;
   color: hsl(var(--muted-foreground));
 }
 .prose h1,
 .prose h2,
-.prose h3,
+.prose h3 {
+  color: hsl(var(--foreground));
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
 .prose strong {
   color: hsl(var(--foreground));
 }
 .prose img {
   border-radius: 12px;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
 }
 
 /* TipTap 표 스타일 */
