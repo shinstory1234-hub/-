@@ -1,9 +1,7 @@
-import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { Category, Comment, Post } from "@/lib/types";
 
 export async function getCategories(): Promise<Category[]> {
-  noStore();
   const supabase = await createClient();
   const categoryOrder = { ascending: true as const };
   const createdOrder = { ascending: false as const };
@@ -34,7 +32,6 @@ export async function getPosts(categorySlug?: string): Promise<Post[]> {
 }
 
 export async function getPostsWithError(categorySlug?: string): Promise<PostListResult> {
-  noStore();
   const supabase = await createClient();
 
   const selectWithViewCount =
@@ -91,7 +88,6 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
 }
 
 export async function getPostBySlug(slugParam: string): Promise<Post | null> {
-  noStore();
   const supabase = await createClient();
   let decodedSlug = slugParam;
 
