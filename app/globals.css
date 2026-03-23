@@ -144,6 +144,16 @@
 .ProseMirror.resize-cursor {
   cursor: col-resize;
 }
+.ProseMirror table .row-resize-handle {
+  background-color: hsl(var(--accent));
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  cursor: row-resize;
+  z-index: 20;
+}
 
 /* 게시글 본문 표 스타일 */
 .prose table {
