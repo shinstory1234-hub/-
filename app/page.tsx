@@ -10,10 +10,13 @@ export default async function HomePage() {
     getCategories(),
   ]);
   return (
-    <section className="space-y-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold md:text-3xl">머니NPC의 액티브 ETF</h1>
-        <VisitCounter />
+    <section className="mx-auto max-w-2xl space-y-10">
+      <header className="space-y-1 pt-4">
+        <h1 className="text-3xl font-bold tracking-tight">머니NPC의 액티브 ETF</h1>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
+          <VisitCounter />
+        </div>
       </header>
       <PortfolioChart />
       <HomeClient posts={posts} categories={categories} />

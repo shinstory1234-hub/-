@@ -1,7 +1,5 @@
 "use client";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { Category } from "@/lib/types";
 
@@ -21,6 +19,18 @@ type Props = {
   categories: Category[];
 };
 
+function formatDate(dateStr: string) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const sameYear = date.getFullYear() === now.getFullYear();
+  return date.toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    ...(sameYear ? {} : { year: "numeric" }),
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export function HomeClient({ posts, categories }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -29,12 +39,17 @@ export function HomeClient({ posts, categories }: Props) {
     : posts;
 
   return (
-    <>
-      <div className="inline-flex rounded-full border border-border bg-surface-muted p-1">
+    <div className="space-y-6">
+      {/* 카테고리 필터 */}
+      <div className="flex items-center gap-1 flex-wrap">
         <button
           type="button"
           onClick={() => setActiveCategory(null)}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition ${!activeCategory ? "bg-surface text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"}`}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            !activeCategory
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
         >
           전체
         </button>
@@ -43,76 +58,54 @@ export function HomeClient({ posts, categories }: Props) {
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.slug)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeCategory === cat.slug ? "bg-surface text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"}`}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              activeCategory === cat.slug
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
             {cat.name}
           </button>
         ))}
       </div>
 
+      {/* 글 목록 */}
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-border bg-surface py-14 text-center text-sm text-muted-foreground">
-          아직 글이 없습니다. 첫 글을 발행해보세요.
-        </div>
+        <p className="py-20 text-center text-sm text-muted-foreground">아직 글이 없습니다.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((post) => {
-            const isNew = post.published_at
-              ? new Date().getTime() - new Date(post.published_at).getTime() < 24 * 60 * 60 * 1000
-              : false;
-           const formatted = post.published_at
-  ? (() => {
-      const date = new Date(post.published_at!);
-      const now = new Date();
-      const sameYear = date.getFullYear() === now.getFullYear();
-      return date.toLocaleString("ko-KR", {
-        timeZone: "Asia/Seoul",
-        ...(sameYear ? {} : { year: "numeric" }),
-        month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit",
-      });
-    })()
-  : "임시저장";
-
-            return (
-              <PostSlugLink key={post.id} slug={post.slug} className="block group">
-                <Card className="overflow-hidden h-full transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg">
-                  <div className="h-36 w-full overflow-hidden border-b border-border">
-                    {post.cover_url
-                      ? <div className="h-full w-full bg-cover bg-center transition-transform duration-300 group-hover:scale-105" style={{ backgroundImage: `url(${post.cover_url})` }} />
-                      : <div className="h-full w-full flex flex-col items-center justify-center bg-surface-muted">
-                          <span className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">{post.category?.name ?? "UNCATEGORIZED"}</span>
-                        </div>
-                    }
-                  </div>
-                  <CardHeader className="space-y-2 pt-4 pb-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge className="text-xs">{post.category?.name ?? "미분류"}</Badge>
-                        {post.tags?.slice(0, 1).map((tag, i) => (
-                          <Badge key={i} className="text-xs">#{tag}</Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {isNew && (
-                          <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">NEW</span>
-                        )}
-                        <span className="text-xs text-muted-foreground">{formatted}</span>
-                      </div>
-                    </div>
-                    <p className="line-clamp-2 text-lg font-bold leading-snug text-foreground group-hover:text-accent transition-colors">
-  {post.title}
-</p>
-                  </CardHeader>
-                  <CardContent className="pb-4 pt-0">
-                    <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">{post.excerpt || "요약이 없습니다."}</p>
-                  </CardContent>
-                </Card>
-              </PostSlugLink>
-            );
-          })}
+        <div className="divide-y divide-border">
+          {filtered.map((post) => (
+            <PostSlugLink key={post.id} slug={post.slug} className="block group py-6 first:pt-0">
+              <div className="flex items-center gap-1.5 mb-2">
+                {post.category && (
+                  <span className="text-xs font-semibold text-accent">{post.category.name}</span>
+                )}
+                {post.category && post.published_at && (
+                  <span className="text-xs text-muted-foreground">·</span>
+                )}
+                {post.published_at && (
+                  <span className="text-xs text-muted-foreground">{formatDate(post.published_at)}</span>
+                )}
+              </div>
+              <h2 className="text-lg font-bold text-foreground leading-snug mb-1.5 group-hover:text-accent transition-colors">
+                {post.title}
+              </h2>
+              {post.excerpt && (
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                  {post.excerpt}
+                </p>
+              )}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex items-center gap-2 mt-3">
+                  {post.tags.slice(0, 3).map((tag, i) => (
+                    <span key={i} className="text-xs text-muted-foreground">#{tag}</span>
+                  ))}
+                </div>
+              )}
+            </PostSlugLink>
+          ))}
         </div>
       )}
-    </>
+    </div>
   );
 }

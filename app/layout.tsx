@@ -9,7 +9,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen bg-background text-foreground antialiased">
         <ToastProvider>
           <SiteHeader />
-          <main className="mx-auto w-full max-w-6xl px-4 py-8 md:py-10">{children}</main>
+          <main className="mx-auto w-full max-w-6xl px-5 py-10 md:py-14">{children}</main>
         </ToastProvider>
       </body>
     </html>

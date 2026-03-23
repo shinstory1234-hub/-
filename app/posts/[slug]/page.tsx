@@ -1,7 +1,5 @@
 export const revalidate = 300;
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
@@ -12,17 +10,11 @@ import { createClient } from "@supabase/supabase-js";
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "방금 전";
-  if (diffMin < 60) return `${diffMin}분 전`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}시간 전`;
-  return date.toLocaleString("ko-KR", {
+  return date.toLocaleDateString("ko-KR", {
     timeZone: "Asia/Seoul",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
@@ -58,56 +50,69 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   const next = index > 0 ? all[index - 1] : undefined;
 
   return (
-    <article className="mx-auto max-w-screen-2xl space-y-6">
-      <Card className="p-8 md:p-10">
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <Badge>{post.category?.name ?? "미분류"}</Badge>
-            {post.tags?.map((tag, idx) => (
-              <Badge key={`${post.id}-tag-${idx}-${tag}`}>#{tag}</Badge>
+    <article className="mx-auto max-w-2xl space-y-10">
+      {/* 글 헤더 */}
+      <header className="space-y-4 pt-2">
+        <div className="flex items-center gap-2">
+          {post.category && (
+            <span className="text-xs font-semibold text-accent">{post.category.name}</span>
+          )}
+          {post.tags?.slice(0, 2).map((tag, idx) => (
+            <span key={idx} className="text-xs text-muted-foreground">#{tag}</span>
+          ))}
+        </div>
+        <h1 className="text-3xl font-bold leading-tight tracking-tight md:text-4xl">{post.title}</h1>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{formatPostDate(post.published_at ?? "")}</span>
+          <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
+        </div>
+        <p className="text-xs text-muted-foreground border-l-2 border-border pl-3">
+          본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.
+        </p>
+      </header>
+
+      {/* 본문 */}
+      <div className="prose prose-sm max-w-none md:prose-base" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+      {/* 첨부파일 */}
+      {attachments.length > 0 && (
+        <div className="space-y-2 border-t border-border pt-6">
+          <p className="text-sm font-semibold">첨부파일 ({attachments.length})</p>
+          <div className="space-y-1">
+            {attachments.map((a) => (
+              <a
+                key={a.id}
+                href={a.url}
+                download={a.name}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+              >
+                📎 {a.name}
+              </a>
             ))}
           </div>
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-3xl font-bold leading-tight md:text-4xl">{post.title}</h1>
-            <div className="pt-1">
-              <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">{formatPostDate(post.published_at ?? "")}</p>
-          <p className="text-base font-semibold text-red-500">본 게시물은 투자 권유용이 아닌 정보 제공 및 작성자 개인 기록용입니다.</p>
         </div>
+      )}
 
-        <div className="prose mt-10 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
-
-        {attachments.length > 0 && (
-          <div className="mt-8 space-y-2">
-            <p className="text-sm font-semibold">첨부파일 ({attachments.length})</p>
-            <div className="space-y-1">
-              {attachments.map((a) => (
-                <a key={a.id} href={a.url} download={a.name} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm hover:bg-surface-muted transition">
-                  {a.name}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
+      {/* 공유 + 좋아요/댓글 */}
+      <div className="border-t border-border pt-6 space-y-6">
         <PostShareButtons />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
-      </Card>
+      </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* 이전/다음 글 */}
+      <div className="grid gap-2 sm:grid-cols-2 border-t border-border pt-6">
         {prev ? (
-          <PostSlugLink slug={prev.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground">
-            이전 글<br />
-            <span className="font-semibold text-foreground">{prev.title}</span>
+          <PostSlugLink slug={prev.slug} className="group flex flex-col gap-1 rounded-xl border border-border p-4 hover:border-foreground/20 transition-colors">
+            <span className="text-xs text-muted-foreground">이전 글</span>
+            <span className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-2">{prev.title}</span>
           </PostSlugLink>
         ) : <div />}
         {next ? (
-          <PostSlugLink slug={next.slug} className="rounded-lg border border-border bg-surface p-4 text-left text-sm text-muted-foreground hover:text-foreground sm:text-right">
-            다음 글<br />
-            <span className="font-semibold text-foreground">{next.title}</span>
+          <PostSlugLink slug={next.slug} className="group flex flex-col gap-1 rounded-xl border border-border p-4 hover:border-foreground/20 transition-colors sm:items-end sm:text-right">
+            <span className="text-xs text-muted-foreground">다음 글</span>
+            <span className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-2">{next.title}</span>
           </PostSlugLink>
         ) : null}
       </div>
