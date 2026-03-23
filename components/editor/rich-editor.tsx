@@ -90,8 +90,6 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showFontSizePicker, setShowFontSizePicker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const { show } = useToast();
 
   const editor = useEditor({
@@ -183,40 +181,44 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setTableHover(null);
   };
 
-  // 행 높이 드래그 리사이즈 (오버레이 핸들)
+  // 행 리사이즈 핸들 (열 리사이즈와 동일 방식)
   useEffect(() => {
     if (!editor) return;
-    const overlay = overlayRef.current;
-    const wrapper = wrapperRef.current;
-    if (!overlay || !wrapper) return;
+    const el = editor.view.dom as HTMLElement;
     let active = false, startY = 0, startH = 0;
     let activeCells: HTMLElement[] = [];
-    const build = () => {
-      overlay.innerHTML = '';
-      const wRect = wrapper.getBoundingClientRect();
-      editor.view.dom.querySelectorAll('tr').forEach((row) => {
-        const rRect = (row as HTMLElement).getBoundingClientRect();
-        if (!rRect.width) return;
+
+    const inject = () => {
+      el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
+      el.querySelectorAll('td, th').forEach(cell => {
         const h = document.createElement('div');
-        h.style.cssText = 'position:absolute;top:' + (rRect.bottom - wRect.top - 3) + 'px;left:' + (rRect.left - wRect.left) + 'px;width:' + rRect.width + 'px;height:6px;cursor:row-resize;z-index:30;pointer-events:auto;border-bottom:2px dashed transparent;box-sizing:border-box;';
-        h.onmouseenter = () => { h.style.borderBottomColor = 'hsl(221,93%,54%)'; };
-        h.onmouseleave = () => { if (!active) h.style.borderBottomColor = 'transparent'; };
-        h.onmousedown = (e) => {
-          e.preventDefault(); e.stopPropagation();
-          active = true; startY = e.clientY;
-          activeCells = Array.from((row as HTMLElement).querySelectorAll('td,th')) as HTMLElement[];
-          startH = activeCells[0]?.getBoundingClientRect().height ?? 40;
-          document.body.style.cursor = 'row-resize';
-          (document.body.style as any).userSelect = 'none';
-        };
-        overlay.appendChild(h);
+        h.className = 'row-resize-handle';
+        h.contentEditable = 'false';
+        (cell as HTMLElement).appendChild(h);
       });
     };
-    build();
+
+    inject();
     let t: ReturnType<typeof setTimeout>;
-    const obs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(build, 30); });
-    obs.observe(editor.view.dom, { childList: true, subtree: true });
-    window.addEventListener('resize', build);
+    const obs = new MutationObserver((muts) => {
+      const self = muts.every(m =>
+        [...m.addedNodes, ...m.removedNodes].every(n => n instanceof Element && (n as Element).classList.contains('row-resize-handle'))
+      );
+      if (!self) { clearTimeout(t); t = setTimeout(inject, 20); }
+    });
+    obs.observe(el, { childList: true, subtree: true });
+
+    el.addEventListener('mousedown', (e) => {
+      if (!(e.target as HTMLElement).classList.contains('row-resize-handle')) return;
+      e.preventDefault(); e.stopPropagation();
+      active = true; startY = e.clientY;
+      const row = (e.target as HTMLElement).closest('tr');
+      activeCells = row ? Array.from(row.querySelectorAll('td,th')) as HTMLElement[] : [];
+      startH = activeCells[0]?.getBoundingClientRect().height ?? 40;
+      document.body.style.cursor = 'row-resize';
+      (document.body.style as any).userSelect = 'none';
+    }, true);
+
     const onMove = (e: MouseEvent) => {
       if (!active) return;
       const newH = Math.max(32, startH + (e.clientY - startY));
@@ -229,7 +231,6 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       (document.body.style as any).userSelect = '';
       if (!activeCells.length) return;
       const ht = Math.round(activeCells[0].getBoundingClientRect().height) + 'px';
-      build();
       const { state, dispatch } = editor.view;
       const tr = state.tr; let changed = false;
       state.doc.descendants((node: any, pos: number) => {
@@ -247,7 +248,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     document.addEventListener('mouseup', onUp);
     return () => {
       obs.disconnect(); clearTimeout(t);
-      window.removeEventListener('resize', build);
+      el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
     };
@@ -431,10 +432,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
         />
       </div>
 
-      <div ref={wrapperRef} className="relative">
-        <div ref={overlayRef} className="absolute inset-0" style={{ pointerEvents: 'none', zIndex: 30 }} />
-        <EditorContent editor={editor} />
-      </div>
+      <EditorContent editor={editor} />
       <input type="hidden" name={name} value={html} readOnly />
 
       {uploading && (
