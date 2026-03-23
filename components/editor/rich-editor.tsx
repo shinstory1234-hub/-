@@ -90,6 +90,8 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showFontSizePicker, setShowFontSizePicker] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const { show } = useToast();
 
   const editor = useEditor({
@@ -181,76 +183,71 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setTableHover(null);
   };
 
-  // 행 높이 드래그 리사이즈
+  // 행 높이 드래그 리사이즈 (오버레이 핸들)
   useEffect(() => {
     if (!editor) return;
-    const el = editor.view.dom as HTMLElement;
-    let resizing = false;
-    let startY = 0;
-    let startH = 0;
-    let cells: HTMLElement[] = [];
-
-    const getRowCells = (cell: HTMLElement): HTMLElement[] => {
-      const row = cell.closest('tr');
-      return row ? (Array.from(row.querySelectorAll('td, th')) as HTMLElement[]) : [];
+    const overlay = overlayRef.current;
+    const wrapper = wrapperRef.current;
+    if (!overlay || !wrapper) return;
+    let active = false, startY = 0, startH = 0;
+    let activeCells: HTMLElement[] = [];
+    const build = () => {
+      overlay.innerHTML = '';
+      const wRect = wrapper.getBoundingClientRect();
+      editor.view.dom.querySelectorAll('tr').forEach((row) => {
+        const rRect = (row as HTMLElement).getBoundingClientRect();
+        if (!rRect.width) return;
+        const h = document.createElement('div');
+        h.style.cssText = 'position:absolute;top:' + (rRect.bottom - wRect.top - 3) + 'px;left:' + (rRect.left - wRect.left) + 'px;width:' + rRect.width + 'px;height:6px;cursor:row-resize;z-index:30;pointer-events:auto;border-bottom:2px dashed transparent;box-sizing:border-box;';
+        h.onmouseenter = () => { h.style.borderBottomColor = 'hsl(221,93%,54%)'; };
+        h.onmouseleave = () => { if (!active) h.style.borderBottomColor = 'transparent'; };
+        h.onmousedown = (e) => {
+          e.preventDefault(); e.stopPropagation();
+          active = true; startY = e.clientY;
+          activeCells = Array.from((row as HTMLElement).querySelectorAll('td,th')) as HTMLElement[];
+          startH = activeCells[0]?.getBoundingClientRect().height ?? 40;
+          document.body.style.cursor = 'row-resize';
+          (document.body.style as any).userSelect = 'none';
+        };
+        overlay.appendChild(h);
+      });
     };
-
-    const onDown = (e: MouseEvent) => {
-      const cell = (e.target as HTMLElement).closest('td, th') as HTMLElement | null;
-      if (!cell) return;
-      const rect = cell.getBoundingClientRect();
-      if (e.clientY < rect.bottom - 6) return;
-      e.preventDefault();
-      resizing = true;
-      startY = e.clientY;
-      cells = getRowCells(cell);
-      startH = cell.getBoundingClientRect().height;
-      document.body.style.cursor = 'row-resize';
-      document.body.style.userSelect = 'none';
-    };
-
+    build();
+    let t: ReturnType<typeof setTimeout>;
+    const obs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(build, 30); });
+    obs.observe(editor.view.dom, { childList: true, subtree: true });
+    window.addEventListener('resize', build);
     const onMove = (e: MouseEvent) => {
-      if (resizing) {
-        const newH = Math.max(32, startH + (e.clientY - startY));
-        cells.forEach(c => { c.style.height = newH + 'px'; });
-        return;
-      }
-      const cell = (e.target as HTMLElement).closest('td, th') as HTMLElement | null;
-      if (cell) {
-        const rect = cell.getBoundingClientRect();
-        el.style.cursor = e.clientY >= rect.bottom - 6 ? 'row-resize' : '';
-      } else {
-        el.style.cursor = '';
-      }
+      if (!active) return;
+      const newH = Math.max(32, startH + (e.clientY - startY));
+      activeCells.forEach(cell => { cell.style.height = newH + 'px'; });
     };
-
     const onUp = () => {
-      if (!resizing) return;
-      resizing = false;
+      if (!active) return;
+      active = false;
       document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      if (!cells.length) return;
-      const h = Math.round(cells[0].getBoundingClientRect().height) + 'px';
+      (document.body.style as any).userSelect = '';
+      if (!activeCells.length) return;
+      const ht = Math.round(activeCells[0].getBoundingClientRect().height) + 'px';
+      build();
       const { state, dispatch } = editor.view;
-      const tr = state.tr;
-      let changed = false;
+      const tr = state.tr; let changed = false;
       state.doc.descendants((node: any, pos: number) => {
         if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return;
         const dom = editor.view.nodeDOM(pos);
-        if (dom && cells.includes(dom as HTMLElement)) {
-          tr.setNodeMarkup(pos, undefined, { ...node.attrs, height: h });
+        if (dom && activeCells.includes(dom as HTMLElement)) {
+          tr.setNodeMarkup(pos, undefined, { ...node.attrs, height: ht });
           changed = true;
         }
       });
       if (changed) dispatch(tr);
-      cells = [];
+      activeCells = [];
     };
-
-    el.addEventListener('mousedown', onDown);
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     return () => {
-      el.removeEventListener('mousedown', onDown);
+      obs.disconnect(); clearTimeout(t);
+      window.removeEventListener('resize', build);
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
     };
@@ -434,7 +431,10 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
         />
       </div>
 
-      <EditorContent editor={editor} />
+      <div ref={wrapperRef} className="relative">
+        <div ref={overlayRef} className="absolute inset-0" style={{ pointerEvents: 'none', zIndex: 30 }} />
+        <EditorContent editor={editor} />
+      </div>
       <input type="hidden" name={name} value={html} readOnly />
 
       {uploading && (
