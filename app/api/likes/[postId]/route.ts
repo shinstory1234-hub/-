@@ -10,8 +10,8 @@ async function getSupabase() {
   return createClient();
 }
 
-export async function GET(req: Request, { params }: { params: { postId: string } }) {
-  const { postId } = params;
+export async function GET(req: Request, { params }: { params: Promise<{ postId: string }> }) {
+  const { postId } = await params;
   const ip = getIP(req);
   const supabase = await getSupabase();
 
@@ -38,8 +38,8 @@ export async function GET(req: Request, { params }: { params: { postId: string }
   return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: Boolean(data?.id) });
 }
 
-export async function POST(req: Request, { params }: { params: { postId: string } }) {
-  const { postId } = params;
+export async function POST(req: Request, { params }: { params: Promise<{ postId: string }> }) {
+  const { postId } = await params;
   const ip = getIP(req);
   const supabase = await getSupabase();
 
@@ -85,8 +85,8 @@ export async function POST(req: Request, { params }: { params: { postId: string 
   return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: true });
 }
 
-export async function DELETE(req: Request, { params }: { params: { postId: string } }) {
-  const { postId } = params;
+export async function DELETE(req: Request, { params }: { params: Promise<{ postId: string }> }) {
+  const { postId } = await params;
   const ip = getIP(req);
   const supabase = await getSupabase();
 
