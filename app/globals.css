@@ -173,6 +173,12 @@
   margin-bottom: 0;
 }
 
+/* 에디터 빈 단락 간격 보정 (발행 결과와 일치) */
+.ProseMirror p:has(> br:only-child) {
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+
 /* 페이지 전환 애니메이션 */
 @keyframes page-in {
   from { opacity: 0; transform: translateY(10px); }
