@@ -1,79 +1,109 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase-server";
 
 function getIP(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   return forwarded ? forwarded.split(",")[0].trim() : "unknown";
 }
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+async function getSupabase() {
+  return createClient();
 }
 
-export async function GET(req: Request, { params }: { params: Promise<{ postId: string }> }) {
-  const { postId } = await params;
+export async function GET(req: Request, { params }: { params: { postId: string } }) {
+  const { postId } = params;
   const ip = getIP(req);
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
 
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from("likes")
     .select("id", { count: "exact", head: true })
     .eq("post_id", postId);
 
-  const { data } = await supabase
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+
+  const { data, error: likeError } = await supabase
     .from("likes")
     .select("id")
     .eq("post_id", postId)
     .eq("ip_address", ip)
     .maybeSingle();
+
+  if (likeError) {
+    return NextResponse.json({ ok: false, error: likeError.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: Boolean(data?.id) });
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ postId: string }> }) {
-  const { postId } = await params;
+export async function POST(req: Request, { params }: { params: { postId: string } }) {
+  const { postId } = params;
   const ip = getIP(req);
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("likes")
     .select("id")
     .eq("post_id", postId)
     .eq("ip_address", ip)
     .maybeSingle();
 
+  if (existingError) {
+    return NextResponse.json({ ok: false, error: existingError.message }, { status: 500 });
+  }
+
   if (existing?.id) {
-    const { count } = await supabase
+    const { count, error } = await supabase
       .from("likes")
       .select("id", { count: "exact", head: true })
       .eq("post_id", postId);
+
+    if (error) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+
     return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: true });
   }
 
-  await supabase.from("likes").insert({ post_id: postId, ip_address: ip });
+  const { error: insertError } = await supabase.from("likes").insert({ post_id: postId, ip_address: ip });
 
-  const { count } = await supabase
+  if (insertError) {
+    return NextResponse.json({ ok: false, error: insertError.message }, { status: 500 });
+  }
+
+  const { count, error } = await supabase
     .from("likes")
     .select("id", { count: "exact", head: true })
     .eq("post_id", postId);
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: true });
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ postId: string }> }) {
-  const { postId } = await params;
+export async function DELETE(req: Request, { params }: { params: { postId: string } }) {
+  const { postId } = params;
   const ip = getIP(req);
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
 
-  await supabase.from("likes").delete().eq("post_id", postId).eq("ip_address", ip);
+  const { error: deleteError } = await supabase.from("likes").delete().eq("post_id", postId).eq("ip_address", ip);
 
-  const { count } = await supabase
+  if (deleteError) {
+    return NextResponse.json({ ok: false, error: deleteError.message }, { status: 500 });
+  }
+
+  const { count, error } = await supabase
     .from("likes")
     .select("id", { count: "exact", head: true })
     .eq("post_id", postId);
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: false });
 }

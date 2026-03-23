@@ -393,3 +393,56 @@ export async function moveToEdgeAction(_prev: ActionState, formData: FormData): 
   revalidatePath("/");
   return { ok: true };
 }
+
+export async function uploadAttachmentAction(formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const postId = String(formData.get("post_id") ?? "").trim();
+  const file = formData.get("file") as File | null;
+
+  if (!postId || !file || file.size === 0) {
+    return { ok: false, error: "파일 또는 게시글 정보가 없습니다." };
+  }
+
+  const supabase = await createClient();
+  const filePath = `${postId}/${Date.now()}-${file.name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("attachments")
+    .upload(filePath, file);
+
+  if (uploadError) return { ok: false, error: uploadError.message };
+
+  const { error: dbError } = await supabase.from("post_attachments").insert({
+    post_id: postId,
+    file_name: file.name,
+    file_path: filePath,
+    file_size: file.size,
+    mime_type: file.type,
+  });
+
+  if (dbError) return { ok: false, error: dbError.message };
+
+  revalidatePath(`/admin/posts`);
+  return { ok: true };
+}
+
+export async function deleteAttachmentAction(formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+  const filePath = String(formData.get("file_path") ?? "").trim();
+  if (!id || !filePath) return { ok: false, error: "첨부파일 정보가 없습니다." };
+
+  const supabase = await createClient();
+
+  const { error: storageError } = await supabase.storage
+    .from("attachments")
+    .remove([filePath]);
+
+  if (storageError) return { ok: false, error: storageError.message };
+
+  const { error: dbError } = await supabase.from("post_attachments").delete().eq("id", id);
+  if (dbError) return { ok: false, error: dbError.message };
+
+  revalidatePath(`/admin/posts`);
+  return { ok: true };
+}
