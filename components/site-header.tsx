@@ -16,9 +16,13 @@ export function SiteHeader() {
   // 홈: page.tsx에서 자체 헤더 처리
   if (pathname === "/") return null;
 
+  // 글 상세 페이지는 본문(max-w-4xl)에 맞춰 헤더도 좁힘
+  const isPost = pathname.startsWith("/posts/") || pathname.startsWith("/topics/");
+  const innerClass = isPost ? "mx-auto max-w-4xl" : "w-full";
+
   return (
     <header className="w-full pt-6 pb-4">
-      <div className="flex items-center justify-between">
+      <div className={cn("flex items-center justify-between", innerClass)}>
         <Link
           href="/"
           className="text-2xl font-bold tracking-tight text-foreground hover:text-accent transition-colors"
