@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from "recharts";
 
 type Snapshot = {
   snapshot_at: string;
@@ -63,9 +63,16 @@ export function PortfolioChart() {
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
-      <ResponsiveContainer width="100%" height={88}>
+      <ResponsiveContainer width="100%" height={110}>
         <LineChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-          <XAxis dataKey="snapshot_at" hide />
+          <XAxis
+            dataKey="snapshot_at"
+            tickFormatter={(v) => new Date(v).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric" })}
+            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            axisLine={false}
+            tickLine={false}
+            interval="preserveStartEnd"
+          />
           <YAxis hide domain={["auto", "auto"]} />
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" strokeWidth={1} />
