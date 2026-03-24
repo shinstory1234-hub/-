@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -16,19 +16,6 @@ import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
-// 행 높이를 <tr> 요소에 적용 — td/th에 height를 쓰면 브라우저가 무시하는 경우가 있음
-const CustomTableRow = TableRow.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      height: {
-        default: null,
-        parseHTML: (el) => el.style.height || null,
-        renderHTML: (attrs) => attrs.height ? { style: `height: ${attrs.height}` } : {},
-      },
-    };
-  },
-});
 
 type Props = {
   name: string;
@@ -89,7 +76,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       FontSize,
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
-      CustomTableRow,
+      TableRow,
       TableHeader,
       TableCell,
     ],
@@ -169,90 +156,6 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setTableHover(null);
   };
 
-  // 행 리사이즈 핸들 — 드래그 중 DOM 직접 수정, mouseup 시 ProseMirror에 커밋
-  useEffect(() => {
-    if (!editor) return;
-    const el = editor.view.dom as HTMLElement;
-    let active = false, startY = 0, startH = 0;
-    let activeTrEl: HTMLElement | null = null;
-    let activeRowPos = -1;
-
-    // DOM 요소 → ProseMirror tableRow 위치 (posAtDOM 사용, nodeDOM보다 신뢰성 높음)
-    const findRowPos = (trEl: HTMLElement): number => {
-      try {
-        const pos = editor.view.posAtDOM(trEl, 0);
-        const $pos = editor.state.doc.resolve(pos);
-        for (let d = $pos.depth; d >= 0; d--) {
-          if ($pos.node(d).type.name === 'tableRow') return $pos.before(d);
-        }
-      } catch { /* ignore */ }
-      return -1;
-    };
-
-    const inject = () => {
-      el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
-      el.querySelectorAll('td, th').forEach(cell => {
-        const h = document.createElement('div');
-        h.className = 'row-resize-handle';
-        h.contentEditable = 'false';
-        h.onmousedown = (e) => {
-          e.preventDefault(); e.stopPropagation();
-          const trEl = (cell as HTMLElement).closest('tr') as HTMLElement | null;
-          if (!trEl) return;
-          active = true;
-          startY = e.clientY;
-          startH = trEl.getBoundingClientRect().height;
-          activeTrEl = trEl;
-          activeRowPos = findRowPos(trEl);
-          document.body.style.cursor = 'row-resize';
-          (document.body.style as any).userSelect = 'none';
-        };
-        (cell as HTMLElement).appendChild(h);
-      });
-    };
-
-    inject();
-    let t: ReturnType<typeof setTimeout>;
-    const obs = new MutationObserver((muts) => {
-      const self = muts.every(m =>
-        [...m.addedNodes, ...m.removedNodes].every(n => n instanceof Element && (n as Element).classList.contains('row-resize-handle'))
-      );
-      if (!self) { clearTimeout(t); t = setTimeout(inject, 20); }
-    });
-    obs.observe(el, { childList: true, subtree: true });
-
-    const onMove = (e: MouseEvent) => {
-      if (!active || !activeTrEl) return;
-      // 드래그 중에는 DOM만 직접 수정 → ProseMirror 재렌더링 없어서 핸들이 안 날아감
-      const newH = Math.max(32, startH + (e.clientY - startY));
-      activeTrEl.style.height = newH + 'px';
-    };
-
-    const onUp = (e: MouseEvent) => {
-      if (!active) return;
-      // mouseup 시 딱 한 번만 ProseMirror에 커밋
-      if (activeTrEl && activeRowPos !== -1) {
-        const newH = Math.max(32, startH + (e.clientY - startY)) + 'px';
-        const { state, dispatch } = editor.view;
-        const node = state.doc.nodeAt(activeRowPos);
-        if (node && node.type.name === 'tableRow') {
-          dispatch(state.tr.setNodeMarkup(activeRowPos, undefined, { ...node.attrs, height: newH }));
-        }
-      }
-      active = false; activeTrEl = null; activeRowPos = -1;
-      document.body.style.cursor = '';
-      (document.body.style as any).userSelect = '';
-    };
-
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-    return () => {
-      obs.disconnect(); clearTimeout(t);
-      el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    };
-  }, [editor]);
 
   return (
     <div className="space-y-2">
@@ -397,38 +300,6 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
                     const val = parseInt((e.target as HTMLInputElement).value);
                     if (val > 0) {
                       editor.chain().focus().setCellAttribute("colwidth", [val]).run();
-                      (e.target as HTMLInputElement).value = "";
-                    }
-                  }
-                }}
-              />
-              <input
-                type="number"
-                min="20"
-                max="500"
-                placeholder="행 높이(px)"
-                className="h-8 w-20 rounded-md border border-border bg-surface px-2 text-xs"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const val = parseInt((e.target as HTMLInputElement).value);
-                    if (val > 0) {
-                      const { state } = editor.view;
-                      const { $from } = state.selection;
-                      let rowPos = -1;
-                      for (let d = $from.depth; d > 0; d--) {
-                        if ($from.node(d).type.name === 'tableRow') {
-                          rowPos = $from.before(d);
-                          break;
-                        }
-                      }
-                      if (rowPos !== -1) {
-                        const node = state.doc.nodeAt(rowPos);
-                        if (node) {
-                          editor.view.dispatch(
-                            state.tr.setNodeMarkup(rowPos, undefined, { ...node.attrs, height: `${val}px` })
-                          );
-                        }
-                      }
                       (e.target as HTMLInputElement).value = "";
                     }
                   }
