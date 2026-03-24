@@ -27,7 +27,7 @@ export function SiteHeader() {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="text-lg font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl"
+          className="text-sm font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl whitespace-nowrap"
         >
           머니NPC의 액티브 ETF
         </Link>
