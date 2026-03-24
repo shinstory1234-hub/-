@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { VisitCounter } from "@/components/visit-counter";
 
 const menus = [
   { href: "/about", label: "소개" },
@@ -14,15 +13,11 @@ const menus = [
 export function SiteHeader() {
   const pathname = usePathname();
 
-  // 관리자 페이지: 헤더 없음
-  if (pathname.startsWith("/admin")) return null;
-
-  // 홈: 그대로 (page.tsx에서 자체 처리하므로 layout 헤더 숨김)
+  // 홈: page.tsx에서 자체 헤더 처리
   if (pathname === "/") return null;
 
-  // 소개·포트폴리오·글 상세 등: VisitCounter 없는 심플 헤더, 본문과 동일한 max-w-6xl
   return (
-    <header className="mx-auto w-full max-w-6xl space-y-1 pt-6 pb-4">
+    <header className="w-full pt-6 pb-4">
       <div className="flex items-center justify-between">
         <Link
           href="/"
@@ -51,7 +46,6 @@ export function SiteHeader() {
           <ThemeToggle />
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
     </header>
   );
 }
