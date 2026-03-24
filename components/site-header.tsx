@@ -18,7 +18,7 @@ export function SiteHeader() {
 
   // 글 상세 페이지는 본문(max-w-4xl)에 맞춰 헤더도 좁힘
   const isPost = pathname.startsWith("/posts/") || pathname.startsWith("/topics/");
-  const innerClass = isPost ? "mx-auto max-w-4xl" : "w-full";
+  const innerClass = isPost ? "mx-auto max-w-3xl" : "w-full";
 
   return (
     <header className="w-full pt-6 pb-4">

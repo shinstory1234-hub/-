@@ -52,18 +52,18 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   const next = index > 0 ? all[index - 1] : undefined;
 
   return (
-    <article className="mx-auto max-w-4xl space-y-10">
+    <article className="mx-auto max-w-3xl space-y-10 pt-10">
       {/* 글 헤더 */}
-      <header className="space-y-4 pt-2">
+      <header className="space-y-3 pt-0">
         <div className="flex items-center gap-2">
           {post.category && (
-            <span className="text-xs font-semibold text-accent">{post.category.name}</span>
+            <span className="text-base font-bold text-accent">{post.category.name}</span>
           )}
           {post.tags?.slice(0, 2).map((tag, idx) => (
             <span key={idx} className="text-xs text-muted-foreground">#{tag}</span>
           ))}
         </div>
-        <h1 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">{post.title}</h1>
+        <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl">{post.title}</h1>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{formatPostDate(post.published_at ?? "")}</span>
           <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
