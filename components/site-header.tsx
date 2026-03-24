@@ -27,13 +27,8 @@ export function SiteHeader() {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2 text-sm font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl whitespace-nowrap"
+          className="text-sm font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl whitespace-nowrap"
         >
-          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" className="flex-shrink-0 md:w-7 md:h-7" aria-hidden="true">
-            <rect width="32" height="32" rx="7" fill="#3b82f6"/>
-            <path d="M5 23L11 15L16 19.5L27 9" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M22 9H27V14" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
           머니NPC의 액티브 ETF
         </Link>
         <div className="flex items-center gap-1">
