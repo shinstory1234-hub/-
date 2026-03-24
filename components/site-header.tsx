@@ -8,16 +8,25 @@ import { VisitCounter } from "@/components/visit-counter";
 const menus = [
   { href: "/about", label: "소개" },
   { href: "/portfolio", label: "포트폴리오" },
-  { href: "/admin", label: "관리자" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
+
+  // 관리자 페이지: 헤더 없음
+  if (pathname.startsWith("/admin")) return null;
+
+  // 홈: 그대로 (page.tsx에서 자체 처리하므로 layout 헤더 숨김)
+  if (pathname === "/") return null;
+
+  // 소개·포트폴리오·글 상세 등: VisitCounter 없는 심플 헤더, 본문과 동일한 max-w-6xl
   return (
-    <header className="mx-auto w-full max-w-2xl space-y-2 pt-6 pb-4">
-      {/* 1행: 블로그 제목 + 메뉴 + 다크모드 */}
+    <header className="mx-auto w-full max-w-6xl space-y-1 pt-6 pb-4">
       <div className="flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold tracking-tight text-foreground hover:text-accent transition-colors">
+        <Link
+          href="/"
+          className="text-2xl font-bold tracking-tight text-foreground hover:text-accent transition-colors"
+        >
           머니NPC의 액티브 ETF
         </Link>
         <div className="flex items-center gap-1">
@@ -41,11 +50,7 @@ export function SiteHeader() {
           <ThemeToggle />
         </div>
       </div>
-      {/* 2행: 부제목 + 조회수 */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
-        <VisitCounter />
-      </div>
+      <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
     </header>
   );
 }
