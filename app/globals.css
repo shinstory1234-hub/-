@@ -166,17 +166,13 @@
 
 /* 에디터 문단 간격 */
 .ProseMirror p {
-  margin-bottom: 0.25rem;
-  line-height: 1.9;
-}
-.ProseMirror p:last-child {
   margin-bottom: 0;
+  line-height: 1.9;
 }
 
 /* 빈 단락(줄바꿈) 간격 */
 .ProseMirror p:has(> br:only-child) {
   line-height: 1.2;
-  margin-bottom: 0.25rem;
 }
 
 /* 페이지 전환 애니메이션 */
