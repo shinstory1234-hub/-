@@ -5,14 +5,14 @@ export default function AboutPage() {
     <section className="mx-auto max-w-6xl space-y-6">
       <Card>
         <CardHeader>
-          <h1 className="text-2xl font-bold tracking-tight">머니NPC 소개</h1>
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl">머니NPC 소개</h1>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="leading-8 text-muted-foreground">
+        <CardContent className="space-y-5">
+          <p className="text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
             머니NPC는 VC심사역, 증권사 등 제도권 금융 현장에서 쌓은 경험을 바탕으로, 투자, 커리어, 시장에 대한 생각을 정리하는 개인 기록 공간입니다.
           </p>
 
-          <div className="rounded-lg border border-border bg-surface p-5 space-y-2">
+          <div className="rounded-lg border border-border bg-surface p-4 space-y-2 md:p-5">
             <p className="text-sm font-bold text-foreground">🧪 머니NPC 액티브 ETF란?</p>
             <div className="text-sm leading-7 text-muted-foreground space-y-2">
               <p>이 블로그는 단순한 투자 기록을 넘어, <strong className="text-foreground">나만의 액티브 ETF</strong>를 설계하고 운용하는 실험적 프로젝트입니다.</p>
@@ -22,9 +22,9 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-surface p-5 space-y-2">
+          <div className="rounded-lg border border-border bg-surface p-4 space-y-2 md:p-5">
             <p className="text-sm font-bold text-foreground">📋 운용 철학</p>
-            <ul className="text-base leading-8 text-muted-foreground list-disc list-inside space-y-2">
+            <ul className="text-sm leading-7 text-muted-foreground list-disc list-inside space-y-1 md:text-base md:leading-8 md:space-y-2">
               <li>데이터와 논리에 기반한 의사결정</li>
               <li>매크로 환경 분석을 통한 자산 배분</li>
               <li>감정이 아닌 프로세스로 운용</li>
@@ -32,9 +32,9 @@ export default function AboutPage() {
             </ul>
           </div>
 
-          <div className="rounded-lg border-2 border-danger/50 bg-danger/10 p-5 space-y-3">
+          <div className="rounded-lg border-2 border-danger/50 bg-danger/10 p-4 space-y-2 md:p-5 md:space-y-3">
             <p className="text-sm font-extrabold text-danger">⚠️ 중요 면책 고지 (Disclaimer)</p>
-            <div className="text-sm leading-7 text-danger/90 space-y-2">
+            <div className="text-xs leading-6 text-danger/90 space-y-2 md:text-sm md:leading-7">
               <p>본 블로그의 모든 콘텐츠는 <strong>개인적인 기록 및 학습 목적</strong>으로만 작성되었으며, 어떠한 경우에도 <strong>투자 권유, 매수·매도·보유 추천</strong>으로 해석될 수 없습니다.</p>
               <p>본 콘텐츠는 <strong>투자 판단의 근거로 사용될 수 없으며</strong>, 모든 투자 결정과 그 결과에 대한 <strong>책임은 전적으로 투자자 본인</strong>에게 있습니다.</p>
               <p>포트폴리오는 <strong>모의투자</strong>로 운용되며, 실제 투자 성과와 다를 수 있습니다. 과거 수익률이 미래 수익률을 보장하지 않습니다.</p>

@@ -79,12 +79,14 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">총 평가금액</p>
-          <p className="text-base font-bold md:text-lg">₩{total_eval_amt.toLocaleString()}</p>
+          <p className="flex items-baseline gap-0.5 text-sm font-bold md:text-lg">
+            <span>₩</span><span>{total_eval_amt.toLocaleString()}</span>
+          </p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">전체 수익률</p>
-          <p className={`text-base font-bold md:text-lg ${isPlus ? "text-red-500" : "text-blue-500"}`}>
-            {isPlus ? "+" : ""}{profit_loss_rate.toFixed(2)}%
+          <p className={`flex items-baseline gap-0.5 text-sm font-bold md:text-lg ${isPlus ? "text-red-500" : "text-blue-500"}`}>
+            <span>{isPlus ? "+" : ""}{profit_loss_rate.toFixed(2)}</span><span>%</span>
           </p>
         </div>
       </div>
@@ -92,19 +94,23 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p className="text-sm font-semibold border-b border-border pb-2">주식계좌</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">현금</p>
-              <p className="text-sm font-bold">₩{(cash_amt - stock_eval_amt).toLocaleString()}</p>
+              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
+                <span>₩</span><span>{(cash_amt - stock_eval_amt).toLocaleString()}</span>
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">평가금액</p>
-              <p className="text-sm font-bold">₩{stock_eval_amt.toLocaleString()}</p>
+              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
+                <span>₩</span><span>{stock_eval_amt.toLocaleString()}</span>
+              </p>
             </div>
-            <div className="space-y-1">
+            <div className="col-span-2 border-t border-border/40 pt-2 space-y-1 sm:col-span-1 sm:border-t-0 sm:pt-0">
               <p className="text-xs text-muted-foreground">손익률</p>
-              <p className={`text-sm font-bold ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
-                {isStockPlus ? "+" : ""}{stockProfitRate.toFixed(3)}%
+              <p className={`flex items-baseline gap-0.5 text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
+                <span>{isStockPlus ? "+" : ""}{stockProfitRate.toFixed(3)}</span><span>%</span>
               </p>
             </div>
           </div>
@@ -112,19 +118,23 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
 
         <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p className="text-sm font-semibold border-b border-border pb-2">선물계좌</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">예탁금</p>
-              <p className="text-sm font-bold">₩{futureAmt.toLocaleString()}</p>
+              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
+                <span>₩</span><span>{futureAmt.toLocaleString()}</span>
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">평가금액</p>
-              <p className="text-sm font-bold">₩{futureEvalAmt.toLocaleString()}</p>
+              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
+                <span>₩</span><span>{futureEvalAmt.toLocaleString()}</span>
+              </p>
             </div>
-            <div className="space-y-1">
+            <div className="col-span-2 border-t border-border/40 pt-2 space-y-1 sm:col-span-1 sm:border-t-0 sm:pt-0">
               <p className="text-xs text-muted-foreground">손익률</p>
-              <p className={`text-sm font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
-                {isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(3)}%
+              <p className={`flex items-baseline gap-0.5 text-xs font-bold md:text-sm ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
+                <span>{isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(3)}</span><span>%</span>
               </p>
             </div>
           </div>
