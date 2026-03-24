@@ -169,24 +169,24 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setTableHover(null);
   };
 
-  // 행 리사이즈 핸들 — tableRow 노드의 height 속성을 업데이트
+  // 행 리사이즈 핸들 — 드래그 중 DOM 직접 수정, mouseup 시 ProseMirror에 커밋
   useEffect(() => {
     if (!editor) return;
     const el = editor.view.dom as HTMLElement;
     let active = false, startY = 0, startH = 0;
+    let activeTrEl: HTMLElement | null = null;
     let activeRowPos = -1;
-    let rafId = 0;
 
+    // DOM 요소 → ProseMirror tableRow 위치 (posAtDOM 사용, nodeDOM보다 신뢰성 높음)
     const findRowPos = (trEl: HTMLElement): number => {
-      let found = -1;
-      editor.state.doc.descendants((node: any, pos: number) => {
-        if (found !== -1) return false;
-        if (node.type.name === 'tableRow') {
-          const dom = editor.view.nodeDOM(pos);
-          if (dom === trEl) found = pos;
+      try {
+        const pos = editor.view.posAtDOM(trEl, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        for (let d = $pos.depth; d >= 0; d--) {
+          if ($pos.node(d).type.name === 'tableRow') return $pos.before(d);
         }
-      });
-      return found;
+      } catch { /* ignore */ }
+      return -1;
     };
 
     const inject = () => {
@@ -202,6 +202,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
           active = true;
           startY = e.clientY;
           startH = trEl.getBoundingClientRect().height;
+          activeTrEl = trEl;
           activeRowPos = findRowPos(trEl);
           document.body.style.cursor = 'row-resize';
           (document.body.style as any).userSelect = 'none';
@@ -221,27 +222,32 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     obs.observe(el, { childList: true, subtree: true });
 
     const onMove = (e: MouseEvent) => {
-      if (!active || activeRowPos === -1) return;
-      const newH = Math.max(32, startH + (e.clientY - startY)) + 'px';
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
+      if (!active || !activeTrEl) return;
+      // 드래그 중에는 DOM만 직접 수정 → ProseMirror 재렌더링 없어서 핸들이 안 날아감
+      const newH = Math.max(32, startH + (e.clientY - startY));
+      activeTrEl.style.height = newH + 'px';
+    };
+
+    const onUp = (e: MouseEvent) => {
+      if (!active) return;
+      // mouseup 시 딱 한 번만 ProseMirror에 커밋
+      if (activeTrEl && activeRowPos !== -1) {
+        const newH = Math.max(32, startH + (e.clientY - startY)) + 'px';
         const { state, dispatch } = editor.view;
         const node = state.doc.nodeAt(activeRowPos);
         if (node && node.type.name === 'tableRow') {
           dispatch(state.tr.setNodeMarkup(activeRowPos, undefined, { ...node.attrs, height: newH }));
         }
-      });
-    };
-    const onUp = () => {
-      if (!active) return;
-      active = false; activeRowPos = -1;
+      }
+      active = false; activeTrEl = null; activeRowPos = -1;
       document.body.style.cursor = '';
       (document.body.style as any).userSelect = '';
     };
+
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     return () => {
-      obs.disconnect(); clearTimeout(t); cancelAnimationFrame(rafId);
+      obs.disconnect(); clearTimeout(t);
       el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
