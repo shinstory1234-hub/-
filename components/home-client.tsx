@@ -23,11 +23,13 @@ function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   const now = new Date();
   const sameYear = date.getFullYear() === now.getFullYear();
-  return date.toLocaleDateString("ko-KR", {
+  return date.toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
     ...(sameYear ? {} : { year: "numeric" }),
     month: "long",
     day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 

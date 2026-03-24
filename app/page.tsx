@@ -1,8 +1,16 @@
 export const revalidate = 60;
+import Link from "next/link";
 import { getCategories, getPostsWithError } from "@/lib/posts";
 import { VisitCounter } from "@/components/visit-counter";
 import { HomeClient } from "@/components/home-client";
 import { PortfolioChart } from "@/components/portfolio-chart";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const NAV_MENUS = [
+  { href: "/about", label: "소개" },
+  { href: "/portfolio", label: "포트폴리오" },
+  { href: "/admin", label: "관리자" },
+];
 
 export default async function HomePage() {
   const [{ posts }, categories] = await Promise.all([
@@ -11,8 +19,29 @@ export default async function HomePage() {
   ]);
   return (
     <section className="mx-auto max-w-2xl space-y-10">
-      <header className="space-y-1 pt-4">
-        <h1 className="text-3xl font-bold tracking-tight">머니NPC의 액티브 ETF</h1>
+      {/* 헤더 */}
+      <header className="space-y-2 pt-4">
+        {/* 1행: 블로그 제목 + 메뉴 */}
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold tracking-tight text-foreground hover:text-accent transition-colors">
+            머니NPC의 액티브 ETF
+          </Link>
+          <div className="flex items-center gap-1">
+            <nav className="flex items-center">
+              {NAV_MENUS.map((menu) => (
+                <Link
+                  key={menu.href}
+                  href={menu.href}
+                  className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md"
+                >
+                  {menu.label}
+                </Link>
+              ))}
+            </nav>
+            <ThemeToggle />
+          </div>
+        </div>
+        {/* 2행: 부제목 + 조회수 */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
           <VisitCounter />
