@@ -18,7 +18,7 @@ export function HomeHeader() {
       <div className="flex items-center justify-between">
         <Link
           href="/"
-          className="text-lg font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl"
+          className="text-base font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl"
         >
           머니NPC의 액티브 ETF
         </Link>

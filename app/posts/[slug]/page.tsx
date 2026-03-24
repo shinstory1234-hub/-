@@ -63,7 +63,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             <span key={idx} className="text-xs text-muted-foreground">#{tag}</span>
           ))}
         </div>
-        <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl">{post.title}</h1>
+        <h1 className="text-lg font-bold leading-snug tracking-tight md:text-2xl">{post.title}</h1>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{formatPostDate(post.published_at ?? "")}</span>
           <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />

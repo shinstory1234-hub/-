@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
 :root {
   color-scheme: light;
   --background: 0 0% 100%;
@@ -44,7 +42,7 @@
     @apply bg-background text-foreground;
   }
   body {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-pretendard), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     letter-spacing: -0.02em;
   }
   h1 {
@@ -173,6 +171,25 @@
 /* 빈 단락(줄바꿈) 간격 */
 .ProseMirror p:has(> br:only-child) {
   line-height: 1.2;
+}
+
+/* 포트폴리오 표 가로 스크롤 + 항상 보이는 스크롤바 */
+.table-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--border));
+}
+.table-scroll::-webkit-scrollbar {
+  height: 6px;
+  display: block;
+}
+.table-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
 }
 
 /* 페이지 전환 애니메이션 */
