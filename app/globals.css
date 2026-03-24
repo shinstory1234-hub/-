@@ -72,7 +72,7 @@
 }
 .prose p {
   line-height: 1.9;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--foreground));
   margin-top: 0;
   margin-bottom: 1.25rem;
 }
@@ -81,7 +81,7 @@
 }
 .prose li {
   line-height: 1.9;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--foreground));
 }
 .prose h1,
 .prose h2,

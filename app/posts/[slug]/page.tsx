@@ -10,11 +10,13 @@ import { createClient } from "@supabase/supabase-js";
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleDateString("ko-KR", {
+  return date.toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
     year: "numeric",
     month: "long",
     day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -50,7 +52,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   const next = index > 0 ? all[index - 1] : undefined;
 
   return (
-    <article className="mx-auto max-w-2xl space-y-10">
+    <article className="mx-auto max-w-4xl space-y-10">
       {/* 글 헤더 */}
       <header className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
