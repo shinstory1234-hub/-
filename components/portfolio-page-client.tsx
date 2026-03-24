@@ -79,17 +79,17 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">총 평가금액</p>
-          <p className="text-lg font-bold">₩{total_eval_amt.toLocaleString()}</p>
+          <p className="text-base font-bold md:text-lg">₩{total_eval_amt.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4 space-y-1">
           <p className="text-xs text-muted-foreground">전체 수익률</p>
-          <p className={`text-lg font-bold ${isPlus ? "text-red-500" : "text-blue-500"}`}>
+          <p className={`text-base font-bold md:text-lg ${isPlus ? "text-red-500" : "text-blue-500"}`}>
             {isPlus ? "+" : ""}{profit_loss_rate.toFixed(2)}%
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p className="text-sm font-semibold border-b border-border pb-2">주식계좌</p>
           <div className="grid grid-cols-3 gap-2">
@@ -166,7 +166,8 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
       {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 ? (
         <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
           <p className="text-sm font-semibold">보유 종목</p>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-1">
+          <table className="w-full text-sm min-w-[480px]">
             <thead>
               <tr className="text-left text-xs text-muted-foreground border-b border-border">
                 <th className="pb-2">종목명</th>
@@ -196,6 +197,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-surface p-6 text-center text-sm text-muted-foreground">

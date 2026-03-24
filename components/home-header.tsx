@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { VisitCounter } from "@/components/visit-counter";
 
 const menus = [
   { href: "/about", label: "소개" },
@@ -11,22 +10,14 @@ const menus = [
   { href: "/admin", label: "관리자" },
 ];
 
-export function SiteHeader() {
-  const pathname = usePathname();
+export function HomeHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  if (pathname === "/") return null;
-
-  const isPost = pathname.startsWith("/posts/") || pathname.startsWith("/topics/");
-  const innerClass = isPost ? "mx-auto max-w-3xl" : "w-full";
-
   return (
-    <header className="w-full pt-6 pb-4">
+    <header className="space-y-2 pt-4">
       {/* 1행: 로고 + 메뉴 */}
-      <div className={cn("flex items-center justify-between", innerClass)}>
+      <div className="flex items-center justify-between">
         <Link
           href="/"
-          onClick={() => setMobileOpen(false)}
           className="text-lg font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl"
         >
           머니NPC의 액티브 ETF
@@ -34,21 +25,15 @@ export function SiteHeader() {
         <div className="flex items-center gap-1">
           {/* 데스크탑 메뉴 */}
           <nav className="hidden md:flex items-center">
-            {menus.map((menu) => {
-              const active = pathname === menu.href || pathname.startsWith(menu.href);
-              return (
-                <Link
-                  key={menu.href}
-                  href={menu.href}
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-medium transition-colors rounded-md",
-                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {menu.label}
-                </Link>
-              );
-            })}
+            {menus.map((menu) => (
+              <Link
+                key={menu.href}
+                href={menu.href}
+                className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md"
+              >
+                {menu.label}
+              </Link>
+            ))}
           </nav>
           <ThemeToggle />
           {/* 모바일 햄버거 버튼 */}
@@ -70,25 +55,24 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+      {/* 2행: 부제목 + 조회수 */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
+        <VisitCounter />
+      </div>
       {/* 모바일 드롭다운 */}
       {mobileOpen && (
-        <div className={cn("md:hidden flex flex-col gap-0.5 border-t border-border mt-2 pt-2 pb-1", innerClass)}>
-          {menus.map((menu) => {
-            const active = pathname === menu.href || pathname.startsWith(menu.href);
-            return (
-              <Link
-                key={menu.href}
-                href={menu.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "py-2.5 text-sm font-medium transition-colors",
-                  active ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                {menu.label}
-              </Link>
-            );
-          })}
+        <div className="md:hidden flex flex-col gap-0.5 border-t border-border mt-1 pt-2 pb-1">
+          {menus.map((menu) => (
+            <Link
+              key={menu.href}
+              href={menu.href}
+              onClick={() => setMobileOpen(false)}
+              className="py-2.5 text-sm font-medium text-muted-foreground"
+            >
+              {menu.label}
+            </Link>
+          ))}
         </div>
       )}
     </header>
