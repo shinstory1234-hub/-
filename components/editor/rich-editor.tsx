@@ -16,20 +16,8 @@ import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
-const CustomTableCell = TableCell.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      height: {
-        default: null,
-        parseHTML: (el) => el.style.height || null,
-        renderHTML: (attrs) => attrs.height ? { style: `height: ${attrs.height}` } : {},
-      },
-    };
-  },
-});
-
-const CustomTableHeader = TableHeader.extend({
+// 행 높이를 <tr> 요소에 적용 — td/th에 height를 쓰면 브라우저가 무시하는 경우가 있음
+const CustomTableRow = TableRow.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -101,9 +89,9 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       FontSize,
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
-      TableRow,
-      CustomTableHeader,
-      CustomTableCell,
+      CustomTableRow,
+      TableHeader,
+      TableCell,
     ],
     content: initialValue,
     onCreate: ({ editor }) => setHtml(editor.getHTML()),
@@ -181,13 +169,25 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setTableHover(null);
   };
 
-  // 행 리사이즈 핸들
+  // 행 리사이즈 핸들 — tableRow 노드의 height 속성을 업데이트
   useEffect(() => {
     if (!editor) return;
     const el = editor.view.dom as HTMLElement;
     let active = false, startY = 0, startH = 0;
-    let activePositions: number[] = [];
+    let activeRowPos = -1;
     let rafId = 0;
+
+    const findRowPos = (trEl: HTMLElement): number => {
+      let found = -1;
+      editor.state.doc.descendants((node: any, pos: number) => {
+        if (found !== -1) return false;
+        if (node.type.name === 'tableRow') {
+          const dom = editor.view.nodeDOM(pos);
+          if (dom === trEl) found = pos;
+        }
+      });
+      return found;
+    };
 
     const inject = () => {
       el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
@@ -197,16 +197,12 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
         h.contentEditable = 'false';
         h.onmousedown = (e) => {
           e.preventDefault(); e.stopPropagation();
-          active = true; startY = e.clientY;
-          const row = h.closest('tr');
-          const cells = row ? Array.from(row.querySelectorAll('td,th')) as HTMLElement[] : [];
-          startH = cells[0]?.getBoundingClientRect().height ?? 40;
-          activePositions = [];
-          editor.state.doc.descendants((node: any, pos: number) => {
-            if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return;
-            const dom = editor.view.nodeDOM(pos);
-            if (dom && cells.includes(dom as HTMLElement)) activePositions.push(pos);
-          });
+          const trEl = (cell as HTMLElement).closest('tr') as HTMLElement | null;
+          if (!trEl) return;
+          active = true;
+          startY = e.clientY;
+          startH = trEl.getBoundingClientRect().height;
+          activeRowPos = findRowPos(trEl);
           document.body.style.cursor = 'row-resize';
           (document.body.style as any).userSelect = 'none';
         };
@@ -225,22 +221,20 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     obs.observe(el, { childList: true, subtree: true });
 
     const onMove = (e: MouseEvent) => {
-      if (!active || !activePositions.length) return;
+      if (!active || activeRowPos === -1) return;
       const newH = Math.max(32, startH + (e.clientY - startY)) + 'px';
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const { state, dispatch } = editor.view;
-        const tr = state.tr;
-        activePositions.forEach(pos => {
-          const node = state.doc.nodeAt(pos);
-          if (node) tr.setNodeMarkup(pos, undefined, { ...node.attrs, height: newH });
-        });
-        dispatch(tr);
+        const node = state.doc.nodeAt(activeRowPos);
+        if (node && node.type.name === 'tableRow') {
+          dispatch(state.tr.setNodeMarkup(activeRowPos, undefined, { ...node.attrs, height: newH }));
+        }
       });
     };
     const onUp = () => {
       if (!active) return;
-      active = false; activePositions = [];
+      active = false; activeRowPos = -1;
       document.body.style.cursor = '';
       (document.body.style as any).userSelect = '';
     };
@@ -412,7 +406,23 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
                   if (e.key === "Enter") {
                     const val = parseInt((e.target as HTMLInputElement).value);
                     if (val > 0) {
-                      editor.chain().focus().setCellAttribute("height", `${val}px`).run();
+                      const { state } = editor.view;
+                      const { $from } = state.selection;
+                      let rowPos = -1;
+                      for (let d = $from.depth; d > 0; d--) {
+                        if ($from.node(d).type.name === 'tableRow') {
+                          rowPos = $from.before(d);
+                          break;
+                        }
+                      }
+                      if (rowPos !== -1) {
+                        const node = state.doc.nodeAt(rowPos);
+                        if (node) {
+                          editor.view.dispatch(
+                            state.tr.setNodeMarkup(rowPos, undefined, { ...node.attrs, height: `${val}px` })
+                          );
+                        }
+                      }
                       (e.target as HTMLInputElement).value = "";
                     }
                   }
