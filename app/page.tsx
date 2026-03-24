@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const NAV_MENUS = [
   { href: "/about", label: "소개" },
   { href: "/portfolio", label: "포트폴리오" },
+  { href: "/admin", label: "관리자" },
 ];
 
 export default async function HomePage() {
