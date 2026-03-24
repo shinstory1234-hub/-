@@ -181,12 +181,13 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     setTableHover(null);
   };
 
-  // 행 리사이즈 핸들 (열 리사이즈와 동일 방식)
+  // 행 리사이즈 핸들
   useEffect(() => {
     if (!editor) return;
     const el = editor.view.dom as HTMLElement;
     let active = false, startY = 0, startH = 0;
-    let activeCells: HTMLElement[] = [];
+    let activePositions: number[] = [];
+    let rafId = 0;
 
     const inject = () => {
       el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
@@ -194,6 +195,21 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
         const h = document.createElement('div');
         h.className = 'row-resize-handle';
         h.contentEditable = 'false';
+        h.onmousedown = (e) => {
+          e.preventDefault(); e.stopPropagation();
+          active = true; startY = e.clientY;
+          const row = h.closest('tr');
+          const cells = row ? Array.from(row.querySelectorAll('td,th')) as HTMLElement[] : [];
+          startH = cells[0]?.getBoundingClientRect().height ?? 40;
+          activePositions = [];
+          editor.state.doc.descendants((node: any, pos: number) => {
+            if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return;
+            const dom = editor.view.nodeDOM(pos);
+            if (dom && cells.includes(dom as HTMLElement)) activePositions.push(pos);
+          });
+          document.body.style.cursor = 'row-resize';
+          (document.body.style as any).userSelect = 'none';
+        };
         (cell as HTMLElement).appendChild(h);
       });
     };
@@ -208,46 +224,30 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     });
     obs.observe(el, { childList: true, subtree: true });
 
-    el.addEventListener('mousedown', (e) => {
-      if (!(e.target as HTMLElement).classList.contains('row-resize-handle')) return;
-      e.preventDefault(); e.stopPropagation();
-      active = true; startY = e.clientY;
-      const row = (e.target as HTMLElement).closest('tr');
-      activeCells = row ? Array.from(row.querySelectorAll('td,th')) as HTMLElement[] : [];
-      startH = activeCells[0]?.getBoundingClientRect().height ?? 40;
-      document.body.style.cursor = 'row-resize';
-      (document.body.style as any).userSelect = 'none';
-    }, true);
-
     const onMove = (e: MouseEvent) => {
-      if (!active) return;
-      const newH = Math.max(32, startH + (e.clientY - startY));
-      activeCells.forEach(cell => { cell.style.height = newH + 'px'; });
+      if (!active || !activePositions.length) return;
+      const newH = Math.max(32, startH + (e.clientY - startY)) + 'px';
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const { state, dispatch } = editor.view;
+        const tr = state.tr;
+        activePositions.forEach(pos => {
+          const node = state.doc.nodeAt(pos);
+          if (node) tr.setNodeMarkup(pos, undefined, { ...node.attrs, height: newH });
+        });
+        dispatch(tr);
+      });
     };
     const onUp = () => {
       if (!active) return;
-      active = false;
+      active = false; activePositions = [];
       document.body.style.cursor = '';
       (document.body.style as any).userSelect = '';
-      if (!activeCells.length) return;
-      const ht = Math.round(activeCells[0].getBoundingClientRect().height) + 'px';
-      const { state, dispatch } = editor.view;
-      const tr = state.tr; let changed = false;
-      state.doc.descendants((node: any, pos: number) => {
-        if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return;
-        const dom = editor.view.nodeDOM(pos);
-        if (dom && activeCells.includes(dom as HTMLElement)) {
-          tr.setNodeMarkup(pos, undefined, { ...node.attrs, height: ht });
-          changed = true;
-        }
-      });
-      if (changed) dispatch(tr);
-      activeCells = [];
     };
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     return () => {
-      obs.disconnect(); clearTimeout(t);
+      obs.disconnect(); clearTimeout(t); cancelAnimationFrame(rafId);
       el.querySelectorAll('.row-resize-handle').forEach(h => h.remove());
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
