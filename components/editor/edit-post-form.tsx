@@ -17,6 +17,7 @@ type Props = {
     slug: string;
     excerpt: string | null;
     content: string;
+    cover_url: string | null;
     category_id: string | null;
     is_published: boolean;
   };
@@ -116,6 +117,7 @@ export function EditPostForm({ post, categories, initialAttachments }: Props) {
       <input type="hidden" name="slug" value={slug} readOnly />
       <p className="text-xs text-muted-foreground">slug: {slug}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" defaultValue={post.excerpt ?? ""} />
+      <Input name="cover_url" placeholder="커버 이미지 URL (선택 — 비워두면 본문 첫 이미지 자동 사용)" defaultValue={post.cover_url ?? ""} />
 
       <select name="category_id" required defaultValue={post.category_id ?? ""} className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm">
         <option value="">카테고리 선택(필수)</option>

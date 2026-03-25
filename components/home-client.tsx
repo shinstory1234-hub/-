@@ -22,6 +22,11 @@ type Props = {
   categories: Category[];
 };
 
+function extractFirstImage(html: string): string | null {
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
+}
+
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   const now = new Date();
@@ -80,18 +85,22 @@ export function HomeClient({ posts, categories }: Props) {
           {filtered.map((post) => (
             <PostSlugLink key={post.id} slug={post.slug} className="block group py-5 first:pt-0">
               <div className="flex gap-4">
-                {/* 썸네일 */}
-                {post.cover_url && (
-                  <div className="shrink-0 w-20 h-16 md:w-24 md:h-20 rounded-lg overflow-hidden bg-surface-muted">
-                    <Image
-                      src={post.cover_url}
-                      alt={post.title}
-                      width={96}
-                      height={80}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                )}
+                {/* 썸네일: cover_url 우선, 없으면 본문 첫 이미지 자동 사용 */}
+                {(() => {
+                  const thumb = post.cover_url ?? (post.content ? extractFirstImage(post.content) : null);
+                  if (!thumb) return null;
+                  return (
+                    <div className="shrink-0 w-20 h-16 md:w-24 md:h-20 rounded-lg overflow-hidden bg-surface-muted">
+                      <Image
+                        src={thumb}
+                        alt={post.title}
+                        width={96}
+                        height={80}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  );
+                })()}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5">
                     {post.category && (
