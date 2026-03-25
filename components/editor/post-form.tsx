@@ -117,7 +117,6 @@ export function PostForm({ categories }: Props) {
       <input type="hidden" name="slug" value={slug} readOnly />
       <p className="text-xs text-muted-foreground">slug: {slug || "제목을 입력하면 자동 생성"}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" />
-      <Input name="cover_url" placeholder="커버 이미지 URL (선택 — 비워두면 본문 첫 이미지 자동 사용)" />
 
       {categories.length === 0 ? (
         <p className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm text-danger">카테고리를 먼저 생성한 뒤 글을 작성해 주세요.</p>

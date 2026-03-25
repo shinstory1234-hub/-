@@ -1,4 +1,5 @@
 "use client";
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -49,6 +50,15 @@ export function SiteHeader() {
               );
             })}
           </nav>
+          <Link
+            href="/search"
+            aria-label="검색"
+            className="p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-surface-muted transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </Link>
           <ThemeToggle />
         </div>
       </div>
