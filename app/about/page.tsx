@@ -26,6 +26,7 @@ export default function AboutPage() {
           <div className="rounded-lg border border-border bg-surface p-4 space-y-2 md:p-5">
             <p className="text-sm font-bold text-foreground">📋 운용 철학</p>
             <ul className="text-sm leading-7 text-muted-foreground list-disc list-inside space-y-1 md:text-base md:leading-8 md:space-y-2">
+              <li>기술적(차트) 분석을 통한 매매</li>
               <li>데이터와 논리에 기반한 의사결정</li>
               <li>매크로 환경 분석을 통한 자산 배분</li>
               <li>감정이 아닌 프로세스로 운용</li>
