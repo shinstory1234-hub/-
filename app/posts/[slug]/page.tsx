@@ -6,6 +6,7 @@ import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { createClient } from "@supabase/supabase-js";
+import { getReadingTime } from "@/lib/reading-time";
 
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
@@ -65,7 +66,12 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
         </div>
         <h1 className="text-base font-bold leading-snug tracking-tight md:text-2xl">{post.title}</h1>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{formatPostDate(post.published_at ?? "")}</span>
+          <div className="flex items-center gap-2">
+            <span>{formatPostDate(post.published_at ?? "")}</span>
+            {post.content && (
+              <span>· {getReadingTime(post.content)}분 읽기</span>
+            )}
+          </div>
           <PostViewCounter postId={post.id} initialCount={Number(post.view_count ?? 0)} />
         </div>
         <p className="text-sm font-semibold text-red-500">
@@ -102,6 +108,39 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
         <PostShareButtons />
         <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
       </div>
+
+      {/* 관련 글 */}
+      {(() => {
+        const related = all
+          .filter((p) => p.slug !== post.slug && p.category?.slug === post.category?.slug)
+          .slice(0, 3);
+        if (related.length === 0) return null;
+        return (
+          <div className="border-t border-border pt-6 space-y-3">
+            <p className="text-sm font-semibold text-foreground">관련 글</p>
+            <div className="space-y-2">
+              {related.map((p) => (
+                <PostSlugLink key={p.id} slug={p.slug}
+                  className="group flex items-center gap-3 rounded-lg border border-border px-4 py-3 hover:border-accent/30 hover:bg-accent-soft transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground group-hover:text-accent transition-colors line-clamp-1">
+                      {p.title}
+                    </p>
+                    {p.published_at && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(p.published_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric" })}
+                      </p>
+                    )}
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-muted-foreground group-hover:text-accent transition-colors">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </PostSlugLink>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 이전/다음 글 */}
       <div className="grid gap-2 sm:grid-cols-2 border-t border-border pt-6">

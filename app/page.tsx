@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { HomeHeader } from "@/components/home-header";
 import { HomeClient } from "@/components/home-client";
 import { PortfolioChart } from "@/components/portfolio-chart";
+import { FadeIn } from "@/components/fade-in";
 
 function getSupabase() {
   return createClient(
@@ -16,7 +17,7 @@ async function getPosts() {
   const supabase = getSupabase();
   const { data } = await supabase
     .from("posts")
-    .select("id,title,slug,excerpt,cover_url,tags,published_at,categories!posts_category_id_fkey(name,slug)")
+    .select("id,title,slug,excerpt,cover_url,content,tags,published_at,categories!posts_category_id_fkey(name,slug)")
     .eq("is_published", true)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
@@ -51,8 +52,12 @@ export default async function HomePage() {
   return (
     <section className="mx-auto max-w-3xl space-y-10">
       <HomeHeader />
-      <PortfolioChart data={portfolioData} />
-      <HomeClient posts={posts} categories={categories} />
+      <FadeIn delay={50}>
+        <PortfolioChart data={portfolioData} />
+      </FadeIn>
+      <FadeIn delay={150}>
+        <HomeClient posts={posts} categories={categories} />
+      </FadeIn>
     </section>
   );
 }

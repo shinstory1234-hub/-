@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { Category } from "@/lib/types";
+import { getReadingTime } from "@/lib/reading-time";
 
 type Post = {
   id: string;
@@ -9,6 +11,7 @@ type Post = {
   slug: string;
   excerpt?: string | null;
   cover_url?: string | null;
+  content?: string | null;
   published_at?: string | null;
   category?: { name: string; slug: string } | null;
   tags?: string[] | null;
@@ -76,31 +79,50 @@ export function HomeClient({ posts, categories }: Props) {
         <div className="divide-y divide-border">
           {filtered.map((post) => (
             <PostSlugLink key={post.id} slug={post.slug} className="block group py-5 first:pt-0">
-              <div className="flex items-center gap-2 mb-2">
-                {post.category && (
-                  <span className="inline-flex items-center rounded-full bg-accent-soft border border-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
-                    {post.category.name}
-                  </span>
+              <div className="flex gap-4">
+                {/* 썸네일 */}
+                {post.cover_url && (
+                  <div className="shrink-0 w-20 h-16 md:w-24 md:h-20 rounded-lg overflow-hidden bg-surface-muted">
+                    <Image
+                      src={post.cover_url}
+                      alt={post.title}
+                      width={96}
+                      height={80}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
                 )}
-                {post.published_at && (
-                  <span className="text-xs text-muted-foreground">{formatDate(post.published_at)}</span>
-                )}
-              </div>
-              <h2 className="text-base font-bold text-foreground leading-snug mb-1.5 group-hover:text-accent transition-colors duration-150 md:text-lg">
-                {post.title}
-              </h2>
-              {post.excerpt && (
-                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                  {post.excerpt}
-                </p>
-              )}
-              {post.tags && post.tags.length > 0 && (
-                <div className="flex items-center gap-2 mt-2.5">
-                  {post.tags.slice(0, 3).map((tag, i) => (
-                    <span key={i} className="text-xs text-muted-foreground/70">#{tag}</span>
-                  ))}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    {post.category && (
+                      <span className="inline-flex items-center rounded-full bg-accent-soft border border-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
+                        {post.category.name}
+                      </span>
+                    )}
+                    {post.published_at && (
+                      <span className="text-xs text-muted-foreground">{formatDate(post.published_at)}</span>
+                    )}
+                    {post.content && (
+                      <span className="text-xs text-muted-foreground/60">{getReadingTime(post.content)}분 읽기</span>
+                    )}
+                  </div>
+                  <h2 className="text-base font-bold text-foreground leading-snug mb-1.5 group-hover:text-accent transition-colors duration-150 md:text-lg">
+                    {post.title}
+                  </h2>
+                  {post.excerpt && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="flex items-center gap-2 mt-2">
+                      {post.tags.slice(0, 3).map((tag, i) => (
+                        <span key={i} className="text-xs text-muted-foreground/70">#{tag}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </PostSlugLink>
           ))}
         </div>

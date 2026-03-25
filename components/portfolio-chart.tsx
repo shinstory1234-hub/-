@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { cn } from "@/lib/utils";
+import { useCountUp } from "@/hooks/use-count-up";
 
 type Snapshot = {
   snapshot_at: string;
@@ -62,10 +63,13 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
 
   const latest = display[display.length - 1];
   const first = display[0];
-  const totalAmt = latest.total_eval_amt.toLocaleString("ko-KR");
   const rate = latest.profit_loss_rate;
   const isPlus = rate >= 0;
   const rateColor = isPlus ? "#ef4444" : "#3b82f6";
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const animatedAmt = useCountUp(latest.total_eval_amt, 1200);
+  const totalAmt = animatedAmt.toLocaleString("ko-KR");
 
   return (
     <div className="rounded-lg border border-border bg-surface px-6 py-5 space-y-4 shadow-soft">
