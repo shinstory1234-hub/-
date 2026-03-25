@@ -49,7 +49,7 @@ export default async function HomePage() {
     getPortfolioData(),
   ]);
   return (
-    <section className="mx-auto max-w-2xl space-y-10">
+    <section className="mx-auto max-w-3xl space-y-10">
       <HomeHeader />
       <PortfolioChart data={portfolioData} />
       <HomeClient posts={posts} categories={categories} />

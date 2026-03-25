@@ -24,9 +24,19 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
+function fmtDate(str: string) {
+  return new Date(str).toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export function PortfolioChart({ data }: { data: Snapshot[] }) {
   if (!data || data.length === 0) return null;
 
+  const first = data[0];
   const latest = data[data.length - 1];
   const totalAmt = latest.total_eval_amt.toLocaleString("ko-KR");
   const rate = latest.profit_loss_rate;
@@ -35,12 +45,13 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
 
   return (
     <div className="rounded-lg border border-border bg-surface px-6 py-5 space-y-4 shadow-soft">
-      <div className="flex items-end justify-between gap-3">
+      {/* 헤더: 모바일 세로 / PC 가로 배치 */}
+      <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between md:gap-3">
         <div className="space-y-0.5 min-w-0">
           <p className="text-xs font-medium text-muted-foreground">모의투자 포트폴리오</p>
           <p className="text-lg font-bold tracking-tight tabular-nums md:text-2xl">₩{totalAmt}</p>
         </div>
-        <p className="text-sm font-bold tabular-nums shrink-0 md:text-lg" style={{ color: rateColor }}>
+        <p className="text-base font-bold tabular-nums md:text-lg md:shrink-0" style={{ color: rateColor }}>
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
@@ -60,6 +71,11 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
           />
         </LineChart>
       </ResponsiveContainer>
+      {/* 날짜 범위 */}
+      <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+        <span>{fmtDate(first.snapshot_at)}</span>
+        <span>{fmtDate(latest.snapshot_at)}</span>
+      </div>
     </div>
   );
 }
