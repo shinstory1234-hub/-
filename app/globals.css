@@ -101,6 +101,34 @@
   }
 }
 
+/* ─── 에디터 / Prose 리스트 스타일 ─────────────────── */
+.ProseMirror ul,
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.ProseMirror ol,
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.ProseMirror li,
+.prose li {
+  margin: 0.25em 0;
+  padding-left: 0.25em;
+}
+/* 중첩 리스트 들여쓰기 */
+.ProseMirror ul ul,
+.ProseMirror ol ul,
+.prose ul ul,
+.prose ol ul { list-style-type: circle; padding-left: 1.5em; }
+.ProseMirror ul ul ul,
+.prose ul ul ul { list-style-type: square; padding-left: 1.5em; }
+.ProseMirror ol ol,
+.prose ol ol { list-style-type: lower-alpha; padding-left: 1.5em; }
+
 /* ─── Prose (게시글 본문) ────────────────────────────── */
 .prose { color: hsl(var(--foreground)); }
 .prose p {

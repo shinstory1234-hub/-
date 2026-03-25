@@ -18,7 +18,6 @@ import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
-
 type Props = {
   name: string;
   initialValue?: string;
@@ -26,26 +25,34 @@ type Props = {
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
 const COLORS = ["#000000", "#e03131", "#2f9e44", "#1971c2", "#f08c00", "#7048e8"];
 const HIGHLIGHTS = ["#fff3bf", "#d3f9d8", "#d0ebff", "#ffe8cc", "#f3d9fa"];
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
 
+const BULLET_STYLES = [
+  { label: "● 채운 원",   value: "disc" },
+  { label: "○ 빈 원",     value: "circle" },
+  { label: "■ 사각형",    value: "square" },
+];
+const ORDERED_STYLES = [
+  { label: "1. 숫자",     value: "decimal" },
+  { label: "① 원 숫자",  value: "decimal" }, // rendered via CSS
+  { label: "가. 한글",    value: "korean" },
+];
+
 const FontSize = Extension.create({
   name: "fontSize",
   addGlobalAttributes() {
-    return [
-      {
-        types: ["textStyle"],
-        attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: (el) => el.style.fontSize || null,
-            renderHTML: (attrs) => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
-          },
+    return [{
+      types: ["textStyle"],
+      attributes: {
+        fontSize: {
+          default: null,
+          parseHTML: (el) => el.style.fontSize || null,
+          renderHTML: (attrs) => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
         },
       },
-    ];
+    }];
   },
   addCommands() {
     return {
@@ -53,8 +60,37 @@ const FontSize = Extension.create({
         chain().setMark("textStyle", { fontSize: size }).run(),
       unsetFontSize: () => ({ chain }: any) =>
         chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
- } as any;
+    } as any;
   },
+});
+
+// 글머리 기호 스타일 속성을 지원하는 커스텀 BulletList
+const StyledBulletList = BulletList.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      listStyleType: {
+        default: "disc",
+        parseHTML: (el) => el.style.listStyleType || "disc",
+        renderHTML: (attrs) => ({ style: `list-style-type: ${attrs.listStyleType}; padding-left: 1.5em;` }),
+      },
+    };
+  },
+  addInputRules: () => [],
+});
+
+const StyledOrderedList = OrderedList.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      listStyleType: {
+        default: "decimal",
+        parseHTML: (el) => el.style.listStyleType || "decimal",
+        renderHTML: (attrs) => ({ style: `list-style-type: ${attrs.listStyleType}; padding-left: 1.5em;` }),
+      },
+    };
+  },
+  addInputRules: () => [],
 });
 
 export function RichEditor({ name, initialValue = "", onImageInserted }: Props) {
@@ -66,18 +102,18 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showFontSizePicker, setShowFontSizePicker] = useState(false);
+  const [showBulletPicker, setShowBulletPicker] = useState(false);
+  const [showOrderedPicker, setShowOrderedPicker] = useState(false);
+  const [showTableGrid, setShowTableGrid] = useState(false);
+  const [tableHover, setTableHover] = useState<{ rows: number; cols: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { show } = useToast();
-
-  // - + 스페이스 자동 리스트 변환 비활성화
-  const BulletListNoRule = BulletList.extend({ addInputRules: () => [] });
-  const OrderedListNoRule = OrderedList.extend({ addInputRules: () => [] });
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ bulletList: false, orderedList: false }),
-      BulletListNoRule,
-      OrderedListNoRule,
+      StyledBulletList,
+      StyledOrderedList,
       Image,
       TextStyle,
       Color,
@@ -94,6 +130,18 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     editorProps: {
       attributes: {
         class: "min-h-[380px] rounded-b-lg border border-t-0 border-border bg-surface p-5 outline-none prose max-w-none"
+      },
+      handleKeyDown: (_view, event) => {
+        if (event.key === "Tab") {
+          event.preventDefault();
+          if (event.shiftKey) {
+            editor?.chain().focus().liftListItem("listItem").run();
+          } else {
+            editor?.chain().focus().sinkListItem("listItem").run();
+          }
+          return true;
+        }
+        return false;
       },
       handlePaste: (_view, event) => {
         const items = event.clipboardData?.items;
@@ -155,50 +203,146 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     }
   };
 
-  const [tableHover, setTableHover] = useState<{ rows: number; cols: number } | null>(null);
-  const [showTableGrid, setShowTableGrid] = useState(false);
-
   const insertTable = (rows: number, cols: number) => {
     editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
     setShowTableGrid(false);
     setTableHover(null);
   };
 
+  const closeAllPickers = () => {
+    setShowColorPicker(false);
+    setShowHighlightPicker(false);
+    setShowFontSizePicker(false);
+    setShowBulletPicker(false);
+    setShowOrderedPicker(false);
+    setShowTableGrid(false);
+  };
 
   return (
     <div className="space-y-2">
       {/* 툴바 */}
       <div className="flex flex-wrap items-center gap-1.5 rounded-t-lg border border-border bg-surface-muted p-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => editor?.chain().focus().toggleBold().run()}>
-          Bold
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => editor?.chain().focus().toggleBulletList().run()}>
-          List
+
+        {/* Bold */}
+        <Button type="button" variant={editor?.isActive("bold") ? "default" : "outline"} size="sm"
+          onClick={() => editor?.chain().focus().toggleBold().run()}>
+          B
         </Button>
 
-        {/* 글자 크기 */}
+        {/* 글머리 기호 드롭다운 */}
         <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => { setShowFontSizePicker(!showFontSizePicker); setShowColorPicker(false); setShowHighlightPicker(false); }}>
-            글자크기
+          <Button
+            type="button"
+            variant={editor?.isActive("bulletList") ? "default" : "outline"}
+            size="sm"
+            onClick={() => { closeAllPickers(); setShowBulletPicker((v) => !v); }}
+          >
+            ● 글머리
           </Button>
-          {showFontSizePicker && (
-            <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface p-2 shadow-lg">
-              {FONT_SIZES.map((size) => (
+          {showBulletPicker && (
+            <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface shadow-md overflow-hidden min-w-[130px]">
+              {BULLET_STYLES.map((s) => (
                 <button
-                  key={size}
+                  key={s.value + s.label}
                   type="button"
-                  className="px-3 py-1 text-left hover:bg-surface-muted rounded"
-                  style={{ fontSize: size }}
-                  onClick={() => { (editor?.chain().focus() as any).setFontSize(size).run(); setShowFontSizePicker(false); }}
+                  className="px-3 py-2 text-left text-sm hover:bg-surface-muted transition-colors"
+                  onClick={() => {
+                    if (editor?.isActive("bulletList")) {
+                      editor.chain().focus().updateAttributes("bulletList", { listStyleType: s.value }).run();
+                    } else {
+                      editor?.chain().focus().toggleBulletList().run();
+                      editor?.chain().focus().updateAttributes("bulletList", { listStyleType: s.value }).run();
+                    }
+                    setShowBulletPicker(false);
+                  }}
                 >
-                  {size}
+                  {s.label}
                 </button>
               ))}
               <button
                 type="button"
-                className="rounded px-3 py-1 text-left text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => { (editor?.chain().focus() as any).unsetFontSize().run(); setShowFontSizePicker(false); }}
+                className="px-3 py-2 text-left text-sm text-muted-foreground hover:bg-surface-muted transition-colors border-t border-border"
+                onClick={() => { editor?.chain().focus().toggleBulletList().run(); setShowBulletPicker(false); }}
               >
+                해제
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 번호 매기기 드롭다운 */}
+        <div className="relative">
+          <Button
+            type="button"
+            variant={editor?.isActive("orderedList") ? "default" : "outline"}
+            size="sm"
+            onClick={() => { closeAllPickers(); setShowOrderedPicker((v) => !v); }}
+          >
+            1. 번호
+          </Button>
+          {showOrderedPicker && (
+            <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface shadow-md overflow-hidden min-w-[130px]">
+              {ORDERED_STYLES.map((s, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="px-3 py-2 text-left text-sm hover:bg-surface-muted transition-colors"
+                  onClick={() => {
+                    if (editor?.isActive("orderedList")) {
+                      editor.chain().focus().updateAttributes("orderedList", { listStyleType: s.value }).run();
+                    } else {
+                      editor?.chain().focus().toggleOrderedList().run();
+                    }
+                    setShowOrderedPicker(false);
+                  }}
+                >
+                  {s.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="px-3 py-2 text-left text-sm text-muted-foreground hover:bg-surface-muted transition-colors border-t border-border"
+                onClick={() => { editor?.chain().focus().toggleOrderedList().run(); setShowOrderedPicker(false); }}
+              >
+                해제
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 들여쓰기 */}
+        <Button type="button" variant="outline" size="sm"
+          onClick={() => editor?.chain().focus().sinkListItem("listItem").run()}
+          disabled={!editor?.can().sinkListItem("listItem")}
+          title="들여쓰기 (Tab)">
+          →
+        </Button>
+        <Button type="button" variant="outline" size="sm"
+          onClick={() => editor?.chain().focus().liftListItem("listItem").run()}
+          disabled={!editor?.can().liftListItem("listItem")}
+          title="내어쓰기 (Shift+Tab)">
+          ←
+        </Button>
+
+        {/* 글자 크기 */}
+        <div className="relative">
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => { closeAllPickers(); setShowFontSizePicker((v) => !v); }}>
+            글자크기
+          </Button>
+          {showFontSizePicker && (
+            <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface shadow-md overflow-hidden p-1">
+              {FONT_SIZES.map((size) => (
+                <button key={size} type="button"
+                  className="px-3 py-1 text-left hover:bg-surface-muted rounded"
+                  style={{ fontSize: size }}
+                  onClick={() => { (editor?.chain().focus() as any).setFontSize(size).run(); setShowFontSizePicker(false); }}>
+                  {size}
+                </button>
+              ))}
+              <button type="button"
+                className="rounded px-3 py-1 text-left text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => { (editor?.chain().focus() as any).unsetFontSize().run(); setShowFontSizePicker(false); }}>
                 기본
               </button>
             </div>
@@ -207,25 +351,21 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
 
         {/* 글자 색 */}
         <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => { setShowColorPicker(!showColorPicker); setShowHighlightPicker(false); setShowFontSizePicker(false); }}>
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => { closeAllPickers(); setShowColorPicker((v) => !v); }}>
             글자색
           </Button>
           {showColorPicker && (
-            <div className="absolute top-9 left-0 z-50 flex gap-1 rounded-lg border border-border bg-surface p-2 shadow-lg">
+            <div className="absolute top-9 left-0 z-50 flex gap-1 rounded-lg border border-border bg-surface p-2 shadow-md">
               {COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className="h-6 w-6 rounded-full border border-border"
+                <button key={color} type="button"
+                  className="h-6 w-6 rounded-full border border-border hover:scale-110 transition-transform"
                   style={{ backgroundColor: color }}
-                  onClick={() => { editor?.chain().focus().setColor(color).run(); setShowColorPicker(false); }}
-                />
+                  onClick={() => { editor?.chain().focus().setColor(color).run(); setShowColorPicker(false); }} />
               ))}
-              <button
-                type="button"
+              <button type="button"
                 className="rounded px-1 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => { editor?.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
-              >
+                onClick={() => { editor?.chain().focus().unsetColor().run(); setShowColorPicker(false); }}>
                 기본
               </button>
             </div>
@@ -234,25 +374,21 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
 
         {/* 형광펜 */}
         <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => { setShowHighlightPicker(!showHighlightPicker); setShowColorPicker(false); setShowFontSizePicker(false); }}>
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => { closeAllPickers(); setShowHighlightPicker((v) => !v); }}>
             형광펜
           </Button>
           {showHighlightPicker && (
-            <div className="absolute top-9 left-0 z-50 flex gap-1 rounded-lg border border-border bg-surface p-2 shadow-lg">
+            <div className="absolute top-9 left-0 z-50 flex gap-1 rounded-lg border border-border bg-surface p-2 shadow-md">
               {HIGHLIGHTS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className="h-6 w-6 rounded-full border border-border"
+                <button key={color} type="button"
+                  className="h-6 w-6 rounded-full border border-border hover:scale-110 transition-transform"
                   style={{ backgroundColor: color }}
-                  onClick={() => { editor?.chain().focus().setHighlight({ color }).run(); setShowHighlightPicker(false); }}
-                />
+                  onClick={() => { editor?.chain().focus().setHighlight({ color }).run(); setShowHighlightPicker(false); }} />
               ))}
-              <button
-                type="button"
+              <button type="button"
                 className="rounded px-1 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => { editor?.chain().focus().unsetHighlight().run(); setShowHighlightPicker(false); }}
-              >
+                onClick={() => { editor?.chain().focus().unsetHighlight().run(); setShowHighlightPicker(false); }}>
                 제거
               </button>
             </div>
@@ -261,11 +397,12 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
 
         {/* 표 */}
         <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => setShowTableGrid(!showTableGrid)}>
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => { closeAllPickers(); setShowTableGrid((v) => !v); }}>
             표 삽입
           </Button>
           {showTableGrid && (
-            <div className="absolute top-9 left-0 z-50 rounded-lg border border-border bg-surface p-2 shadow-lg">
+            <div className="absolute top-9 left-0 z-50 rounded-lg border border-border bg-surface p-2 shadow-md">
               <p className="mb-1 text-xs text-muted-foreground">
                 {tableHover ? `${tableHover.rows} × ${tableHover.cols}` : "표 크기 선택"}
               </p>
@@ -275,20 +412,18 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
                   const col = (i % 8) + 1;
                   const isActive = tableHover && row <= tableHover.rows && col <= tableHover.cols;
                   return (
-                    <button
-                      key={i}
-                      type="button"
+                    <button key={i} type="button"
                       className={`h-5 w-5 border rounded-sm transition ${isActive ? "bg-accent border-accent" : "border-border hover:border-accent"}`}
                       onMouseEnter={() => setTableHover({ rows: row, cols: col })}
                       onMouseLeave={() => setTableHover(null)}
-                      onClick={() => insertTable(row, col)}
-                    />
+                      onClick={() => insertTable(row, col)} />
                   );
                 })}
               </div>
             </div>
           )}
         </div>
+
         {editor?.isActive("table") && (
           <>
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().addColumnAfter().run()}>열 추가</Button>
@@ -297,22 +432,14 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteRow().run()}>행 삭제</Button>
             <Button type="button" variant="outline" size="sm" onClick={() => editor.chain().focus().deleteTable().run()}>표 삭제</Button>
             <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min="40"
-                max="1000"
-                placeholder="열 너비(px)"
+              <input type="number" min="40" max="1000" placeholder="열 너비(px)"
                 className="h-8 w-20 rounded-md border border-border bg-surface px-2 text-xs"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     const val = parseInt((e.target as HTMLInputElement).value);
-                    if (val > 0) {
-                      editor.chain().focus().setCellAttribute("colwidth", [val]).run();
-                      (e.target as HTMLInputElement).value = "";
-                    }
+                    if (val > 0) { editor.chain().focus().setCellAttribute("colwidth", [val]).run(); (e.target as HTMLInputElement).value = ""; }
                   }
-                }}
-              />
+                }} />
               <span className="text-xs text-muted-foreground">Enter↵</span>
             </div>
           </>
@@ -323,8 +450,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
           이미지 첨부
         </Button>
         <input ref={fileRef} type="file" className="hidden" accept="image/*"
-          onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadAndInsert(file); e.currentTarget.value = ""; }}
-        />
+          onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadAndInsert(file); e.currentTarget.value = ""; }} />
       </div>
 
       <EditorContent editor={editor} />
