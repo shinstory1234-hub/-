@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const menus = [
+  { href: "/", label: "홈" },
   { href: "/about", label: "소개" },
   { href: "/portfolio", label: "포트폴리오" },
   { href: "/admin", label: "관리자" },
@@ -16,7 +17,6 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (pathname === "/") return null;
 
   const isPost = pathname.startsWith("/posts/") || pathname.startsWith("/topics/");
   const innerClass = isPost ? "mx-auto max-w-3xl" : "w-full";
@@ -28,9 +28,10 @@ export function SiteHeader() {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center"
+          className="flex items-center gap-2"
         >
-          <Image src="/logo.png" alt="머니NPC" width={140} height={40} className="object-contain" priority />
+          <Image src="/logo.png" alt="머니NPC" width={36} height={36} className="object-contain" priority />
+          <span className="text-sm font-bold tracking-tight text-foreground md:text-lg whitespace-nowrap">머니NPC의 액티브 ETF</span>
         </Link>
         <div className="flex items-center gap-1">
           {/* 데스크탑 메뉴 */}
