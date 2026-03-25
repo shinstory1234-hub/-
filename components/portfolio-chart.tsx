@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 type Snapshot = {
@@ -25,23 +24,8 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-export function PortfolioChart() {
-  const [data, setData] = useState<Snapshot[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/portfolio/chart")
-      .then((r) => r.json())
-      .then((json) => { if (json.ok) setData(json.data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return (
-    <div className="h-24 flex items-center justify-center text-xs text-muted-foreground">
-      불러오는 중...
-    </div>
-  );
-  if (data.length === 0) return null;
+export function PortfolioChart({ data }: { data: Snapshot[] }) {
+  if (!data || data.length === 0) return null;
 
   const latest = data[data.length - 1];
   const totalAmt = latest.total_eval_amt.toLocaleString("ko-KR");
