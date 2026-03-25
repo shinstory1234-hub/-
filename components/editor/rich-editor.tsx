@@ -275,7 +275,15 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
             type="button"
             variant={editor?.isActive("bulletList") ? "default" : "outline"}
             size="sm"
-            onClick={() => { closeAllPickers(); setShowBulletPicker((v) => !v); }}
+            onClick={() => {
+              if (editor?.isActive("bulletList")) {
+                editor.chain().focus().toggleBulletList().run();
+                setShowBulletPicker(false);
+              } else {
+                closeAllPickers();
+                setShowBulletPicker((v) => !v);
+              }
+            }}
           >
             ● 글머리
           </Button>
