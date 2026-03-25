@@ -1,6 +1,6 @@
 export const revalidate = 3600;
 import { notFound } from "next/navigation";
-import { getPostBySlug, getPostLikesCount, getPostComments } from "@/lib/posts";
+import { getPostBySlug } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
@@ -13,6 +13,23 @@ function getSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+async function getLikesCount(postId: string) {
+  const { count } = await getSupabase()
+    .from("likes")
+    .select("id", { count: "exact", head: true })
+    .eq("post_id", postId);
+  return count ?? 0;
+}
+
+async function getComments(postId: string) {
+  const { data } = await getSupabase()
+    .from("comments")
+    .select("id,post_id,author_name,author_email,content,created_at")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: false });
+  return data ?? [];
 }
 
 // 빌드 시 모든 포스트 페이지 정적 생성
@@ -82,8 +99,8 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
 
   const [all, likes, comments, attachments] = await Promise.all([
     getPostNav(),
-    getPostLikesCount(post.id),
-    getPostComments(post.id),
+    getLikesCount(post.id),
+    getComments(post.id),
     getAttachments(post.id),
   ]);
 
