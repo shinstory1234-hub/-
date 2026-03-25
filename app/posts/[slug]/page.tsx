@@ -99,7 +99,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
           {post.category && (
             <span className="text-base font-bold text-accent">{post.category.name}</span>
           )}
-          {post.tags?.slice(0, 2).map((tag, idx) => (
+          {(post.tags as string[] | null)?.slice(0, 2).map((tag: string, idx: number) => (
             <span key={idx} className="text-xs text-muted-foreground">#{tag}</span>
           ))}
         </div>
