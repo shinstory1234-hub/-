@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -27,9 +28,9 @@ export function SiteHeader() {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="text-sm font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl whitespace-nowrap"
+          className="flex items-center"
         >
-          머니NPC의 액티브 ETF
+          <Image src="/logo.png" alt="머니NPC" width={140} height={40} className="object-contain" priority />
         </Link>
         <div className="flex items-center gap-1">
           {/* 데스크탑 메뉴 */}
