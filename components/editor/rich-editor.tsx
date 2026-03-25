@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
 import Image from "@tiptap/extension-image";
 import { Color } from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -67,9 +69,15 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
   const fileRef = useRef<HTMLInputElement>(null);
   const { show } = useToast();
 
+  // - + 스페이스 자동 리스트 변환 비활성화
+  const BulletListNoRule = BulletList.extend({ addInputRules: () => [] });
+  const OrderedListNoRule = OrderedList.extend({ addInputRules: () => [] });
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ bulletList: false, orderedList: false }),
+      BulletListNoRule,
+      OrderedListNoRule,
       Image,
       TextStyle,
       Color,
