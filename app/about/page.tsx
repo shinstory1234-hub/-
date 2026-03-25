@@ -2,12 +2,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function AboutPage() {
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-3 md:px-0">
+    <section className="mx-auto max-w-6xl space-y-6">
+      <div className="about-wrapper">
       <Card>
-        <CardHeader>
+        <CardHeader className="about-card-header">
           <h1 className="text-xl font-bold tracking-tight md:text-2xl">머니NPC 소개</h1>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="about-card-content space-y-5">
           <p className="text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
             머니NPC는 VC심사역, 증권사 등 제도권 금융 현장에서 쌓은 경험을 바탕으로, 투자, 커리어, 시장에 대한 생각을 정리하는 개인 기록 공간입니다.
           </p>
@@ -43,6 +44,7 @@ export default function AboutPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </section>
   );
 }

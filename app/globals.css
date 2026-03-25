@@ -207,6 +207,32 @@
   }
 }
 
+/* About 페이지 모바일 전용 레이아웃 (PC 레이아웃 영향 없음) */
+@media (max-width: 768px) {
+  .about-wrapper {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .about-card-header {
+    padding-left: 1.75rem;  /* 28px */
+    padding-right: 1.75rem;
+  }
+  .about-card-content {
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+  }
+  .about-card-content p,
+  .about-card-content li {
+    line-height: 1.8;
+    margin-bottom: 0.875rem;
+  }
+  .about-card-content p:last-child,
+  .about-card-content li:last-child {
+    margin-bottom: 0;
+  }
+}
+
 /* 페이지 전환 애니메이션 */
 @keyframes page-in {
   from { opacity: 0; transform: translateY(10px); }
