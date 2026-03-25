@@ -1,11 +1,39 @@
 "use client";
+import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { cn } from "@/lib/utils";
 
 type Snapshot = {
   snapshot_at: string;
   total_eval_amt: number;
   profit_loss_rate: number;
 };
+
+type Period = "1W" | "1M" | "3M" | "ALL";
+
+const PERIODS: { label: string; value: Period }[] = [
+  { label: "1W",  value: "1W" },
+  { label: "1M",  value: "1M" },
+  { label: "3M",  value: "3M" },
+  { label: "ALL", value: "ALL" },
+];
+
+function filterByPeriod(data: Snapshot[], period: Period): Snapshot[] {
+  if (period === "ALL" || data.length === 0) return data;
+  const days = period === "1W" ? 7 : period === "1M" ? 30 : 90;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return data.filter((d) => new Date(d.snapshot_at) >= cutoff);
+}
+
+function fmtDate(str: string, short = false) {
+  return new Date(str).toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    ...(short ? {} : { year: "numeric" }),
+    month: "short",
+    day: "numeric",
+  });
+}
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -24,20 +52,16 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-function fmtDate(str: string) {
-  return new Date(str).toLocaleDateString("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export function PortfolioChart({ data }: { data: Snapshot[] }) {
+  const [period, setPeriod] = useState<Period>("ALL");
+
   if (!data || data.length === 0) return null;
 
-  const first = data[0];
-  const latest = data[data.length - 1];
+  const filtered = filterByPeriod(data, period);
+  const display = filtered.length > 0 ? filtered : data;
+
+  const latest = display[display.length - 1];
+  const first = display[0];
   const totalAmt = latest.total_eval_amt.toLocaleString("ko-KR");
   const rate = latest.profit_loss_rate;
   const isPlus = rate >= 0;
@@ -55,8 +79,29 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
+
+      {/* 기간 선택 */}
+      <div className="flex items-center gap-1">
+        {PERIODS.map((p) => (
+          <button
+            key={p.value}
+            type="button"
+            onClick={() => setPeriod(p.value)}
+            className={cn(
+              "px-2.5 py-1 rounded-md text-xs font-semibold transition-colors",
+              period === p.value
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-surface-muted"
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 차트 */}
       <ResponsiveContainer width="100%" height={80}>
-        <LineChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+        <LineChart data={display} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <XAxis dataKey="snapshot_at" hide />
           <YAxis hide domain={["auto", "auto"]} />
           <Tooltip content={<CustomTooltip />} />
@@ -71,6 +116,7 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
           />
         </LineChart>
       </ResponsiveContainer>
+
       {/* 날짜 범위 */}
       <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
         <span>{fmtDate(first.snapshot_at)}</span>

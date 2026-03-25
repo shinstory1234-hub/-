@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import localFont from "next/font/local";
 import { SiteHeader } from "@/components/site-header";
+import { BottomNav } from "@/components/bottom-nav";
 import { ToastProvider } from "@/components/ui/toast";
 import { PageTransition } from "@/components/page-transition";
 
@@ -20,9 +21,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-6xl px-6 md:px-5">
             <SiteHeader />
           </div>
-          <main className="mx-auto w-full max-w-6xl px-6 md:px-5 pb-10 md:pb-14">
+          <main className="mx-auto w-full max-w-6xl px-6 md:px-5 pb-24 md:pb-14">
             <PageTransition>{children}</PageTransition>
           </main>
+          <BottomNav />
         </ToastProvider>
       </body>
     </html>
