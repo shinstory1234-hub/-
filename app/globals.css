@@ -209,19 +209,20 @@
 
 /* =====================================================
    About 페이지 모바일 전용 (PC 769px+ 영향 없음)
-   구조: main(px-6=24px) > section(px-4=16px) > Card
-   화면 끝 ~ 카드 경계: 24+16 = 40px
-   카드 내부 패딩: 20px → 텍스트 폭 충분히 확보
+   핵심 전략: wrapper 너비를 calc로 조여서 외부 여백 확보.
+   내부 padding은 Tailwind p-6(24px)이 그대로 적용됨.
+   최종 여백: main px-6(24px) + wrapper 20px = 44px each side
    ===================================================== */
 @media (max-width: 768px) {
-  .about-card-header {
-    padding: 20px 20px 10px 20px !important;
+  /* 외부 wrapper - 카드를 화면 양쪽에서 20px 강제로 띄움 */
+  .about-wrapper {
     box-sizing: border-box !important;
+    width: calc(100% - 40px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
-  .about-card-content {
-    padding: 0 20px 20px 20px !important;
-    box-sizing: border-box !important;
-  }
+
+  /* 텍스트 가독성만 조정 - 내부 패딩은 건드리지 않음 */
   .about-card-content p,
   .about-card-content li {
     font-size: 0.95rem !important;
