@@ -237,11 +237,14 @@
     padding-right: 1rem !important;
   }
 
-  /* 텍스트 가독성 */
+  /* 텍스트 가독성 + 단어 단위 줄바꿈 */
   .about-card-content p,
-  .about-card-content li {
-    font-size: 0.95rem !important;
+  .about-card-content li,
+  .about-card-content span {
+    font-size: 0.9rem !important;
     line-height: 1.7 !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
   }
   .about-card-content > div p {
     margin-bottom: 0.6rem !important;
