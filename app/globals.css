@@ -119,6 +119,12 @@
   margin: 0.25em 0;
   padding-left: 0.25em;
 }
+/* 번호 목록 - bold 텍스트가 있으면 마커도 bold */
+.ProseMirror ol li:has(strong)::marker,
+.prose ol li:has(strong)::marker {
+  font-weight: 700;
+}
+
 /* 중첩 리스트 들여쓰기 */
 .ProseMirror ul ul,
 .ProseMirror ol ul,

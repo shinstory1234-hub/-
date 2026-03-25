@@ -350,38 +350,18 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
           )}
         </div>
 
-        {/* 들여쓰기 */}
+        {/* 실행 취소 / 다시 실행 */}
         <Button type="button" variant="outline" size="sm"
-          onClick={() => editor?.commands.command(({ tr, state, dispatch }) => {
-            if (editor.can().sinkListItem("listItem")) return editor.chain().focus().sinkListItem("listItem").run();
-            const { from, to } = state.selection;
-            state.doc.nodesBetween(from, to, (node, pos) => {
-              if (["paragraph","heading"].includes(node.type.name)) {
-                const cur = (node.attrs.indent as number) || 0;
-                if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: Math.min(cur+40,240) });
-              }
-            });
-            if (dispatch) dispatch(tr);
-            return true;
-          })}
-          title="들여쓰기 (Tab)">
-          →
+          onClick={() => editor?.chain().focus().undo().run()}
+          disabled={!editor?.can().undo()}
+          title="실행 취소 (Ctrl+Z)">
+          ↩
         </Button>
         <Button type="button" variant="outline" size="sm"
-          onClick={() => editor?.commands.command(({ tr, state, dispatch }) => {
-            if (editor.can().liftListItem("listItem")) return editor.chain().focus().liftListItem("listItem").run();
-            const { from, to } = state.selection;
-            state.doc.nodesBetween(from, to, (node, pos) => {
-              if (["paragraph","heading"].includes(node.type.name)) {
-                const cur = (node.attrs.indent as number) || 0;
-                if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: Math.max(cur-40,0) });
-              }
-            });
-            if (dispatch) dispatch(tr);
-            return true;
-          })}
-          title="내어쓰기 (Shift+Tab)">
-          ←
+          onClick={() => editor?.chain().focus().redo().run()}
+          disabled={!editor?.can().redo()}
+          title="다시 실행 (Ctrl+Y)">
+          ↪
         </Button>
 
         {/* 글자 크기 */}
