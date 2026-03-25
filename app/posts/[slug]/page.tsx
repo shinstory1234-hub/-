@@ -1,12 +1,39 @@
-export const revalidate = 300;
+export const revalidate = 3600;
 import { notFound } from "next/navigation";
-import { getPostBySlug, getPostLikesCount, getPostComments, getPosts } from "@/lib/posts";
+import { getPostBySlug, getPostLikesCount, getPostComments } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
 import { PostViewCounter } from "@/components/post-view-counter";
 import { PostSlugLink } from "@/components/post-slug-link";
 import { createClient } from "@supabase/supabase-js";
 import { getReadingTime } from "@/lib/reading-time";
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+// 빌드 시 모든 포스트 페이지 정적 생성
+export async function generateStaticParams() {
+  const { data } = await getSupabase()
+    .from("posts")
+    .select("slug")
+    .eq("is_published", true);
+  return (data ?? []).map((p) => ({ slug: p.slug }));
+}
+
+// 이전/다음/관련 글용 경량 조회 (content 제외)
+async function getPostNav() {
+  const { data } = await getSupabase()
+    .from("posts")
+    .select("id,title,slug,published_at,categories!posts_category_id_fkey(name,slug)")
+    .eq("is_published", true)
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((row: any) => ({ ...row, category: row.categories ?? null }));
+}
 
 function formatPostDate(dateStr: string) {
   if (!dateStr) return "";
@@ -38,11 +65,23 @@ async function getAttachments(postId: string) {
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+
+  // service role key로 직접 조회 (쿠키 기반 X → ISR 캐싱 정상 작동)
+  const { data: postRaw } = await getSupabase()
+    .from("posts")
+    .select("id,title,slug,excerpt,content,category_id,tags,is_published,published_at,view_count,categories!posts_category_id_fkey(name,slug)")
+    .eq("is_published", true)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  const post = postRaw
+    ? { ...postRaw, category: (postRaw as any).categories ?? null, view_count: Number((postRaw as any).view_count ?? 0) }
+    : await getPostBySlug(slug); // fallback
+
   if (!post) return notFound();
 
   const [all, likes, comments, attachments] = await Promise.all([
-    getPosts(),
+    getPostNav(),
     getPostLikesCount(post.id),
     getPostComments(post.id),
     getAttachments(post.id),
