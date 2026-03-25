@@ -64,7 +64,7 @@ const FontSize = Extension.create({
   },
 });
 
-// 글머리 기호 스타일 속성을 지원하는 커스텀 BulletList
+// 글머리 기호 스타일 속성 지원 (input rule 유지 → - + 스페이스 = 불릿)
 const StyledBulletList = BulletList.extend({
   addAttributes() {
     return {
@@ -76,7 +76,6 @@ const StyledBulletList = BulletList.extend({
       },
     };
   },
-  addInputRules: () => [],
 });
 
 const StyledOrderedList = OrderedList.extend({
@@ -90,7 +89,59 @@ const StyledOrderedList = OrderedList.extend({
       },
     };
   },
-  addInputRules: () => [],
+});
+
+// 일반 텍스트 들여쓰기 extension
+const Indent = Extension.create({
+  name: "indent",
+  addGlobalAttributes() {
+    return [{
+      types: ["paragraph", "heading"],
+      attributes: {
+        indent: {
+          default: 0,
+          parseHTML: (el) => parseInt(el.style.paddingLeft) || 0,
+          renderHTML: (attrs) => attrs.indent > 0 ? { style: `padding-left: ${attrs.indent}px` } : {},
+        },
+      },
+    }];
+  },
+  addKeyboardShortcuts() {
+    return {
+      Tab: () => {
+        if (this.editor.can().sinkListItem("listItem")) {
+          return this.editor.chain().sinkListItem("listItem").run();
+        }
+        return this.editor.commands.command(({ tr, state, dispatch }) => {
+          const { from, to } = state.selection;
+          state.doc.nodesBetween(from, to, (node, pos) => {
+            if (["paragraph", "heading"].includes(node.type.name)) {
+              const cur = (node.attrs.indent as number) || 0;
+              if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: Math.min(cur + 40, 240) });
+            }
+          });
+          if (dispatch) dispatch(tr);
+          return true;
+        });
+      },
+      "Shift-Tab": () => {
+        if (this.editor.can().liftListItem("listItem")) {
+          return this.editor.chain().liftListItem("listItem").run();
+        }
+        return this.editor.commands.command(({ tr, state, dispatch }) => {
+          const { from, to } = state.selection;
+          state.doc.nodesBetween(from, to, (node, pos) => {
+            if (["paragraph", "heading"].includes(node.type.name)) {
+              const cur = (node.attrs.indent as number) || 0;
+              if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: Math.max(cur - 40, 0) });
+            }
+          });
+          if (dispatch) dispatch(tr);
+          return true;
+        });
+      },
+    };
+  },
 });
 
 export function RichEditor({ name, initialValue = "", onImageInserted }: Props) {
@@ -114,6 +165,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
       StarterKit.configure({ bulletList: false, orderedList: false }),
       StyledBulletList,
       StyledOrderedList,
+      Indent,
       Image,
       TextStyle,
       Color,
@@ -130,18 +182,6 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     editorProps: {
       attributes: {
         class: "min-h-[380px] rounded-b-lg border border-t-0 border-border bg-surface p-5 outline-none prose max-w-none"
-      },
-      handleKeyDown: (_view, event) => {
-        if (event.key === "Tab") {
-          event.preventDefault();
-          if (event.shiftKey) {
-            editor?.chain().focus().liftListItem("listItem").run();
-          } else {
-            editor?.chain().focus().sinkListItem("listItem").run();
-          }
-          return true;
-        }
-        return false;
       },
       handlePaste: (_view, event) => {
         const items = event.clipboardData?.items;
@@ -312,14 +352,34 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
 
         {/* 들여쓰기 */}
         <Button type="button" variant="outline" size="sm"
-          onClick={() => editor?.chain().focus().sinkListItem("listItem").run()}
-          disabled={!editor?.can().sinkListItem("listItem")}
+          onClick={() => editor?.commands.command(({ tr, state, dispatch }) => {
+            if (editor.can().sinkListItem("listItem")) return editor.chain().focus().sinkListItem("listItem").run();
+            const { from, to } = state.selection;
+            state.doc.nodesBetween(from, to, (node, pos) => {
+              if (["paragraph","heading"].includes(node.type.name)) {
+                const cur = (node.attrs.indent as number) || 0;
+                if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: Math.min(cur+40,240) });
+              }
+            });
+            if (dispatch) dispatch(tr);
+            return true;
+          })}
           title="들여쓰기 (Tab)">
           →
         </Button>
         <Button type="button" variant="outline" size="sm"
-          onClick={() => editor?.chain().focus().liftListItem("listItem").run()}
-          disabled={!editor?.can().liftListItem("listItem")}
+          onClick={() => editor?.commands.command(({ tr, state, dispatch }) => {
+            if (editor.can().liftListItem("listItem")) return editor.chain().focus().liftListItem("listItem").run();
+            const { from, to } = state.selection;
+            state.doc.nodesBetween(from, to, (node, pos) => {
+              if (["paragraph","heading"].includes(node.type.name)) {
+                const cur = (node.attrs.indent as number) || 0;
+                if (dispatch) tr.setNodeMarkup(pos, undefined, { ...node.attrs, indent: Math.max(cur-40,0) });
+              }
+            });
+            if (dispatch) dispatch(tr);
+            return true;
+          })}
           title="내어쓰기 (Shift+Tab)">
           ←
         </Button>
