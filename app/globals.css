@@ -2,41 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ──────────────────────────────────── */
 :root {
   color-scheme: light;
-  --background: 0 0% 100%;
-  --surface: 0 0% 99%;
-  --surface-muted: 0 0% 96%;
-  --foreground: 0 0% 7%;
-  --muted-foreground: 0 0% 46%;
-  --border: 0 0% 91%;
-  --accent: 221 93% 54%;
-  --accent-foreground: 0 0% 100%;
-  --danger: 0 84% 60%;
-  --ring: 221 93% 64%;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --shadow-soft: 0 1px 4px rgba(0,0,0,0.04);
+  --background:      0 0% 100%;
+  --surface:         240 5% 98%;
+  --surface-muted:   240 5% 95%;
+  --foreground:      240 10% 4%;
+  --muted-foreground:240 4% 46%;
+  --border:          240 6% 90%;
+  --accent:          239 84% 67%;
+  --accent-foreground:0 0% 100%;
+  --accent-soft:     239 84% 97%;
+  --danger:          0 84% 60%;
+  --ring:            239 84% 67%;
+  --radius-lg:       14px;
+  --radius-md:       10px;
+  --shadow-soft:     0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:       0 4px 6px -1px rgba(0,0,0,.06), 0 10px 30px -8px rgba(0,0,0,.08);
+  --glow-accent:     0 0 0 rgba(99,102,241,0);
 }
 
 .dark {
   color-scheme: dark;
-  --background: 222 40% 8%;
-  --surface: 222 34% 11%;
-  --surface-muted: 223 28% 16%;
-  --foreground: 220 20% 96%;
-  --muted-foreground: 220 14% 72%;
-  --border: 222 18% 24%;
-  --accent: 213 93% 62%;
-  --accent-foreground: 0 0% 100%;
-  --danger: 0 74% 56%;
-  --ring: 213 93% 70%;
-  --shadow-soft: 0 18px 44px -30px rgba(0, 0, 0, 0.6);
+  --background:      240 10% 4%;
+  --surface:         240 7% 8%;
+  --surface-muted:   240 6% 13%;
+  --foreground:      0 0% 98%;
+  --muted-foreground:240 5% 58%;
+  --border:          240 5% 18%;
+  --accent:          239 84% 67%;
+  --accent-foreground:0 0% 100%;
+  --accent-soft:     239 40% 14%;
+  --danger:          0 74% 56%;
+  --ring:            239 84% 67%;
+  --shadow-soft:     0 1px 2px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.3);
+  --shadow-md:       0 4px 6px -1px rgba(0,0,0,.4), 0 20px 40px -12px rgba(0,0,0,.5);
+  --glow-accent:     0 0 24px rgba(99,102,241,.15);
 }
 
+/* ─── Base ───────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html, body {
     @apply bg-background text-foreground;
@@ -45,62 +59,71 @@
     font-family: var(--font-pretendard), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     letter-spacing: -0.02em;
   }
-  h1 {
-    @apply text-3xl font-bold leading-tight md:text-4xl;
-    letter-spacing: -0.04em;
-  }
-  h2 {
-    @apply text-2xl font-bold leading-tight;
-    letter-spacing: -0.03em;
-  }
-  h3 {
-    @apply text-lg font-semibold leading-7;
-    letter-spacing: -0.02em;
-  }
-  p {
-    @apply text-base leading-7;
-  }
+  h1 { @apply text-3xl font-bold leading-tight md:text-4xl; letter-spacing: -0.04em; }
+  h2 { @apply text-2xl font-bold leading-tight; letter-spacing: -0.03em; }
+  h3 { @apply text-lg font-semibold leading-7; letter-spacing: -0.02em; }
+  p  { @apply text-base leading-7; }
   :focus-visible {
     @apply outline-none ring-2 ring-ring/60 ring-offset-2 ring-offset-background;
   }
 }
 
-.prose {
-  color: hsl(var(--foreground));
+/* ─── Utilities ──────────────────────────────────────── */
+@layer utilities {
+  /* 그라디언트 테두리 카드 */
+  .glass-card {
+    position: relative;
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .glass-card:hover {
+    box-shadow: var(--shadow-md), var(--glow-accent);
+    transform: translateY(-1px);
+  }
+
+  /* 그라디언트 텍스트 */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* 액센트 글로우 버튼용 */
+  .glow-accent {
+    box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
+    transition: box-shadow 0.2s ease;
+  }
+  .glow-accent:hover {
+    box-shadow: 0 0 16px hsl(var(--accent) / 0.35);
+  }
 }
+
+/* ─── Prose (게시글 본문) ────────────────────────────── */
+.prose { color: hsl(var(--foreground)); }
 .prose p {
   line-height: 1.9;
   color: hsl(var(--foreground));
   margin-top: 0;
   margin-bottom: 1.25rem;
 }
-.prose p:last-child {
-  margin-bottom: 0;
-}
-.prose li {
-  line-height: 1.9;
-  color: hsl(var(--foreground));
-}
-.prose h1,
-.prose h2,
-.prose h3 {
+.prose p:last-child { margin-bottom: 0; }
+.prose li { line-height: 1.9; color: hsl(var(--foreground)); }
+.prose h1, .prose h2, .prose h3 {
   color: hsl(var(--foreground));
   margin-top: 1.5em;
   margin-bottom: 0.5em;
 }
-.prose strong {
-  color: hsl(var(--foreground));
-}
-.prose img {
-  border-radius: 12px;
-}
-.prose ul,
-.prose ol {
+.prose strong { color: hsl(var(--foreground)); }
+.prose img { border-radius: 12px; }
+.prose ul, .prose ol {
   padding-left: 1.5em;
   margin-bottom: 1.25em;
 }
 
-/* TipTap 표 스타일 */
+/* ─── TipTap 에디터 ──────────────────────────────────── */
 .ProseMirror table {
   border-collapse: collapse;
   width: 100%;
@@ -108,8 +131,7 @@
   table-layout: fixed;
   overflow: hidden;
 }
-.ProseMirror table td,
-.ProseMirror table th {
+.ProseMirror table td, .ProseMirror table th {
   border: 1px solid hsl(var(--border));
   padding: 8px 12px;
   min-width: 80px;
@@ -130,27 +152,13 @@
   position: absolute;
   z-index: 2;
 }
-.ProseMirror table .column-resize-handle {
-  background-color: hsl(var(--accent));
-  bottom: -2px;
-  position: absolute;
-  right: -2px;
-  pointer-events: none;
-  top: 0;
-  width: 4px;
-}
-.ProseMirror.resize-cursor {
-  cursor: col-resize;
-}
+.ProseMirror.resize-cursor { cursor: col-resize; }
+.ProseMirror p { margin-bottom: 0; line-height: 1.9; }
+.ProseMirror p:has(> br:only-child) { line-height: 1.2; }
 
-/* 게시글 본문 표 스타일 */
-.prose table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1rem 0;
-}
-.prose table td,
-.prose table th {
+/* ─── 게시글 표 ─────────────────────────────────────── */
+.prose table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+.prose table td, .prose table th {
   border: 1px solid hsl(var(--border));
   padding: 8px 12px;
   min-width: 80px;
@@ -162,103 +170,49 @@
   text-align: left;
 }
 
-/* 에디터 문단 간격 */
-.ProseMirror p {
-  margin-bottom: 0;
-  line-height: 1.9;
-}
-
-/* 빈 단락(줄바꿈) 간격 */
-.ProseMirror p:has(> br:only-child) {
-  line-height: 1.2;
-}
-
-/* 포트폴리오 표 가로 스크롤 + 항상 보이는 스크롤바 */
+/* ─── 포트폴리오 테이블 스크롤 ──────────────────────── */
 .table-scroll {
   overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--border));
 }
-.table-scroll::-webkit-scrollbar {
-  height: 6px;
-  display: block;
-}
-.table-scroll::-webkit-scrollbar-track {
-  background: hsl(var(--border));
-  border-radius: 3px;
-}
-.table-scroll::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 3px;
-}
+.table-scroll::-webkit-scrollbar { height: 6px; display: block; }
+.table-scroll::-webkit-scrollbar-track { background: hsl(var(--border)); border-radius: 3px; }
+.table-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
 
-/* 모바일 전용 - 스크롤바 항상 표시 */
-@media (max-width: 767px) {
-  .table-scroll {
-    overflow-x: scroll;
-  }
+/* ─── 페이지 전환 ────────────────────────────────────── */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.page-in { animation: page-in 0.18s ease-out both; }
 
-/* 모바일 한국어 폰트 스택 통일 (PC 건드리지 않음) */
+/* ─── 모바일 ─────────────────────────────────────────── */
 @media (max-width: 767px) {
+  .table-scroll { overflow-x: scroll; }
   body {
-    font-family: var(--font-pretendard), 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    font-family: var(--font-pretendard), 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
     letter-spacing: -0.01em;
   }
 }
 
-/* =====================================================
-   About 페이지 모바일 전용 (PC 769px+ 영향 없음)
-   핵심 전략: main의 px-6(1.5rem=24px)을 negative margin으로
-   상쇄 → 카드가 화면 양끝까지 꽉 참.
-   텍스트는 내부 padding 16px으로 경계선에서 떨어뜨림.
-   ===================================================== */
+/* ─── About 페이지 모바일 ────────────────────────────── */
 @media (max-width: 768px) {
-  /* main px-6 상쇄 + 카드 전체 너비 확장 */
   .about-wrapper {
     box-sizing: border-box !important;
-    width: calc(100% + 3rem) !important;   /* 1.5rem × 2 = px-6 양쪽 상쇄 */
+    width: calc(100% + 3rem) !important;
     margin-left: -1.5rem !important;
     margin-right: -1.5rem !important;
   }
-
-  /* 카드 모서리 제거 (edge-to-edge 디자인) */
-  .about-wrapper > * {
-    border-radius: 0 !important;
-  }
-
-  /* 내부 텍스트가 경계선에 닿지 않도록 16px 패딩 */
-  .about-card-header {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-  .about-card-content {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  /* 텍스트 가독성 + 단어 단위 줄바꿈 */
-  .about-card-content p,
-  .about-card-content li,
-  .about-card-content span {
+  .about-wrapper > * { border-radius: 0 !important; }
+  .about-card-header { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .about-card-content { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .about-card-content p, .about-card-content li, .about-card-content span {
     font-size: 0.9rem !important;
     line-height: 1.7 !important;
     word-break: keep-all !important;
     overflow-wrap: break-word !important;
   }
-  .about-card-content > div p {
-    margin-bottom: 0.6rem !important;
-  }
-  .about-card-content > div p:last-child {
-    margin-bottom: 0 !important;
-  }
-}
-
-/* 페이지 전환 애니메이션 */
-@keyframes page-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.page-in {
-  animation: page-in 0.22s ease-out both;
+  .about-card-content > div p { margin-bottom: 0.6rem !important; }
+  .about-card-content > div p:last-child { margin-bottom: 0 !important; }
 }

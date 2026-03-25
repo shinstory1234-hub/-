@@ -13,12 +13,12 @@ function CustomTooltip({ active, payload, label }: any) {
   const d = payload[0].payload as Snapshot;
   const isPlus = d.profit_loss_rate >= 0;
   return (
-    <div className="rounded-xl border border-border bg-surface px-4 py-3 shadow-soft text-xs space-y-1">
+    <div className="rounded-lg border border-border bg-surface px-3 py-2.5 shadow-md text-xs space-y-1">
       <p className="text-muted-foreground">
         {new Date(label).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "short", day: "numeric" })}
       </p>
-      <p className="font-bold">₩{d.total_eval_amt.toLocaleString("ko-KR")}</p>
-      <p className="font-semibold" style={{ color: isPlus ? "#ef4444" : "#3b82f6" }}>
+      <p className="font-bold text-foreground">₩{d.total_eval_amt.toLocaleString("ko-KR")}</p>
+      <p className="font-semibold tabular-nums" style={{ color: isPlus ? "#ef4444" : "#3b82f6" }}>
         {isPlus ? "+" : ""}{d.profit_loss_rate.toFixed(2)}%
       </p>
     </div>
@@ -32,15 +32,12 @@ export function PortfolioChart() {
   useEffect(() => {
     fetch("/api/portfolio/chart")
       .then((r) => r.json())
-      .then((json) => {
-        if (json.ok) setData(json.data);
-        setLoading(false);
-      })
+      .then((json) => { if (json.ok) setData(json.data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
   if (loading) return (
-    <div className="h-28 flex items-center justify-center text-xs text-muted-foreground">
+    <div className="h-24 flex items-center justify-center text-xs text-muted-foreground">
       불러오는 중...
     </div>
   );
@@ -53,17 +50,17 @@ export function PortfolioChart() {
   const rateColor = isPlus ? "#ef4444" : "#3b82f6";
 
   return (
-    <div className="rounded-2xl border border-border bg-surface px-8 py-6 space-y-4 shadow-soft">
+    <div className="rounded-lg border border-border bg-surface px-6 py-5 space-y-4 shadow-soft">
       <div className="flex items-end justify-between gap-3">
         <div className="space-y-0.5 min-w-0">
-          <p className="text-xs text-muted-foreground">모의투자 포트폴리오</p>
-          <p className="text-lg font-bold tracking-tight md:text-2xl">₩{totalAmt}</p>
+          <p className="text-xs font-medium text-muted-foreground">모의투자 포트폴리오</p>
+          <p className="text-lg font-bold tracking-tight tabular-nums md:text-2xl">₩{totalAmt}</p>
         </div>
-        <p className="text-sm font-bold mb-0.5 shrink-0 md:text-lg" style={{ color: rateColor }}>
+        <p className="text-sm font-bold tabular-nums shrink-0 md:text-lg" style={{ color: rateColor }}>
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
-      <ResponsiveContainer width="100%" height={88}>
+      <ResponsiveContainer width="100%" height={80}>
         <LineChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <XAxis dataKey="snapshot_at" hide />
           <YAxis hide domain={["auto", "auto"]} />
@@ -73,9 +70,9 @@ export function PortfolioChart() {
             type="monotone"
             dataKey="profit_loss_rate"
             stroke={rateColor}
-            strokeWidth={2}
+            strokeWidth={1.5}
             dot={false}
-            activeDot={{ r: 3, strokeWidth: 0 }}
+            activeDot={{ r: 3, strokeWidth: 0, fill: rateColor }}
           />
         </LineChart>
       </ResponsiveContainer>

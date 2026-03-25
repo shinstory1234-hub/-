@@ -28,8 +28,6 @@ function formatDate(dateStr: string) {
     ...(sameYear ? {} : { year: "numeric" }),
     month: "long",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
@@ -41,16 +39,16 @@ export function HomeClient({ posts, categories }: Props) {
     : posts;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* 카테고리 필터 */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1.5 flex-wrap">
         <button
           type="button"
           onClick={() => setActiveCategory(null)}
-          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 ${
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${
             !activeCategory
-              ? "bg-foreground text-background scale-105"
-              : "text-muted-foreground hover:text-foreground hover:scale-105"
+              ? "bg-accent text-accent-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground bg-surface-muted hover:bg-surface border border-border"
           }`}
         >
           전체
@@ -60,10 +58,10 @@ export function HomeClient({ posts, categories }: Props) {
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.slug)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${
               activeCategory === cat.slug
-                ? "bg-foreground text-background scale-105"
-                : "text-muted-foreground hover:text-foreground hover:scale-105"
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground bg-surface-muted hover:bg-surface border border-border"
             }`}
           >
             {cat.name}
@@ -73,23 +71,22 @@ export function HomeClient({ posts, categories }: Props) {
 
       {/* 글 목록 */}
       {filtered.length === 0 ? (
-        <p className="py-20 text-center text-sm text-muted-foreground">아직 글이 없습니다.</p>
+        <p className="py-16 text-center text-sm text-muted-foreground">아직 글이 없습니다.</p>
       ) : (
         <div className="divide-y divide-border">
           {filtered.map((post) => (
-            <PostSlugLink key={post.id} slug={post.slug} className="block group py-6 first:pt-0">
-              <div className="flex items-center gap-1.5 mb-2">
+            <PostSlugLink key={post.id} slug={post.slug} className="block group py-5 first:pt-0">
+              <div className="flex items-center gap-2 mb-2">
                 {post.category && (
-                  <span className="text-xs font-semibold text-accent">{post.category.name}</span>
-                )}
-                {post.category && post.published_at && (
-                  <span className="text-xs text-muted-foreground">·</span>
+                  <span className="inline-flex items-center rounded-full bg-accent-soft border border-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
+                    {post.category.name}
+                  </span>
                 )}
                 {post.published_at && (
                   <span className="text-xs text-muted-foreground">{formatDate(post.published_at)}</span>
                 )}
               </div>
-              <h2 className="text-lg font-bold text-foreground leading-snug mb-1.5 group-hover:text-accent transition-colors">
+              <h2 className="text-base font-bold text-foreground leading-snug mb-1.5 group-hover:text-accent transition-colors duration-150 md:text-lg">
                 {post.title}
               </h2>
               {post.excerpt && (
@@ -98,9 +95,9 @@ export function HomeClient({ posts, categories }: Props) {
                 </p>
               )}
               {post.tags && post.tags.length > 0 && (
-                <div className="flex items-center gap-2 mt-3">
+                <div className="flex items-center gap-2 mt-2.5">
                   {post.tags.slice(0, 3).map((tag, i) => (
-                    <span key={i} className="text-xs text-muted-foreground">#{tag}</span>
+                    <span key={i} className="text-xs text-muted-foreground/70">#{tag}</span>
                   ))}
                 </div>
               )}
