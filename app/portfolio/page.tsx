@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1시간 캐시 (KIS API + 스냅샷 모두 하루 1회 갱신)
 import { createClient } from "@supabase/supabase-js";
 import { PortfolioPageClient } from "@/components/portfolio-page-client";
 
