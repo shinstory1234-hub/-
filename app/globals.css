@@ -224,6 +224,27 @@
 }
 .page-in { animation: page-in 0.18s ease-out both; }
 
+/* ─── 카테고리 필터 ──────────────────────────────────── */
+.category-filter {
+  flex-wrap: wrap;
+}
+@media (max-width: 767px) {
+  .category-filter {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    /* 스크롤바 숨김 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .category-filter::-webkit-scrollbar {
+    display: none;
+  }
+  .category-filter button {
+    flex-shrink: 0;
+  }
+}
+
 /* ─── 모바일 ─────────────────────────────────────────── */
 @media (max-width: 767px) {
   .table-scroll { overflow-x: scroll; }

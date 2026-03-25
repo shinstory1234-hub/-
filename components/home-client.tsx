@@ -41,7 +41,7 @@ export function HomeClient({ posts, categories }: Props) {
   return (
     <div className="space-y-5">
       {/* 카테고리 필터 */}
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="category-filter flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => setActiveCategory(null)}
