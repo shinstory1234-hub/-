@@ -23,7 +23,7 @@ export function SiteHeader() {
   return (
     <header className="w-full pt-5 pb-4">
       <div className={cn("flex items-center justify-between", innerClass)}>
-        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <Image src="/logo.png" alt="머니NPC" width={28} height={28} className="object-contain" priority />
           <span className="text-sm font-bold tracking-tight text-foreground md:text-base">
             머니NPC의 액티브 ETF
