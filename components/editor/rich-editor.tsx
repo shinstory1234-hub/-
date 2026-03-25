@@ -353,15 +353,13 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
         {/* 실행 취소 / 다시 실행 */}
         <Button type="button" variant="outline" size="sm"
           onClick={() => editor?.chain().focus().undo().run()}
-          disabled={!editor?.can().undo()}
           title="실행 취소 (Ctrl+Z)">
-          ↩
+          ↩ 되돌리기
         </Button>
         <Button type="button" variant="outline" size="sm"
           onClick={() => editor?.chain().focus().redo().run()}
-          disabled={!editor?.can().redo()}
           title="다시 실행 (Ctrl+Y)">
-          ↪
+          ↪ 다시실행
         </Button>
 
         {/* 글자 크기 */}
