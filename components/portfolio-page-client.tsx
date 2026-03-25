@@ -173,6 +173,31 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
         </div>
       </div>
 
+      {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 && (
+        <div className="rounded-xl border border-border bg-surface p-6">
+          <p className="text-sm font-semibold mb-4">종목별 비중</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={[
+                  ...holdings
+                    .filter((h) => parseInt(h.hldg_qty) > 0)
+                    .map((h) => ({ name: h.prdt_name, value: parseInt(h.evlu_amt) })),
+                  { name: "현금", value: Math.max(0, cash_amt - stock_eval_amt) },
+                ].filter((d) => d.value > 0)}
+                cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={2} dataKey="value"
+              >
+                {["#3b82f6","#6366f1","#8b5cf6","#a78bfa","#c4b5fd","#e5e7eb"].map((color, i) => (
+                  <Cell key={i} fill={color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number) => `₩${value.toLocaleString()}`} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 ? (
         <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
           <p className="text-sm font-semibold">보유 종목</p>
