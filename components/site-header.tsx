@@ -17,14 +17,15 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  if (pathname === "/") return null;
 
   const isPost = pathname.startsWith("/posts/") || pathname.startsWith("/topics/");
   const innerClass = isPost ? "mx-auto max-w-3xl" : "w-full";
 
   return (
     <header className="w-full pt-6 pb-4">
-      {/* 1행: 로고 + 메뉴 */}
-      <div className={cn("flex items-center justify-between", innerClass)}>
+      {/* 1행: 로고 + 메뉴 — items-baseline으로 타이틀과 메뉴 baseline 맞춤 */}
+      <div className={cn("flex items-baseline justify-between", innerClass)}>
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}

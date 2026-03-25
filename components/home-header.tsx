@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { VisitCounter } from "@/components/visit-counter";
 
 const menus = [
+  { href: "/", label: "홈" },
   { href: "/about", label: "소개" },
   { href: "/portfolio", label: "포트폴리오" },
   { href: "/admin", label: "관리자" },
@@ -14,13 +16,13 @@ export function HomeHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <header className="space-y-2 pt-4">
-      {/* 1행: 로고 + 메뉴 */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-base font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl"
-        >
-          머니NPC의 액티브 ETF
+      {/* 1행: 로고+타이틀 + 메뉴 — items-baseline으로 같은 라인에 정렬 */}
+      <div className="flex items-baseline justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/logo.png" alt="머니NPC" width={36} height={36} className="object-contain" priority />
+          <span className="text-base font-bold tracking-tight text-foreground hover:text-accent transition-colors md:text-2xl whitespace-nowrap">
+            머니NPC의 액티브 ETF
+          </span>
         </Link>
         <div className="flex items-center gap-1">
           {/* 데스크탑 메뉴 */}
