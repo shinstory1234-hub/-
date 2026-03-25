@@ -54,12 +54,12 @@ export function PortfolioChart() {
 
   return (
     <div className="rounded-2xl border border-border bg-surface px-8 py-6 space-y-4 shadow-soft">
-      <div className="flex items-end justify-between">
-        <div className="space-y-0.5">
+      <div className="flex items-end justify-between gap-3">
+        <div className="space-y-0.5 min-w-0">
           <p className="text-xs text-muted-foreground">모의투자 포트폴리오</p>
-          <p className="text-2xl font-bold tracking-tight">₩{totalAmt}</p>
+          <p className="text-lg font-bold tracking-tight md:text-2xl">₩{totalAmt}</p>
         </div>
-        <p className="text-lg font-bold mb-0.5" style={{ color: rateColor }}>
+        <p className="text-sm font-bold mb-0.5 shrink-0 md:text-lg" style={{ color: rateColor }}>
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
