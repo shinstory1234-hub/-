@@ -209,20 +209,35 @@
 
 /* =====================================================
    About 페이지 모바일 전용 (PC 769px+ 영향 없음)
-   핵심 전략: wrapper 너비를 calc로 조여서 외부 여백 확보.
-   내부 padding은 Tailwind p-6(24px)이 그대로 적용됨.
-   최종 여백: main px-6(24px) + wrapper 20px = 44px each side
+   핵심 전략: main의 px-6(1.5rem=24px)을 negative margin으로
+   상쇄 → 카드가 화면 양끝까지 꽉 참.
+   텍스트는 내부 padding 16px으로 경계선에서 떨어뜨림.
    ===================================================== */
 @media (max-width: 768px) {
-  /* 외부 wrapper - 카드를 화면 양쪽에서 20px 강제로 띄움 */
+  /* main px-6 상쇄 + 카드 전체 너비 확장 */
   .about-wrapper {
     box-sizing: border-box !important;
-    width: calc(100% - 40px) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    width: calc(100% + 3rem) !important;   /* 1.5rem × 2 = px-6 양쪽 상쇄 */
+    margin-left: -1.5rem !important;
+    margin-right: -1.5rem !important;
   }
 
-  /* 텍스트 가독성만 조정 - 내부 패딩은 건드리지 않음 */
+  /* 카드 모서리 제거 (edge-to-edge 디자인) */
+  .about-wrapper > * {
+    border-radius: 0 !important;
+  }
+
+  /* 내부 텍스트가 경계선에 닿지 않도록 16px 패딩 */
+  .about-card-header {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .about-card-content {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* 텍스트 가독성 */
   .about-card-content p,
   .about-card-content li {
     font-size: 0.95rem !important;
