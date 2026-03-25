@@ -2,8 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function AboutPage() {
   return (
-    <section className="mx-auto max-w-6xl space-y-6">
-      <div className="about-wrapper">
+    <section className="mx-auto max-w-6xl space-y-6 px-4 md:px-0">
       <Card>
         <CardHeader className="about-card-header">
           <h1 className="text-xl font-bold tracking-tight md:text-2xl">머니NPC 소개</h1>
@@ -44,7 +43,6 @@ export default function AboutPage() {
           </div>
         </CardContent>
       </Card>
-      </div>
     </section>
   );
 }
