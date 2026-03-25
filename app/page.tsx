@@ -27,7 +27,7 @@ async function getCategories() {
   const supabase = getSupabase();
   const { data } = await supabase
     .from("categories")
-    .select("id,name,slug")
+    .select("id,name,slug,description")
     .order("sort_order", { ascending: true });
   return data ?? [];
 }
