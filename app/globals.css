@@ -207,29 +207,59 @@
   }
 }
 
-/* About 페이지 모바일 전용 레이아웃 (PC 레이아웃 영향 없음) */
+/* =====================================================
+   About 페이지 모바일 전용 레이아웃 — 강제 적용
+   PC(769px+)에는 일절 영향 없음
+   ===================================================== */
 @media (max-width: 768px) {
+  /* box-sizing 보장 */
+  .about-wrapper,
+  .about-wrapper * {
+    box-sizing: border-box !important;
+  }
+
+  /* 최상위 컨테이너: 화면 양쪽 20px 고정 여백 */
   .about-wrapper {
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
+    width: calc(100% - 40px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
+
+  /* 카드 헤더 패딩 강제 */
   .about-card-header {
-    padding-left: 1.75rem;  /* 28px */
-    padding-right: 1.75rem;
+    padding: 24px 24px 12px 24px !important;
   }
+
+  /* 카드 콘텐츠 패딩 강제 */
   .about-card-content {
-    padding-left: 1.75rem;
-    padding-right: 1.75rem;
+    padding: 0 24px 24px 24px !important;
   }
+
+  /* 내부 회색 박스들 패딩 강제 */
+  .about-card-content > div {
+    padding: 20px !important;
+  }
+
+  /* 문단 가독성 */
   .about-card-content p,
-  .about-card-content li {
-    line-height: 1.8;
-    margin-bottom: 0.875rem;
+  .about-card-content li,
+  .about-card-content span {
+    line-height: 1.8 !important;
+    font-size: 0.95rem !important;
   }
-  .about-card-content p:last-child,
-  .about-card-content li:last-child {
-    margin-bottom: 0;
+
+  /* 문단 간격 */
+  .about-card-content > p {
+    margin-bottom: 1rem !important;
+  }
+  .about-card-content > p:last-child {
+    margin-bottom: 0 !important;
+  }
+  .about-card-content > div p {
+    margin-bottom: 0.75rem !important;
+  }
+  .about-card-content > div p:last-child {
+    margin-bottom: 0 !important;
   }
 }
 
