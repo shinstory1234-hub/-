@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { VisitCounter } from "@/components/visit-counter";
 
 const menus = [
   { href: "/",          label: "홈" },
@@ -12,7 +13,7 @@ const menus = [
 
 export function HomeHeader() {
   return (
-    <header className="space-y-3 pt-6">
+    <header className="pt-6 space-y-2">
       {/* 로고 + 메뉴 */}
       <div className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1">
@@ -45,7 +46,11 @@ export function HomeHeader() {
           <ThemeToggle />
         </div>
       </div>
-
+      {/* 서브헤더: 설명 + 방문자 수 */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
+        <VisitCounter />
+      </div>
     </header>
   );
 }

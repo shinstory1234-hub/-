@@ -5,7 +5,6 @@ import { HomeHeader } from "@/components/home-header";
 import { HomeClient } from "@/components/home-client";
 import { PortfolioChart } from "@/components/portfolio-chart";
 import { FadeIn } from "@/components/fade-in";
-import { VisitCounter } from "@/components/visit-counter";
 
 function getSupabase() {
   return createClient(
@@ -51,12 +50,8 @@ export default async function HomePage() {
     getPortfolioData(),
   ]);
   return (
-    <section className="mx-auto max-w-2xl px-6 md:px-5 space-y-10">
+    <section className="mx-auto max-w-2xl px-6 md:px-5 space-y-6">
       <HomeHeader />
-      <div className="flex items-center justify-between -mt-6">
-        <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
-        <VisitCounter />
-      </div>
       <FadeIn delay={50}>
         <PortfolioChart data={portfolioData} />
       </FadeIn>
