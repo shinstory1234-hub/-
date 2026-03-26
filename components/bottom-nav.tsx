@@ -51,9 +51,9 @@ function SettingsIcon({ active }: { active: boolean }) {
 
 const tabs = [
   { href: "/",          label: "홈",       Icon: HomeIcon },
-  { href: "/portfolio", label: "포트폴리오", Icon: ChartIcon },
-  { href: "/search",    label: "검색",     Icon: SearchIcon },
   { href: "/about",     label: "소개",     Icon: UserIcon },
+  { href: "/search",    label: "검색",     Icon: SearchIcon },
+  { href: "/portfolio", label: "포트폴리오", Icon: ChartIcon },
   { href: "/admin",     label: "관리자",   Icon: SettingsIcon },
 ];
 

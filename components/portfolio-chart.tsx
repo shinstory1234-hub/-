@@ -121,18 +121,18 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
 
   return (
     <div className="rounded-lg border border-border bg-surface px-6 py-5 space-y-4 shadow-soft">
-      {/* 헤더: 모바일 세로 / PC 가로 배치 */}
-      <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between md:gap-3">
+      {/* 헤더 */}
+      <div className="flex items-baseline justify-between gap-3">
         <div className="space-y-0.5 min-w-0">
           <p className="text-xs font-medium text-muted-foreground">모의투자 포트폴리오</p>
           <p className="text-lg font-bold tracking-tight tabular-nums md:text-2xl">₩{totalAmt}</p>
         </div>
-        <p className="self-end text-base font-bold tabular-nums md:text-lg md:shrink-0" style={{ color: rateColor }}>
+        <p className="text-base font-bold tabular-nums shrink-0 md:text-lg" style={{ color: rateColor }}>
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
 
-      {/* 기간 선택 + 범례 */}
+      {/* 기간 선택 + 범례(PC) */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           {PERIODS.map((p) => (
@@ -152,7 +152,7 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
           ))}
         </div>
         {showKospi && (
-          <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
+          <div className="hidden md:flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-4 h-0.5 rounded-full" style={{ background: rateColor }} />
               포트폴리오
@@ -164,6 +164,19 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
           </div>
         )}
       </div>
+      {/* 범례(모바일) — 기간 버튼 아래 */}
+      {showKospi && (
+        <div className="flex md:hidden items-center gap-3 -mt-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-4 h-0.5 rounded-full" style={{ background: rateColor }} />
+            포트폴리오
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-4 h-px border-t-2 border-dashed border-orange-400" />
+            코스피
+          </span>
+        </div>
+      )}
 
       {/* 차트 */}
       <ResponsiveContainer width="100%" height={100}>
