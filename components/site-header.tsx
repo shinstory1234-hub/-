@@ -15,7 +15,7 @@ const menus = [
 function getContainerClass(pathname: string): string {
   if (pathname.startsWith("/about")) return "mx-auto w-full max-w-4xl px-3 md:px-5";
   if (pathname.startsWith("/admin")) return "mx-auto w-full max-w-4xl px-6 md:px-5";
-  if (pathname.startsWith("/portfolio")) return "mx-auto w-full max-w-3xl px-3 md:px-5";
+  if (pathname.startsWith("/portfolio")) return "mx-auto w-full max-w-4xl px-3 md:px-5";
   return "mx-auto w-full max-w-3xl px-6 md:px-5";
 }
 
