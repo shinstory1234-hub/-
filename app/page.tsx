@@ -51,7 +51,7 @@ export default async function HomePage() {
     getPortfolioData(),
   ]);
   return (
-    <section className="mx-auto max-w-3xl space-y-10">
+    <section className="space-y-10">
       <HomeHeader />
       <div className="flex items-center justify-between -mt-6">
         <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>

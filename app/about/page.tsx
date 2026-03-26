@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function AboutPage() {
   return (
-    <section className="mx-auto max-w-3xl space-y-6">
+    <section className="space-y-6">
       <div className="about-wrapper">
       <Card>
         <CardHeader className="about-card-header">
