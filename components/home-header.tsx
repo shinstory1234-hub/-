@@ -16,7 +16,7 @@ export function HomeHeader() {
     <header className="pt-6 pb-0 space-y-2 w-full">
       {/* 로고 + 메뉴 */}
       <div className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-1">
+        <Link href="/" className="flex items-center gap-1 -ml-2">
           <Image src="/logo.png" alt="머니NPC" width={44} height={44} className="object-contain object-left" priority />
           <span className="text-base font-bold tracking-tight text-foreground md:text-xl">
             머니NPC의 액티브 ETF
