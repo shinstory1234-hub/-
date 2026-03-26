@@ -49,7 +49,9 @@ export function HomeHeader() {
       {/* 서브헤더: 설명 + 방문자 수 */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
-        <VisitCounter />
+        <div className="pr-3">
+          <VisitCounter />
+        </div>
       </div>
     </header>
   );
