@@ -12,7 +12,7 @@ type Snapshot = {
   profit_loss_rate: number;
 } | null;
 
-const STOCK_COLORS = ["#3b82f6", "#e5e7eb"];
+const STOCK_COLORS = ["#3b82f6", "#94a3b8"];
 const FUTURE_COLORS = ["#f59e0b", "#f97316", "#e5e7eb"];
 
 type Holding = {
