@@ -50,14 +50,16 @@ export default async function HomePage() {
     getPortfolioData(),
   ]);
   return (
-    <section className="mx-auto max-w-2xl px-6 md:px-5 space-y-6">
+    <div className="mx-auto w-full max-w-2xl px-4">
       <HomeHeader />
-      <FadeIn delay={50}>
-        <PortfolioChart data={portfolioData} />
-      </FadeIn>
-      <FadeIn delay={150}>
-        <HomeClient posts={posts} categories={categories} />
-      </FadeIn>
-    </section>
+      <div className="space-y-5 mt-5">
+        <FadeIn delay={50}>
+          <PortfolioChart data={portfolioData} />
+        </FadeIn>
+        <FadeIn delay={150}>
+          <HomeClient posts={posts} categories={categories} />
+        </FadeIn>
+      </div>
+    </div>
   );
 }

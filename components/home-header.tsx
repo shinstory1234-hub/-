@@ -13,7 +13,7 @@ const menus = [
 
 export function HomeHeader() {
   return (
-    <header className="pt-6 space-y-2">
+    <header className="pt-6 pb-0 space-y-2 w-full">
       {/* 로고 + 메뉴 */}
       <div className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1">
