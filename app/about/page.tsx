@@ -12,7 +12,7 @@ export default function AboutPage() {
             머니NPC는 VC심사역, 증권사 등 제도권 금융 현장에서 쌓은 경험을 바탕으로, 투자, 커리어, 시장에 대한 생각을 정리하는 개인 기록 공간입니다.
           </p>
 
-          <div className="rounded-lg border border-border bg-surface p-4 space-y-2 md:p-5">
+          <div className="rounded-lg border border-border bg-surface p-5 space-y-3 md:p-6">
             <p className="text-sm font-bold text-foreground">🧪 머니NPC 액티브 ETF란?</p>
             <div className="leading-7 text-muted-foreground space-y-2">
               <p className="text-sm">이 블로그는 단순한 투자 기록을 넘어, <strong className="text-foreground">나만의 액티브 ETF</strong>를 설계하고 운용하는 실험적 프로젝트입니다.</p>
@@ -22,7 +22,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-surface p-4 space-y-2 md:p-5">
+          <div className="rounded-lg border border-border bg-surface p-5 space-y-3 md:p-6">
             <p className="text-sm font-bold text-foreground">📋 운용 철학</p>
             <ul className="text-sm leading-7 text-muted-foreground list-disc list-inside space-y-1 md:text-base md:leading-8 md:space-y-2">
               <li>기술적(차트) 분석을 통한 매매</li>
@@ -33,7 +33,7 @@ export default function AboutPage() {
             </ul>
           </div>
 
-          <div className="rounded-lg border-2 border-danger/50 bg-danger/10 p-4 space-y-2 md:p-5 md:space-y-3">
+          <div className="rounded-lg border-2 border-danger/50 bg-danger/10 p-5 space-y-3 md:p-6">
             <p className="text-sm font-extrabold text-danger">⚠️ 중요 면책 고지 (Disclaimer)</p>
             <div className="leading-7 text-danger/90 space-y-2">
               <p className="text-sm">본 블로그의 모든 콘텐츠는 <strong>개인적인 기록 및 학습 목적</strong>으로만 작성되었으며, 어떠한 경우에도 <strong>투자 권유, 매수·매도·보유 추천</strong>으로 해석될 수 없습니다.</p>
