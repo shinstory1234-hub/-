@@ -210,6 +210,7 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
                 <th className="pb-2 text-right">현재가</th>
                 <th className="pb-2 text-right">평가금액</th>
                 <th className="pb-2 text-right">손익</th>
+                <th className="pb-2 text-right">손익률</th>
               </tr>
             </thead>
             <tbody>
@@ -225,6 +226,9 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
                     <td className="py-3 text-right">₩{parseInt(h.evlu_amt).toLocaleString()}</td>
                     <td className={`py-3 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
                       {isUp ? "+" : ""}{pfls.toLocaleString()}
+                    </td>
+                    <td className={`py-3 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
+                      {isUp ? "+" : ""}{parseFloat(h.evlu_pfls_rt).toFixed(2)}%
                     </td>
                   </tr>
                 );

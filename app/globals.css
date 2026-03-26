@@ -225,8 +225,8 @@ mark {
   padding: 0 2px;
 }
 .dark mark {
-  background-color: #854d0e;
-  color: #fef08a;
+  background-color: #854d0e !important;
+  color: #fef08a !important;
 }
 
 /* ─── 페이지 전환 ────────────────────────────────────── */
