@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { VisitCounter } from "@/components/visit-counter";
 
@@ -15,7 +16,8 @@ export function HomeHeader() {
     <header className="space-y-3 pt-6">
       {/* 로고 + 메뉴 */}
       <div className="flex items-center justify-between">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/logo.png" alt="머니NPC" width={32} height={32} className="object-contain" priority />
           <span className="text-base font-bold tracking-tight text-foreground md:text-xl">
             머니NPC의 액티브 ETF
           </span>

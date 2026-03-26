@@ -1,6 +1,7 @@
 "use client";
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -23,7 +24,8 @@ export function SiteHeader() {
   return (
     <header className="w-full pt-5 pb-4">
       <div className={cn("flex items-center justify-between", innerClass)}>
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/logo.png" alt="머니NPC" width={28} height={28} className="object-contain" priority />
           <span className="text-sm font-bold tracking-tight text-foreground md:text-base">
             머니NPC의 액티브 ETF
           </span>
