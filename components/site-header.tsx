@@ -18,7 +18,7 @@ export function SiteHeader() {
   if (pathname === "/") return null;
 
   const isPost = pathname.startsWith("/posts/") || pathname.startsWith("/topics/");
-  const innerClass = isPost ? "mx-auto max-w-3xl xl:max-w-5xl" : "w-full";
+  const innerClass = isPost ? "mx-auto max-w-3xl" : "w-full";
 
   return (
     <header className="w-full pt-5 pb-4">

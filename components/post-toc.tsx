@@ -45,7 +45,7 @@ export function PostTOC({ contentSelector = ".prose" }: { contentSelector?: stri
   if (headings.length < 2) return null;
 
   return (
-    <nav className="hidden xl:block sticky top-24 w-52 shrink-0 self-start text-xs space-y-1">
+    <nav className="hidden xl:block fixed top-24 w-52 text-xs space-y-1" style={{ left: "calc(50% + 408px)" }}>
       <p className="text-xs font-semibold text-foreground mb-2">목차</p>
       {headings.map((h) => (
         <a
