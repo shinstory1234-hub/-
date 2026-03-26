@@ -22,6 +22,7 @@ type Props = {
   name: string;
   initialValue?: string;
   onImageInserted?: (url: string) => void;
+  onChange?: (html: string) => void;
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -144,7 +145,7 @@ const Indent = Extension.create({
   },
 });
 
-export function RichEditor({ name, initialValue = "", onImageInserted }: Props) {
+export function RichEditor({ name, initialValue = "", onImageInserted, onChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [lastFile, setLastFile] = useState<File | null>(null);
@@ -178,7 +179,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted }: Props) 
     ],
     content: initialValue,
     onCreate: ({ editor }) => setHtml(editor.getHTML()),
-    onUpdate: ({ editor }) => setHtml(editor.getHTML()),
+    onUpdate: ({ editor }) => { const h = editor.getHTML(); setHtml(h); onChange?.(h); },
     editorProps: {
       attributes: {
         class: "min-h-[380px] rounded-b-lg border border-t-0 border-border bg-surface p-5 outline-none prose max-w-none"

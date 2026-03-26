@@ -32,11 +32,16 @@ function slugify(v: string) {
     .replace(/^-|-$/g, "");
 }
 
+const DRAFT_KEY = "admin_draft_new";
+
 type Attachment = { name: string; url: string };
 
 export function PostForm({ categories }: Props) {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
+  const [editorContent, setEditorContent] = useState("");
+  const [editorKey, setEditorKey] = useState(0);
+  const [savedDraft, setSavedDraft] = useState<{ title: string; content: string } | null>(null);
   const [state, action] = useActionState(createPostAction, initialState);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -47,8 +52,36 @@ export function PostForm({ categories }: Props) {
 
   useEffect(() => { setSlug(slugify(title)); }, [title]);
 
+  // 마운트 시 임시저장 확인
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) setSavedDraft(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  // 자동 임시저장 (1초 디바운스)
+  useEffect(() => {
+    if (!title && !editorContent) return;
+    const timer = setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, content: editorContent }));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [title, editorContent]);
+
+  // 탭/창 닫을 때 저장
+  useEffect(() => {
+    const save = () => {
+      if (title || editorContent)
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, content: editorContent }));
+    };
+    window.addEventListener("beforeunload", save);
+    return () => window.removeEventListener("beforeunload", save);
+  }, [title, editorContent]);
+
   useEffect(() => {
     if (state?.ok && state.redirectTo && state.id) {
+      localStorage.removeItem(DRAFT_KEY);
       if (attachments.length > 0) {
         fetch("/api/attachments/save", {
           method: "POST",
@@ -106,6 +139,21 @@ export function PostForm({ categories }: Props) {
         {categories.length > 0 ? <SubmitActions intentRef={intentRef} /> : null}
       </div>
 
+      {savedDraft && (
+        <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent-soft p-3 text-sm">
+          <span className="text-accent">이전에 작성 중이던 내용이 있습니다.</span>
+          <div className="flex gap-2">
+            <button type="button" className="text-xs font-semibold text-accent underline" onClick={() => {
+              setTitle(savedDraft.title);
+              setEditorContent(savedDraft.content);
+              setEditorKey((k) => k + 1);
+              setSavedDraft(null);
+            }}>복원</button>
+            <button type="button" className="text-xs text-muted-foreground underline" onClick={() => { localStorage.removeItem(DRAFT_KEY); setSavedDraft(null); }}>삭제</button>
+          </div>
+        </div>
+      )}
+
       {state?.error ? <p className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm text-danger">{state.error}</p> : null}
 
       <Input name="title" placeholder="제목을 입력하세요" autoFocus value={title}
@@ -154,7 +202,7 @@ export function PostForm({ categories }: Props) {
         )}
       </div>
 
-      <RichEditor name="content" onImageInserted={() => show("이미지를 커서 위치에 삽입했습니다.")} />
+      <RichEditor key={editorKey} name="content" initialValue={editorContent} onChange={setEditorContent} onImageInserted={() => show("이미지를 커서 위치에 삽입했습니다.")} />
     </form>
   );
 }

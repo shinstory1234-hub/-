@@ -266,17 +266,3 @@ mark {
   }
 }
 
-/* ─── About 페이지 모바일 ────────────────────────────── */
-@media (max-width: 768px) {
-  .about-wrapper > * { border-radius: 0 !important; }
-  .about-card-header { padding-left: 1rem !important; padding-right: 1rem !important; }
-  .about-card-content { padding-left: 1rem !important; padding-right: 1rem !important; }
-  .about-card-content p, .about-card-content li, .about-card-content span {
-    font-size: 0.9rem !important;
-    line-height: 1.7 !important;
-    word-break: keep-all !important;
-    overflow-wrap: break-word !important;
-  }
-  .about-card-content > div p { margin-bottom: 0.6rem !important; }
-  .about-card-content > div p:last-child { margin-bottom: 0 !important; }
-}

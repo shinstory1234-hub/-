@@ -297,7 +297,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   revalidatePath("/");
   revalidatePath("/admin/posts");
   revalidatePath(`/posts/${slug}`);
-  return { ok: true, id, redirectTo: "/admin/posts" };
+  return { ok: true, id, redirectTo: `/posts/${slug}` };
 }
 
 export async function deletePostAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

@@ -50,6 +50,9 @@ type Attachment = { id?: string; name: string; url: string };
 export function EditPostForm({ post, categories, initialAttachments }: Props) {
   const [title, setTitle] = useState(post.title);
   const [slug, setSlug] = useState(post.slug);
+  const [editorContent, setEditorContent] = useState(post.content);
+  const [editorKey, setEditorKey] = useState(0);
+  const [savedDraft, setSavedDraft] = useState<{ title: string; content: string } | null>(null);
   const [state, action] = useActionState(updatePostAction, initialState);
   const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments);
   const [uploading, setUploading] = useState(false);
@@ -57,16 +60,41 @@ export function EditPostForm({ post, categories, initialAttachments }: Props) {
   const { show } = useToast();
   const router = useRouter();
   const intentRef = useRef<HTMLInputElement>(null);
+  const draftKey = `admin_draft_edit_${post.id}`;
+
+  // 마운트 시 임시저장 확인
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) setSavedDraft(JSON.parse(saved));
+    } catch {}
+  }, [draftKey]);
+
+  // 자동 임시저장 (1초 디바운스)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(draftKey, JSON.stringify({ title, content: editorContent }));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [title, editorContent, draftKey]);
+
+  // 탭/창 닫을 때 저장
+  useEffect(() => {
+    const save = () => localStorage.setItem(draftKey, JSON.stringify({ title, content: editorContent }));
+    window.addEventListener("beforeunload", save);
+    return () => window.removeEventListener("beforeunload", save);
+  }, [title, editorContent, draftKey]);
 
   useEffect(() => {
     if (state?.ok && state.redirectTo) {
+      localStorage.removeItem(draftKey);
       show("글이 수정되었습니다.");
       router.push(state.redirectTo);
       router.refresh();
       return;
     }
     if (state?.error) show(state.error, "error");
-  }, [router, show, state]);
+  }, [router, show, state, draftKey]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -110,6 +138,21 @@ export function EditPostForm({ post, categories, initialAttachments }: Props) {
         <SubmitActions intentRef={intentRef} />
       </div>
 
+      {savedDraft && (
+        <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent-soft p-3 text-sm">
+          <span className="text-accent">이전에 저장된 임시 내용이 있습니다.</span>
+          <div className="flex gap-2">
+            <button type="button" className="text-xs font-semibold text-accent underline" onClick={() => {
+              setTitle(savedDraft.title);
+              setEditorContent(savedDraft.content);
+              setEditorKey((k) => k + 1);
+              setSavedDraft(null);
+            }}>복원</button>
+            <button type="button" className="text-xs text-muted-foreground underline" onClick={() => { localStorage.removeItem(draftKey); setSavedDraft(null); }}>삭제</button>
+          </div>
+        </div>
+      )}
+
       <Input name="title" placeholder="제목을 입력하세요" value={title}
         onChange={(e) => { const v = e.target.value; setTitle(v); setSlug(slugify(v)); }}
       />
@@ -150,7 +193,7 @@ export function EditPostForm({ post, categories, initialAttachments }: Props) {
         )}
       </div>
 
-      <RichEditor name="content" initialValue={post.content} onImageInserted={() => show("이미지를 커서 위치에 삽입했습니다.")} />
+      <RichEditor key={editorKey} name="content" initialValue={editorContent} onChange={setEditorContent} onImageInserted={() => show("이미지를 커서 위치에 삽입했습니다.")} />
     </form>
   );
 }

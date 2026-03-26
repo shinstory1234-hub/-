@@ -20,10 +20,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ToastProvider>
           <div className="mx-auto w-full max-w-3xl px-6 md:px-5">
             <SiteHeader />
-            <main className="pb-24 md:pb-14">
-              <PageTransition>{children}</PageTransition>
-            </main>
           </div>
+          <main className="px-6 md:px-5 pb-24 md:pb-14">
+            <PageTransition>{children}</PageTransition>
+          </main>
           <BottomNav />
         </ToastProvider>
       </body>
