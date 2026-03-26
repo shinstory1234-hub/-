@@ -183,7 +183,6 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
                   ...holdings
                     .filter((h) => parseInt(h.hldg_qty) > 0)
                     .map((h) => ({ name: h.prdt_name, value: parseInt(h.evlu_amt) })),
-                  { name: "현금", value: Math.max(0, cash_amt - stock_eval_amt) },
                 ].filter((d) => d.value > 0)}
                 cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={2} dataKey="value"
               >

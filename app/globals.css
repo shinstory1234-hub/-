@@ -217,6 +217,18 @@
 .table-scroll::-webkit-scrollbar-track { background: hsl(var(--border)); border-radius: 3px; }
 .table-scroll::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
 
+/* ─── 형광펜 (highlight) ─────────────────────────────── */
+mark {
+  background-color: #fef08a;
+  color: #1a1a1a;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.dark mark {
+  background-color: #854d0e;
+  color: #fef08a;
+}
+
 /* ─── 페이지 전환 ────────────────────────────────────── */
 @keyframes page-in {
   from { opacity: 0; transform: translateY(8px); }

@@ -127,7 +127,7 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
           <p className="text-xs font-medium text-muted-foreground">모의투자 포트폴리오</p>
           <p className="text-lg font-bold tracking-tight tabular-nums md:text-2xl">₩{totalAmt}</p>
         </div>
-        <p className="text-base font-bold tabular-nums md:text-lg md:shrink-0" style={{ color: rateColor }}>
+        <p className="self-end text-base font-bold tabular-nums md:text-lg md:shrink-0" style={{ color: rateColor }}>
           {isPlus ? "+" : ""}{rate.toFixed(2)}%
         </p>
       </div>
