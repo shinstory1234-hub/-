@@ -154,11 +154,11 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
         {showKospi && (
           <div className="hidden md:flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <span className="inline-block w-4 h-px border-t-2 border-dashed" style={{ borderColor: rateColor }} />
+              <span className="inline-block w-4 h-0.5 rounded-full" style={{ background: rateColor }} />
               포트폴리오
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block w-4 h-0.5 rounded-full bg-orange-400" />
+              <span className="inline-block w-4 h-px border-t-2 border-dashed border-orange-400" />
               코스피
             </span>
           </div>
@@ -190,7 +190,6 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
             dataKey="profit_loss_rate"
             stroke={rateColor}
             strokeWidth={1.5}
-            strokeDasharray="4 2"
             dot={false}
             activeDot={{ r: 3, strokeWidth: 0, fill: rateColor }}
           />

@@ -12,12 +12,20 @@ const menus = [
   { href: "/admin",     label: "관리자" },
 ];
 
+function getContainerClass(pathname: string): string {
+  if (pathname.startsWith("/about")) return "mx-auto w-full max-w-4xl px-3 md:px-5";
+  if (pathname.startsWith("/admin")) return "mx-auto w-full max-w-4xl px-6 md:px-5";
+  if (pathname.startsWith("/portfolio")) return "mx-auto w-full max-w-3xl px-3 md:px-5";
+  return "mx-auto w-full max-w-3xl px-6 md:px-5";
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
 
   if (pathname === "/") return null;
 
   return (
+    <div className={getContainerClass(pathname)}>
     <header className="w-full pt-5 pb-4">
       <div className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-1">
@@ -59,5 +67,6 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+    </div>
   );
 }

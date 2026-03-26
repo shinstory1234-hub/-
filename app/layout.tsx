@@ -18,9 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ko" className={pretendard.variable}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <ToastProvider>
-          <div className="mx-auto w-full max-w-2xl px-4">
-            <SiteHeader />
-          </div>
+          <SiteHeader />
           <main className="pb-24 md:pb-14">
             <PageTransition>{children}</PageTransition>
           </main>
