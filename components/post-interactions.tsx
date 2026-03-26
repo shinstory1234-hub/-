@@ -69,9 +69,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
         const initial: Record<string, { count: number; liked: boolean }> = {};
         await Promise.all(
           (commentsJson.comments ?? []).map(async (c) => {
+            const localLiked = localStorage.getItem(`comment_liked_${c.id}`) === "true";
             const likeRes = await fetch(`/api/comment-likes/${c.id}`, { cache: "no-store" });
             const likeJson = await safeJson<CommentLikeResponse>(likeRes);
-            initial[c.id] = { count: c.likes_count ?? 0, liked: likeJson?.liked ?? false };
+            initial[c.id] = { count: c.likes_count ?? 0, liked: localLiked || (likeJson?.liked ?? false) };
           })
         );
         setCommentLikes(initial);
@@ -111,12 +112,15 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       ...prev,
       [commentId]: { count: current.count + (newLiked ? 1 : -1), liked: newLiked }
     }));
+    localStorage.setItem(`comment_liked_${commentId}`, String(newLiked));
     const res = await fetch(`/api/comment-likes/${commentId}`, { method: "POST" });
     const json = await safeJson<CommentLikeResponse>(res);
     if (json?.ok) {
       setCommentLikes((prev) => ({ ...prev, [commentId]: { count: json.likes_count ?? 0, liked: json.liked ?? false } }));
+      localStorage.setItem(`comment_liked_${commentId}`, String(json.liked ?? newLiked));
     } else {
       setCommentLikes((prev) => ({ ...prev, [commentId]: current }));
+      localStorage.setItem(`comment_liked_${commentId}`, String(current.liked));
     }
   };
 
