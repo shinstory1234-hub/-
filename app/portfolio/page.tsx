@@ -68,7 +68,7 @@ export default async function PortfolioPage() {
   );
 
   return (
-    <section className="mx-auto max-w-3xl space-y-8">
+    <section className="mx-auto max-w-3xl px-6 md:px-5 space-y-8">
       <div>
         <h1 className="text-2xl font-bold">포트폴리오</h1>
         <p className="text-sm text-muted-foreground mt-1">머니NPC 모의투자 현황</p>

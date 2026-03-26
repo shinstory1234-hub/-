@@ -5,7 +5,7 @@ import { resetPasswordAction } from "./actions";
 
 export default function ResetPasswordPage() {
   return (
-    <section className="mx-auto max-w-md">
+    <section className="mx-auto max-w-md px-6 md:px-5">
       <Card>
         <CardHeader>
           <h1 className="text-2xl font-bold">비밀번호 재설정</h1>

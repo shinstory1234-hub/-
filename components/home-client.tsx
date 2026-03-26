@@ -35,9 +35,8 @@ function formatDate(dateStr: string) {
 export function HomeClient({ posts, categories }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const usedSlugs = new Set(posts.map((p) => p.category?.slug).filter(Boolean));
   const uniqueCategories = categories.filter(
-    (cat, idx, arr) => usedSlugs.has(cat.slug) && arr.findIndex((c) => c.slug === cat.slug) === idx
+    (cat, idx, arr) => arr.findIndex((c) => c.slug === cat.slug) === idx
   );
 
   const filtered = activeCategory

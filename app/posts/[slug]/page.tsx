@@ -110,7 +110,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   const next = index > 0 ? all[index - 1] : undefined;
 
   return (
-    <div className="mx-auto max-w-3xl pt-6 md:pt-10">
+    <div className="mx-auto max-w-3xl px-6 md:px-5 pt-6 md:pt-10">
     <PostTOC />
     <article className="space-y-8">
       {/* 글 헤더 */}

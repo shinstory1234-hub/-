@@ -19,7 +19,7 @@ async function getAllPosts() {
 export default async function SearchPage() {
   const posts = await getAllPosts();
   return (
-    <section className="mx-auto max-w-3xl space-y-6 pt-4">
+    <section className="mx-auto max-w-3xl px-6 md:px-5 space-y-6 pt-4">
       <SearchClient posts={posts} />
     </section>
   );

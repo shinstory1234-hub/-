@@ -4,7 +4,7 @@ import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
-    <section className="mx-auto grid w-full max-w-4xl gap-4 md:grid-cols-[1.1fr_1fr]">
+    <section className="mx-auto grid w-full max-w-4xl px-6 md:px-5 gap-4 md:grid-cols-[1.1fr_1fr]">
       <Card className="hidden md:block">
         <CardHeader>
           <h2>머니NPC 관리자</h2>

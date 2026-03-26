@@ -11,7 +11,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
   const posts = showPosts ? await getPosts(slug) : [];
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6">
+    <section className="mx-auto max-w-3xl px-6 md:px-5 space-y-6">
       <h1 className="text-2xl font-bold">카테고리</h1>
       <Tabs
         items={[

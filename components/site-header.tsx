@@ -58,7 +58,6 @@ export function SiteHeader() {
           <ThemeToggle />
         </div>
       </div>
-      <div className="mt-4 h-px bg-border" />
     </header>
   );
 }

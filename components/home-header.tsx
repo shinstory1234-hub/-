@@ -46,8 +46,6 @@ export function HomeHeader() {
         </div>
       </div>
 
-      {/* 구분선 */}
-      <div className="h-px bg-border" />
     </header>
   );
 }

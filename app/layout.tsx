@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-3xl px-6 md:px-5">
             <SiteHeader />
           </div>
-          <main className="px-6 md:px-5 pb-24 md:pb-14">
+          <main className="pb-24 md:pb-14">
             <PageTransition>{children}</PageTransition>
           </main>
           <BottomNav />
