@@ -199,6 +199,7 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
               dataKey="kospi_rate"
               stroke="#f97316"
               strokeWidth={1.5}
+              strokeDasharray="4 2"
               dot={false}
               activeDot={{ r: 3, strokeWidth: 0, fill: "#f97316" }}
               connectNulls
