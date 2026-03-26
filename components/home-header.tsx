@@ -37,18 +37,18 @@ export function HomeHeader() {
           <Link
             href="/search"
             aria-label="검색"
-            className="p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-surface-muted transition-colors"
+            className="pl-2 py-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-surface-muted transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </Link>
-          <ThemeToggle />
+          <div className="-mr-3"><ThemeToggle /></div>
         </div>
       </div>
       {/* 서브헤더: 설명 + 방문자 수 */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground pl-2">VC심사역 출신의 투자 기록</p>
+        <p className="text-sm text-muted-foreground">VC심사역 출신의 투자 기록</p>
         <VisitCounter />
       </div>
     </header>
