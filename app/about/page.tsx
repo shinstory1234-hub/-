@@ -35,7 +35,7 @@ export default function AboutPage() {
 
           <div className="rounded-lg border-2 border-danger/50 bg-danger/10 p-4 space-y-2 md:p-5 md:space-y-3">
             <p className="text-sm font-extrabold text-danger">⚠️ 중요 면책 고지 (Disclaimer)</p>
-            <div className="text-xs leading-6 text-danger/90 space-y-2 md:text-sm md:leading-7">
+            <div className="text-sm leading-7 text-danger/90 space-y-2">
               <p>본 블로그의 모든 콘텐츠는 <strong>개인적인 기록 및 학습 목적</strong>으로만 작성되었으며, 어떠한 경우에도 <strong>투자 권유, 매수·매도·보유 추천</strong>으로 해석될 수 없습니다.</p>
               <p>본 콘텐츠는 <strong>투자 판단의 근거로 사용될 수 없으며</strong>, 모든 투자 결정과 그 결과에 대한 <strong>책임은 전적으로 투자자 본인</strong>에게 있습니다.</p>
               <p>포트폴리오는 <strong>모의투자</strong>로 운용되며, 실제 투자 성과와 다를 수 있습니다. 과거 수익률이 미래 수익률을 보장하지 않습니다.</p>
