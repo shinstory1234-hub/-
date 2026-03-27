@@ -227,7 +227,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   if (error) return { ok: false, error: error.message };
 
   await supabase.from("post_categories").insert(
-    categoryIds.map((cid) => ({ post_id: data.id, category_id: Number(cid) }))
+    categoryIds.map((cid: string) => ({ post_id: data.id, category_id: Number(cid) }))
   );
 
   const attachmentsRaw = String(getText(formData, "attachments") ?? "").trim();
