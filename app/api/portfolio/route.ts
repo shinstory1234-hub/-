@@ -52,7 +52,12 @@ async function getFutureBalance(token: string, appKey: string, appSecret: string
   return res.json();
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const authHeader = req.headers.get("authorization");
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const [tokenStock, tokenFuture] = await Promise.all([
       getToken(process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!),

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isAdmin } from "@/lib/auth";
 
 function getSupabase() {
   return createClient(
@@ -9,6 +10,10 @@ function getSupabase() {
 }
 
 export async function POST(req: Request) {
+  if (!await isAdmin()) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const supabase = getSupabase();
   const { postId, attachments } = await req.json();
 

@@ -18,6 +18,12 @@ export async function requireAdmin() {
   return user;
 }
 
+/** API route handler용 — redirect 대신 null 반환 */
+export async function isAdmin(): Promise<boolean> {
+  const user = await getSessionUser();
+  return !!user && user.email === ADMIN_EMAIL;
+}
+
 export function isDev() {
   return process.env.NODE_ENV === "development";
 }
