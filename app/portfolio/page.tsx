@@ -64,6 +64,29 @@ async function getSnapshotHistory() {
   return data ?? [];
 }
 
+async function getKospiHistory(startDate: string): Promise<{ date: string; rate: number }[]> {
+  try {
+    const from = Math.floor(new Date(startDate).getTime() / 1000);
+    const to = Math.floor(Date.now() / 1000);
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/%5EKS11?interval=1d&period1=${from}&period2=${to}`,
+      { headers: { "User-Agent": "Mozilla/5.0" }, next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    const timestamps: number[] = json.chart?.result?.[0]?.timestamp ?? [];
+    const closes: number[] = json.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? [];
+    const base = closes[0];
+    if (!base) return [];
+    return timestamps.map((ts, i) => ({
+      date: new Date(ts * 1000).toISOString().slice(0, 10),
+      rate: parseFloat((((closes[i] - base) / base) * 100).toFixed(2)),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function PortfolioPage() {
   const [snapshot, history, token] = await Promise.all([
     getLatestSnapshot(),
@@ -74,12 +97,11 @@ export default async function PortfolioPage() {
     ),
   ]);
 
-  const holdings = await getHoldings(
-    token,
-    process.env.KIS_APP_KEY_STOCK!,
-    process.env.KIS_APP_SECRET_STOCK!,
-    process.env.KIS_ACCOUNT_STOCK!
-  );
+  const startDate = history[0]?.snapshot_at ?? new Date().toISOString();
+  const [holdings, kospiHistory] = await Promise.all([
+    getHoldings(token, process.env.KIS_APP_KEY_STOCK!, process.env.KIS_APP_SECRET_STOCK!, process.env.KIS_ACCOUNT_STOCK!),
+    getKospiHistory(startDate),
+  ]);
 
   return (
     <section className="mx-auto max-w-4xl px-3 md:px-5 space-y-8">
@@ -87,7 +109,7 @@ export default async function PortfolioPage() {
         <h1 className="text-2xl font-bold">포트폴리오</h1>
         <p className="text-sm text-muted-foreground mt-1">머니NPC 모의투자 현황</p>
       </div>
-      <PortfolioPageClient snapshot={snapshot} holdings={holdings} history={history} />
+      <PortfolioPageClient snapshot={snapshot} holdings={holdings} history={history} kospiHistory={kospiHistory} />
     </section>
   );
 }
