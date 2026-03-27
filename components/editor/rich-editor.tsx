@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import BulletList from "@tiptap/extension-bullet-list";
@@ -151,6 +151,14 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [html, setHtml] = useState(initialValue);
+  const isDirty = html !== initialValue;
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showFontSizePicker, setShowFontSizePicker] = useState(false);
@@ -280,9 +288,11 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
               if (editor?.isActive("bulletList")) {
                 editor.chain().focus().toggleBulletList().run();
                 setShowBulletPicker(false);
+              } else if (showBulletPicker) {
+                setShowBulletPicker(false);
               } else {
                 closeAllPickers();
-                setShowBulletPicker((v) => !v);
+                setShowBulletPicker(true);
               }
             }}
           >
@@ -325,7 +335,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
             type="button"
             variant={editor?.isActive("orderedList") ? "default" : "outline"}
             size="sm"
-            onClick={() => { closeAllPickers(); setShowOrderedPicker((v) => !v); }}
+            onClick={() => { if (showOrderedPicker) { setShowOrderedPicker(false); } else { closeAllPickers(); setShowOrderedPicker(true); } }}
           >
             1. 번호
           </Button>
@@ -374,8 +384,8 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
         {/* 글자 크기 */}
         <div className="relative">
           <Button type="button" variant="outline" size="sm"
-            onClick={() => { closeAllPickers(); setShowFontSizePicker((v) => !v); }}>
-            글자크기
+            onClick={() => { if (showFontSizePicker) { setShowFontSizePicker(false); } else { closeAllPickers(); setShowFontSizePicker(true); } }}>
+            {editor?.getAttributes("textStyle").fontSize ?? "글자크기"}
           </Button>
           {showFontSizePicker && (
             <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface shadow-md overflow-hidden p-1">
@@ -399,7 +409,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
         {/* 글자 색 */}
         <div className="relative">
           <Button type="button" variant="outline" size="sm"
-            onClick={() => { closeAllPickers(); setShowColorPicker((v) => !v); }}>
+            onClick={() => { if (showColorPicker) { setShowColorPicker(false); } else { closeAllPickers(); setShowColorPicker(true); } }}>
             글자색
           </Button>
           {showColorPicker && (
@@ -422,7 +432,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
         {/* 형광펜 */}
         <div className="relative">
           <Button type="button" variant="outline" size="sm"
-            onClick={() => { closeAllPickers(); setShowHighlightPicker((v) => !v); }}>
+            onClick={() => { if (showHighlightPicker) { setShowHighlightPicker(false); } else { closeAllPickers(); setShowHighlightPicker(true); } }}>
             형광펜
           </Button>
           {showHighlightPicker && (
@@ -445,7 +455,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
         {/* 표 */}
         <div className="relative">
           <Button type="button" variant="outline" size="sm"
-            onClick={() => { closeAllPickers(); setShowTableGrid((v) => !v); }}>
+            onClick={() => { if (showTableGrid) { setShowTableGrid(false); } else { closeAllPickers(); setShowTableGrid(true); } }}>
             표 삽입
           </Button>
           {showTableGrid && (
