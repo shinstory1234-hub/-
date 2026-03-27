@@ -35,9 +35,9 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
   const supabase = await createClient();
 
   const selectWithViewCount =
-    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)";
+    "id,title,slug,excerpt,content,cover_url,tags,is_published,published_at,created_at,updated_at,view_count,post_categories(categories(name,slug))";
   const selectWithoutViewCount =
-    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)";
+    "id,title,slug,excerpt,content,cover_url,tags,is_published,published_at,created_at,updated_at,post_categories(categories(name,slug))";
 
   const runQuery = async (selectFields: string) => {
     let query = supabase
@@ -48,9 +48,13 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
       .order("created_at", { ascending: false });
 
     if (categorySlug) {
-      const { data: cat, error: categoryError } = await supabase.from("categories").select("id").eq("slug", categorySlug).single();
-      if (categoryError) return { data: null, error: categoryError };
-      if (cat?.id) query = query.eq("category_id", cat.id);
+      const { data: catPosts } = await supabase
+        .from("post_categories")
+        .select("post_id, categories!inner(slug)")
+        .eq("categories.slug", categorySlug);
+      const postIds = (catPosts ?? []).map((r: any) => r.post_id);
+      if (postIds.length > 0) query = query.in("id", postIds);
+      else return { data: [], error: null };
     }
 
     return query;
@@ -68,7 +72,8 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
         posts: (fallbackResult.data ?? []).map((row: any) => ({
           ...row,
           view_count: 0,
-          category: row.categories ?? null
+          categories: (row.post_categories ?? []).map((pc: any) => pc.categories).filter(Boolean),
+          category: (row.post_categories?.[0]?.categories) ?? null,
         })),
         error: null
       };
@@ -81,7 +86,8 @@ export async function getPostsWithError(categorySlug?: string): Promise<PostList
     posts: (firstResult.data ?? []).map((row: any) => ({
       ...row,
       view_count: Number(row.view_count ?? 0),
-      category: row.categories ?? null
+      categories: (row.post_categories ?? []).map((pc: any) => pc.categories).filter(Boolean),
+      category: (row.post_categories?.[0]?.categories) ?? null,
     })),
     error: null
   };
@@ -108,9 +114,6 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
   const isMissingViewCountError = (message?: string | null) =>
     Boolean(message && message.includes("view_count") && (message.includes("does not exist") || message.includes("schema cache")));
 
-  const isCategoryRelationError = (message?: string | null) =>
-    Boolean(message && message.includes("posts_category_id_fkey") && message.includes("relationship"));
-
   const findBySlug = async (selectFields: string) => {
     let lastError: string | null = null;
     for (const candidate of candidates) {
@@ -128,53 +131,26 @@ export async function getPostBySlug(slugParam: string): Promise<Post | null> {
     return { data: null, error: lastError };
   };
 
-  const normalizePost = (row: any, category: { name: string; slug: string } | null): Post =>
+  const normalizePost = (row: any): Post =>
     ({
       ...row,
-      category,
+      categories: (row.post_categories ?? []).map((pc: any) => pc.categories).filter(Boolean),
+      category: (row.post_categories?.[0]?.categories) ?? null,
       is_published: Boolean(row?.is_published ?? false),
-      view_count: Number(row?.view_count ?? 0)
+      view_count: Number(row?.view_count ?? 0),
     } as Post);
 
-  const mapWithCategory = async (row: any, includeJoinedCategory: boolean): Promise<Post> => {
-    if (includeJoinedCategory) {
-      return normalizePost(row, row.categories ?? null);
-    }
+  const withViewCount =
+    "id,title,slug,excerpt,content,cover_url,tags,is_published,published_at,created_at,updated_at,view_count,post_categories(categories(name,slug))";
+  const withoutViewCount =
+    "id,title,slug,excerpt,content,cover_url,tags,is_published,published_at,created_at,updated_at,post_categories(categories(name,slug))";
 
-    let category: { name: string; slug: string } | null = null;
-    if (row.category_id) {
-      const { data: categoryRow } = await supabase.from("categories").select("name,slug").eq("id", row.category_id).maybeSingle();
-      category = categoryRow ?? null;
-    }
-
-    return normalizePost(row, category);
-  };
-
-  const joinedWithViewCount =
-    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count,categories!posts_category_id_fkey(name,slug)";
-  const joinedWithoutViewCount =
-    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,categories!posts_category_id_fkey(name,slug)";
-  const plainWithViewCount =
-    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at,view_count";
-  const plainWithoutViewCount =
-    "id,title,slug,excerpt,content,cover_url,category_id,tags,is_published,published_at,created_at,updated_at";
-
-  const first = await findBySlug(joinedWithViewCount);
-  if (first.data) return mapWithCategory(first.data, true);
+  const first = await findBySlug(withViewCount);
+  if (first.data) return normalizePost(first.data);
 
   if (isMissingViewCountError(first.error)) {
-    const second = await findBySlug(joinedWithoutViewCount);
-    if (second.data) return mapWithCategory(second.data, true);
-  }
-
-  if (isCategoryRelationError(first.error)) {
-    const third = await findBySlug(plainWithViewCount);
-    if (third.data) return mapWithCategory(third.data, false);
-
-    if (isMissingViewCountError(third.error)) {
-      const fourth = await findBySlug(plainWithoutViewCount);
-      if (fourth.data) return mapWithCategory(fourth.data, false);
-    }
+    const second = await findBySlug(withoutViewCount);
+    if (second.data) return normalizePost(second.data);
   }
 
   return null;

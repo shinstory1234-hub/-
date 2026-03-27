@@ -46,11 +46,14 @@ export async function generateStaticParams() {
 async function getPostNav() {
   const { data } = await getSupabase()
     .from("posts")
-    .select("id,title,slug,published_at,categories!posts_category_id_fkey(name,slug)")
+    .select("id,title,slug,published_at,post_categories(categories(name,slug))")
     .eq("is_published", true)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
-  return (data ?? []).map((row: any) => ({ ...row, category: row.categories ?? null }));
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    categories: (row.post_categories ?? []).map((pc: any) => pc.categories).filter(Boolean),
+  }));
 }
 
 function formatPostDate(dateStr: string) {
@@ -87,13 +90,18 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   // service role key로 직접 조회 (쿠키 기반 X → ISR 캐싱 정상 작동)
   const { data: postRaw } = await getSupabase()
     .from("posts")
-    .select("id,title,slug,excerpt,content,category_id,tags,is_published,published_at,view_count,categories!posts_category_id_fkey(name,slug)")
+    .select("id,title,slug,excerpt,content,tags,is_published,published_at,view_count,post_categories(categories(name,slug))")
     .eq("is_published", true)
     .eq("slug", slug)
     .maybeSingle();
 
   const post = postRaw
-    ? { ...postRaw, category: (postRaw as any).categories ?? null, view_count: Number((postRaw as any).view_count ?? 0) }
+    ? {
+        ...postRaw,
+        categories: (postRaw as any).post_categories?.map((pc: any) => pc.categories).filter(Boolean) ?? [],
+        category: (postRaw as any).post_categories?.[0]?.categories ?? null,
+        view_count: Number((postRaw as any).view_count ?? 0),
+      }
     : await getPostBySlug(slug); // fallback
 
   if (!post) return notFound();
@@ -115,10 +123,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
     <article className="space-y-8">
       {/* 글 헤더 */}
       <header className="space-y-3 pt-0">
-        <div className="flex items-center gap-2">
-          {post.category && (
-            <span className="text-base font-bold text-accent">{post.category.name}</span>
-          )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {((post as any).categories ?? []).map((cat: any) => (
+            <span key={cat.slug} className="text-base font-bold text-accent">{cat.name}</span>
+          ))}
           {(post.tags as string[] | null)?.slice(0, 2).map((tag: string, idx: number) => (
             <span key={idx} className="text-xs text-muted-foreground">#{tag}</span>
           ))}
@@ -170,8 +178,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
 
       {/* 관련 글 */}
       {(() => {
+        const postCategorySlugs = new Set(((post as any).categories ?? []).map((c: any) => c.slug));
         const related = all
-          .filter((p) => p.slug !== post.slug && p.category?.slug === post.category?.slug)
+          .filter((p) => p.slug !== post.slug && (p as any).categories?.some((c: any) => postCategorySlugs.has(c.slug)))
           .slice(0, 3);
         if (related.length === 0) return null;
         return (

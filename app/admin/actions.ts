@@ -245,6 +245,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   revalidatePath("/admin/posts");
   revalidatePath("/admin/posts/new");
   revalidatePath("/topics/all");
+  revalidatePath(`/posts/${slug}`);
 
   return { ok: true, id: data.id, redirectTo: "/admin/posts" };
 }
