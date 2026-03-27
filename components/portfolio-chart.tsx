@@ -122,7 +122,7 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
   return (
     <div className="rounded-lg border border-border bg-surface px-6 py-5 space-y-4 shadow-soft">
       {/* 헤더 */}
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex items-end justify-between gap-3">
         <div className="space-y-0.5 min-w-0">
           <p className="text-xs font-medium text-muted-foreground">모의투자 포트폴리오</p>
           <p className="text-lg font-bold tracking-tight tabular-nums md:text-2xl">₩{totalAmt}</p>
