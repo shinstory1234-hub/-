@@ -62,10 +62,8 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
   ].filter((d) => d.value > 0);
 
   const futurePositionAmt = futureEvalAmt;
-  const futureCashAmt = Math.max(0, futureAmt - futurePositionAmt);
   const futurePieData = [
-    { name: "선물포지션", value: futurePositionAmt },
-    { name: "선물예탁금", value: futureCashAmt > 0 ? futureCashAmt : futureAmt },
+    { name: "선물포지션", value: futurePositionAmt > 0 ? futurePositionAmt : futureAmt },
   ].filter((d) => d.value > 0);
 
   const updatedAt = new Date(snapshot_at).toLocaleString("ko-KR", {
@@ -118,20 +116,14 @@ export function PortfolioPageClient({ snapshot, holdings = [] }: { snapshot: Sna
 
         <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p className="text-sm font-semibold border-b border-border pb-2">선물계좌</p>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">예탁금</p>
-              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
-                <span>₩</span><span>{futureAmt.toLocaleString()}</span>
-              </p>
-            </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-3">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">평가금액</p>
               <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
                 <span>₩</span><span>{futureEvalAmt.toLocaleString()}</span>
               </p>
             </div>
-            <div className="col-span-2 border-t border-border/40 pt-2 space-y-1 sm:col-span-1 sm:border-t-0 sm:pt-0">
+            <div className="space-y-1">
               <p className="text-xs text-muted-foreground">손익률</p>
               <p className={`flex items-baseline gap-0.5 text-xs font-bold md:text-sm ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
                 <span>{isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(3)}</span><span>%</span>
