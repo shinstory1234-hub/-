@@ -58,7 +58,7 @@ async function getSnapshotHistory() {
   );
   const { data } = await supabase
     .from("portfolio_snapshots")
-    .select("snapshot_at,profit_loss_rate,profit_loss_amt,total_eval_amt")
+    .select("snapshot_at,profit_loss_rate,profit_loss_amt,total_eval_amt,future_amt")
     .order("snapshot_at", { ascending: true })
     .limit(180);
   return data ?? [];

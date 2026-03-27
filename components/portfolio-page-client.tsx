@@ -20,6 +20,7 @@ type HistoryRow = {
   profit_loss_rate: number;
   profit_loss_amt: number;
   total_eval_amt: number;
+  future_amt?: number;
 };
 
 type Holding = {
@@ -84,17 +85,19 @@ export function PortfolioPageClient({
     rate: parseFloat(row.profit_loss_rate.toFixed(2)),
   }));
 
-  // 일별 손익 바 차트 데이터
+  // 일별 선물 손익 바 차트 데이터 (future_amt 기준)
   const barData = history.map((row, i) => {
     const prev = history[i - 1];
-    const dailyAmt = prev ? row.profit_loss_amt - prev.profit_loss_amt : 0;
+    const dailyAmt = prev
+      ? (row.future_amt ?? 0) - (prev.future_amt ?? 0)
+      : 0;
     return {
       date: fmtDate(row.snapshot_at),
       amt: dailyAmt,
     };
-  }).slice(1); // 첫 번째는 이전 데이터 없으므로 제외
+  }).slice(1);
 
-  // 매매 통계
+  // 매매 통계 (선물 기준)
   const tradingDays = barData.length;
   const winDays = barData.filter((d) => d.amt > 0).length;
   const lossDays = barData.filter((d) => d.amt < 0).length;
@@ -103,12 +106,13 @@ export function PortfolioPageClient({
   const maxGain = barData.length > 0 ? Math.max(...barData.map((d) => d.amt)) : 0;
   const maxLoss = barData.length > 0 ? Math.min(...barData.map((d) => d.amt)) : 0;
 
-  // MDD
-  let peak = history[0]?.total_eval_amt ?? 0;
+  // MDD (선물 기준)
+  let peak = history[0]?.future_amt ?? 0;
   let mdd = 0;
   for (const row of history) {
-    if (row.total_eval_amt > peak) peak = row.total_eval_amt;
-    const drawdown = peak > 0 ? (row.total_eval_amt - peak) / peak * 100 : 0;
+    const val = row.future_amt ?? 0;
+    if (val > peak) peak = val;
+    const drawdown = peak > 0 ? (val - peak) / peak * 100 : 0;
     if (drawdown < mdd) mdd = drawdown;
   }
 
@@ -188,7 +192,7 @@ export function PortfolioPageClient({
       {/* 매매 통계 */}
       {tradingDays > 0 && (
         <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm font-semibold mb-3">매매 통계</p>
+          <p className="text-sm font-semibold mb-3">매매 통계 <span className="text-xs text-muted-foreground font-normal">(선물 기준)</span></p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">거래일</p>
