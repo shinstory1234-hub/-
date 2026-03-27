@@ -213,12 +213,12 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2">
           <Input value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="이름" />
           <Input value={commentPassword} onChange={(e) => setCommentPassword(e.target.value)} type="password" placeholder="비밀번호" />
-          <Button type="button" onClick={submitComment}>댓글 등록</Button>
         </div>
         <Input value={content} onChange={(e) => setContent(e.target.value)} placeholder="댓글을 입력하세요" />
+        <Button type="button" onClick={submitComment} className="w-full sm:w-auto">댓글 등록</Button>
 
         <div className="space-y-2">
           {sortedComments.map((comment) => (
