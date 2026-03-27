@@ -108,7 +108,8 @@ export function PortfolioPageClient({
   const lossDays = barData.filter((d) => d.amt < 0).length;
   const winRate = tradingDays > 0 ? (winDays / tradingDays) * 100 : 0;
   const maxGain = barData.length > 0 ? Math.max(...barData.map((d) => d.amt)) : 0;
-  const maxLoss = barData.length > 0 ? Math.min(...barData.map((d) => d.amt)) : 0;
+  const lossData = barData.filter((d) => d.amt < 0);
+  const maxLoss = lossData.length > 0 ? Math.min(...lossData.map((d) => d.amt)) : null;
 
   // MDD (선물, EOD 기준)
   let peak = dailyHistory[0]?.future_amt ?? 0;
@@ -150,43 +151,45 @@ export function PortfolioPageClient({
 
       {/* 계좌별 요약 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* 주식계좌 */}
         <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p className="text-sm font-semibold border-b border-border pb-2">주식계좌</p>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-3">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">현금</p>
-              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
-                <span>₩</span><span>{fmt(cash_amt - stock_eval_amt)}</span>
+              <p className="text-xs text-muted-foreground">예수금</p>
+              <p className="text-xs font-bold md:text-sm">₩{fmt(cash_amt - stock_eval_amt)}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">주식평가</p>
+              <p className="text-xs font-bold md:text-sm">₩{fmt(stock_eval_amt)}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">평가손익</p>
+              <p className={`text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
+                {isStockPlus ? "+" : ""}₩{fmt(Math.round(stock_eval_amt + cash_amt - stockInitial))}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">평가금액</p>
-              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
-                <span>₩</span><span>{fmt(stock_eval_amt)}</span>
-              </p>
-            </div>
-            <div className="col-span-2 border-t border-border/40 pt-2 space-y-1 sm:col-span-1 sm:border-t-0 sm:pt-0">
               <p className="text-xs text-muted-foreground">손익률</p>
-              <p className={`flex items-baseline gap-0.5 text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
-                <span>{isStockPlus ? "+" : ""}{stockProfitRate.toFixed(3)}</span><span>%</span>
+              <p className={`text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
+                {isStockPlus ? "+" : ""}{stockProfitRate.toFixed(2)}%
               </p>
             </div>
           </div>
         </div>
 
+        {/* 선물계좌 */}
         <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p className="text-sm font-semibold border-b border-border pb-2">선물계좌</p>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+          <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">평가금액</p>
-              <p className="flex items-baseline gap-0.5 text-xs font-bold md:text-sm">
-                <span>₩</span><span>{fmt(futureEvalAmt)}</span>
-              </p>
+              <p className="text-xs font-bold md:text-sm">₩{fmt(futureEvalAmt)}</p>
             </div>
-            <div className="space-y-1">
+            <div className="text-right space-y-1">
               <p className="text-xs text-muted-foreground">손익률</p>
-              <p className={`flex items-baseline gap-0.5 text-xs font-bold md:text-sm ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
-                <span>{isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(3)}</span><span>%</span>
+              <p className={`text-sm font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
+                {isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(2)}%
               </p>
             </div>
           </div>
@@ -215,7 +218,9 @@ export function PortfolioPageClient({
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">최대 손실일</p>
-              <p className="text-sm font-bold text-blue-500">₩{fmt(maxLoss)}</p>
+              <p className="text-sm font-bold text-blue-500">
+                {maxLoss !== null ? `₩${fmt(maxLoss)}` : "없음"}
+              </p>
             </div>
           </div>
         </div>
