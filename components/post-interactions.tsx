@@ -39,6 +39,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [targetCommentId, setTargetCommentId] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editPassword, setEditPassword] = useState("");
   const { show } = useToast();
 
   const safeJson = async <T,>(res: Response): Promise<T | null> => {
@@ -144,6 +148,30 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
 
   const requestDelete = (id: string) => { setTargetCommentId(id); setDeletePassword(""); setDeleteOpen(true); };
 
+  const requestEdit = (comment: Comment) => {
+    setEditTargetId(comment.id);
+    setEditContent(comment.content);
+    setEditPassword("");
+    setEditOpen(true);
+  };
+
+  const confirmEdit = async () => {
+    if (!editTargetId) return;
+    if (!editPassword.trim()) { show("비밀번호를 입력해 주세요.", "error"); return; }
+    if (!editContent.trim()) { show("댓글 내용을 입력해 주세요.", "error"); return; }
+    const res = await fetch(`/api/comments/${postId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commentId: editTargetId, password: editPassword.trim(), content: editContent.trim() })
+    });
+    const json = await safeJson<CommentsResponse>(res);
+    if (!json?.ok || !json.comment) { show(json?.error ?? "댓글 수정에 실패했습니다.", "error"); return; }
+    setComments((prev) => prev.map((c) => c.id === editTargetId ? (json.comment as Comment) : c));
+    setEditOpen(false);
+    setEditTargetId(null);
+    show("댓글을 수정했습니다.");
+  };
+
   const confirmDelete = async () => {
     if (!targetCommentId) return;
     if (!deletePassword.trim()) { show("삭제 비밀번호를 입력해 주세요.", "error"); return; }
@@ -200,7 +228,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
                   <p className="font-medium">{comment.author_name ?? comment.author_email ?? "사용자"}</p>
                   <p className="text-xs text-muted-foreground">{formatKST(comment.created_at)}</p>
                 </div>
-                <button type="button" className="text-xs text-danger" onClick={() => requestDelete(comment.id)}>삭제</button>
+                <div className="flex gap-2">
+                  <button type="button" className="text-xs text-muted-foreground hover:text-foreground" onClick={() => requestEdit(comment)}>수정</button>
+                  <button type="button" className="text-xs text-danger" onClick={() => requestDelete(comment.id)}>삭제</button>
+                </div>
               </div>
               <p className="mt-1 text-muted-foreground">{comment.content}</p>
               <button
@@ -219,6 +250,20 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
         <div className="space-y-3">
           <Input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder="비밀번호" />
           <Button type="button" variant="danger" onClick={confirmDelete}>삭제 확인</Button>
+        </div>
+      </Modal>
+
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="댓글 수정" description="수정할 내용과 작성 시 입력한 비밀번호를 입력하세요.">
+        <div className="space-y-3">
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            placeholder="수정할 댓글 내용"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            rows={4}
+          />
+          <Input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} placeholder="비밀번호" />
+          <Button type="button" onClick={confirmEdit}>수정 확인</Button>
         </div>
       </Modal>
 

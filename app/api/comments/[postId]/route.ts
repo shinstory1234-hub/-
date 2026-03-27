@@ -82,6 +82,57 @@ export async function POST(req: Request, { params }: { params: Promise<{ postId:
   return NextResponse.json({ ok: true, comment: data });
 }
 
+export async function PATCH(req: Request, { params }: { params: Promise<{ postId: string }> }) {
+  const { postId } = await params;
+  const supabase = createAdminClient();
+  const body = (await req.json().catch(() => ({}))) as { commentId?: string; password?: string; content?: string };
+
+  const commentId = String(body.commentId ?? "").trim();
+  const password = String(body.password ?? "").trim();
+  const content = String(body.content ?? "").trim();
+
+  if (!commentId || !password || !content) {
+    return NextResponse.json({ ok: false, error: "commentId, 비밀번호, 내용이 필요합니다." }, { status: 400 });
+  }
+
+  const { data: target, error: findError } = await supabase
+    .from("comments")
+    .select("id,password_hash")
+    .eq("id", commentId)
+    .eq("post_id", postId)
+    .maybeSingle();
+
+  if (findError || !target) {
+    return NextResponse.json({ ok: false, error: "댓글을 찾을 수 없습니다." }, { status: 404 });
+  }
+
+  const { data: verified, error: verifyError } = await supabase.rpc("verify_password", {
+    plain_password: password,
+    hashed_password: target.password_hash
+  });
+
+  if (verifyError) {
+    return NextResponse.json({ ok: false, error: verifyError.message }, { status: 500 });
+  }
+  if (!verified) {
+    return NextResponse.json({ ok: false, error: "비밀번호가 일치하지 않습니다." }, { status: 401 });
+  }
+
+  const { data, error } = await supabase
+    .from("comments")
+    .update({ content })
+    .eq("id", commentId)
+    .eq("post_id", postId)
+    .select("id,post_id,author_name,author_email,content,created_at,likes_count")
+    .single();
+
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+  }
+
+  return NextResponse.json({ ok: true, comment: data });
+}
+
 export async function DELETE(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
   const supabase = createAdminClient();
