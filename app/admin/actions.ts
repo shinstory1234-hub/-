@@ -195,7 +195,8 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   const slugRaw = String(getText(formData, "slug") ?? "").trim();
   const content = String(getText(formData, "content") ?? "").trim();
   const excerpt = String(getText(formData, "excerpt") ?? "").trim();
-  const categoryIds = formData.getAll("category_ids").map(String).filter(Boolean);
+  const categoryIdsJson = String(getText(formData, "category_ids_json") ?? "[]");
+  const categoryIds = (() => { try { return JSON.parse(categoryIdsJson).map(String).filter(Boolean); } catch { return []; } })();
   const intent = String(getText(formData, "intent") || "draft").trim();
   const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
 
@@ -258,7 +259,8 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   const slugRaw = String(getText(formData, "slug") ?? "").trim();
   const content = String(getText(formData, "content") ?? "").trim();
   const excerpt = String(getText(formData, "excerpt") ?? "").trim();
-  const categoryIds = formData.getAll("category_ids").map(String).filter(Boolean);
+  const categoryIdsJson = String(getText(formData, "category_ids_json") ?? "[]");
+  const categoryIds = (() => { try { return JSON.parse(categoryIdsJson).map(String).filter(Boolean); } catch { return []; } })();
   const intent = String(getText(formData, "intent") || "save").trim();
   const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
 

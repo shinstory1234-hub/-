@@ -187,9 +187,7 @@ export function EditPostForm({ post, categories, initialCategoryIds, initialAtta
             );
           })}
         </div>
-        {selectedCategoryIds.map((id) => (
-          <input key={id} type="hidden" name="category_ids" value={id} />
-        ))}
+        <input type="hidden" name="category_ids_json" value={JSON.stringify(selectedCategoryIds)} />
       </div>
 
       <div className="space-y-2">
