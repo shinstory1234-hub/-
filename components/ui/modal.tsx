@@ -1,11 +1,16 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 export function Modal({ open, title, description, children, onClose }: { open: boolean; title: string; description?: string; children: ReactNode; onClose: () => void }) {
-  if (!open) return null;
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-soft">
         <h3 className="text-lg font-semibold">{title}</h3>
@@ -15,6 +20,7 @@ export function Modal({ open, title, description, children, onClose }: { open: b
           닫기
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
