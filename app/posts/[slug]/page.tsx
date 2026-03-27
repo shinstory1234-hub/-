@@ -1,5 +1,6 @@
 export const revalidate = 3600;
 import { notFound } from "next/navigation";
+import DOMPurify from "isomorphic-dompurify";
 import { getPostBySlug } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
@@ -147,7 +148,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
       </header>
 
       {/* 본문 */}
-      <div className="prose prose-sm max-w-none leading-relaxed md:prose-base md:leading-normal" dangerouslySetInnerHTML={{ __html: post.content }} />
+      <div className="prose prose-sm max-w-none leading-relaxed md:prose-base md:leading-normal" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }} />
 
       {/* 첨부파일 */}
       {attachments.length > 0 && (
