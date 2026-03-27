@@ -1,8 +1,7 @@
 "use client";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, ReferenceLine, Legend,
-  PieChart, Pie, Cell,
+  ResponsiveContainer,
+  PieChart, Pie, Cell, Tooltip, Legend,
 } from "recharts";
 
 type Snapshot = {
@@ -47,12 +46,10 @@ export function PortfolioPageClient({
   snapshot,
   holdings = [],
   history = [],
-  kospiHistory = [],
 }: {
   snapshot: Snapshot;
   holdings?: Holding[];
   history?: HistoryRow[];
-  kospiHistory?: { date: string; rate: number }[];
 }) {
   if (!snapshot) {
     return (
@@ -86,9 +83,14 @@ export function PortfolioPageClient({
     a.snapshot_at.localeCompare(b.snapshot_at)
   );
 
-  // ── 선물 일별 손익 (승패 통계용)
-  const futureDailyPnl = dailyHistory.map((row, i) => {
-    const prev = dailyHistory[i - 1];
+  // ── 선물 일별 손익 (승패 통계용) — 초기 원금을 기준점으로 사용
+  const baselineFutureAmt = futureInitial;
+  const extendedHistory = [
+    { snapshot_at: "2000-01-01T00:00:00Z", future_amt: baselineFutureAmt } as HistoryRow,
+    ...dailyHistory,
+  ];
+  const futureDailyPnl = extendedHistory.map((row, i) => {
+    const prev = extendedHistory[i - 1];
     return prev ? (row.future_amt ?? 0) - (prev.future_amt ?? 0) : 0;
   }).slice(1).filter((v) => v !== 0);
 
@@ -99,7 +101,7 @@ export function PortfolioPageClient({
   const maxLoss = lossOnly.length > 0 ? Math.min(...lossOnly) : null;
 
   // ── MDD (선물 EOD 기준)
-  let peak = dailyHistory[0]?.future_amt ?? 0;
+  let peak = futureInitial;
   let mdd = 0;
   for (const row of dailyHistory) {
     const val = row.future_amt ?? 0;
@@ -108,36 +110,8 @@ export function PortfolioPageClient({
     if (dd < mdd) mdd = dd;
   }
 
-  // ── 최근 매매일
-  const lastTradedDay = (() => {
-    for (let i = dailyHistory.length - 1; i >= 1; i--) {
-      const diff = (dailyHistory[i].future_amt ?? 0) - (dailyHistory[i - 1].future_amt ?? 0);
-      if (diff !== 0) return fmtDate(dailyHistory[i].snapshot_at);
-    }
-    return "-";
-  })();
-
-  // ── 현재 선물 포지션
-  const currentPosition = futureEvalAmt > 0 ? `₩${fmt(futureEvalAmt)}` : "청산완료";
-
   // ── 선물 누적 손익
   const futureCumPnl = futureAmt - futureInitial;
-
-  // ── KOSPI 비교 차트 데이터
-  const kospiMap = new Map(kospiHistory.map((k) => [k.date, k.rate]));
-  const baseTotal = dailyHistory[0]?.total_eval_amt ?? total_eval_amt;
-  const compData = dailyHistory
-    .map((row) => {
-      const date = row.snapshot_at.slice(0, 10);
-      const portfolioRate = parseFloat(
-        (((row.total_eval_amt - baseTotal) / baseTotal) * 100).toFixed(2)
-      );
-      const kospi = kospiMap.get(date) ??
-        [...kospiMap.entries()].filter(([d]) => d <= date).at(-1)?.[1] ?? null;
-      return { date: fmtDate(row.snapshot_at), portfolio: portfolioRate, kospi };
-    })
-    .filter((d) => d.kospi !== null);
-  const showComparison = compData.length >= 3;
 
   // ── 주식 파이차트 데이터
   const activeHoldings = holdings.filter((h) => parseInt(h.hldg_qty) > 0);
@@ -211,24 +185,6 @@ export function PortfolioPageClient({
           </div>
         </div>
 
-        {/* KOSPI 비교 차트 (PC만) */}
-        {showComparison && (
-          <div className="hidden md:block">
-            <p className="text-xs font-medium text-muted-foreground mb-3">포트폴리오 vs KOSPI</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={compData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={46} />
-                <Tooltip formatter={(v: number, name: string) => [`${v}%`, name === "portfolio" ? "포트폴리오" : "KOSPI"]} />
-                <ReferenceLine y={0} stroke="#e5e7eb" strokeDasharray="3 3" />
-                <Legend formatter={(v) => v === "portfolio" ? "포트폴리오" : "KOSPI"} iconType="line" />
-                <Line type="monotone" dataKey="portfolio" stroke="#ef4444" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                <Line type="monotone" dataKey="kospi" stroke="#94a3b8" strokeWidth={1.5} dot={false} activeDot={{ r: 3 }} strokeDasharray="4 2" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
         {/* 파이차트 (보유종목 있을 때만) */}
         {showPie && (
           <div>
@@ -293,24 +249,34 @@ export function PortfolioPageClient({
       </div>
 
       {/* ══════════════════════════════════
-          선물계좌 (하단 한 줄 요약)
+          선물계좌
       ══════════════════════════════════ */}
-      <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="text-sm font-semibold mb-3">선물계좌</p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          <div className="space-y-0.5">
-            <p className="text-xs text-muted-foreground">누적 손익</p>
-            <p className={`text-sm font-bold ${futureCumPnl >= 0 ? "text-red-500" : "text-blue-500"}`}>
-              {futureCumPnl >= 0 ? "+" : ""}₩{fmt(futureCumPnl)}
+      <div className="rounded-xl border border-border bg-surface p-5 space-y-5">
+        <p className="font-semibold border-b border-border pb-2">선물계좌</p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">총 평가금액</p>
+            <p className="text-sm font-bold">₩{fmt(futureAmt)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">예수금</p>
+            <p className="text-sm font-bold">₩{fmt(Math.max(0, futureAmt - futureEvalAmt))}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">미결제 평가</p>
+            <p className="text-sm font-bold">₩{fmt(futureEvalAmt)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">평가손익</p>
+            <p className={`text-sm font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
+              {isFuturePlus ? "+" : ""}₩{fmt(Math.round(futureCumPnl))}
             </p>
           </div>
-          <div className="space-y-0.5">
-            <p className="text-xs text-muted-foreground">최근 매매일</p>
-            <p className="text-sm font-bold">{lastTradedDay}</p>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-xs text-muted-foreground">현재 포지션</p>
-            <p className="text-sm font-bold">{currentPosition}</p>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">손익률</p>
+            <p className={`text-sm font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
+              {isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(2)}%
+            </p>
           </div>
         </div>
       </div>
