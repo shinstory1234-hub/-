@@ -151,13 +151,40 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [html, setHtml] = useState(initialValue);
-  const isDirty = html !== initialValue;
+  // Tiptap이 빈 내용을 <p></p>로 초기화하므로 정규화 후 비교
+  const isDirty = html !== initialValue && !(initialValue === "" && html === "<p></p>");
 
   useEffect(() => {
     if (!isDirty) return;
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
+
+    // 1) 탭 닫기 / 새로고침
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // 2) Next.js 링크 클릭 (클라이언트 라우팅) — capture phase에서 가로채기
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as Element).closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href") ?? "";
+      if (!href || href.startsWith("#")) return;
+      try {
+        const url = new URL(href, window.location.href);
+        if (url.pathname === window.location.pathname) return;
+      } catch { return; }
+      if (!window.confirm("저장하지 않은 내용이 있습니다. 페이지를 나가시겠습니까?")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener("click", handleClick, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleClick, true);
+    };
   }, [isDirty]);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
