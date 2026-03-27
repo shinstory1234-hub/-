@@ -301,7 +301,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
 
   await supabase.from("post_categories").delete().eq("post_id", id);
   await supabase.from("post_categories").insert(
-    categoryIds.map((cid) => ({ post_id: id, category_id: Number(cid) }))
+    categoryIds.map((cid: string) => ({ post_id: id, category_id: Number(cid) }))
   );
 
   revalidatePath("/");
