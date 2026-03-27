@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-function getIP(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  return forwarded ? forwarded.split(",")[0].trim() : "unknown";
-}
+import { getIP } from "@/lib/get-ip";
 
 function getSupabase() {
   return createClient(

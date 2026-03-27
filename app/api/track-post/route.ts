@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getIP } from "@/lib/get-ip";
 
 type TrackBody = {
   postId?: string;
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
   if (!supabaseUrl || !serviceRoleKey) return json({ ok: false, error: "missing env" });
   if (!postId) return json({ ok: false, error: "postId is required" });
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const ip = getIP(req);
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   // 동일 IP가 쿨다운 내에 이미 조회한 경우 카운트 증가 없이 현재 수 반환

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getIP } from "@/lib/get-ip";
 
 function json(body: Record<string, unknown>) {
   return NextResponse.json(body, { status: 200, headers: { "Cache-Control": "no-store" } });
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) return json({ ok: false, error: "missing env" });
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const ip = getIP(req);
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   const since = new Date(Date.now() - COOLDOWN_MS).toISOString();
