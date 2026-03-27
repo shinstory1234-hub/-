@@ -1,7 +1,7 @@
 "use client";
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  Tooltip, ResponsiveContainer, ReferenceLine, Cell,
+  PieChart, Pie, BarChart, Bar, XAxis, YAxis,
+  Tooltip, ResponsiveContainer, ReferenceLine, Cell, Legend,
 } from "recharts";
 
 type Snapshot = {
@@ -71,19 +71,26 @@ export function PortfolioPageClient({
   } = snapshot;
 
   const futureEvalAmt = future_eval_amt ?? 0;
+  const futureAmt = snapshot.future_amt ?? 0;
   const stockInitial = 500000000;
   const futureInitial = 500000000;
-  const stockProfitRate = ((stock_eval_amt + cash_amt - stockInitial) / stockInitial) * 100;
-  const futureProfitRate = (((snapshot.future_amt ?? 0) - futureInitial) / futureInitial) * 100;
+  // 주식계좌 총액 = 전체 - 선물계좌
+  const stockTotal = total_eval_amt - futureAmt;
+  const stockProfitAmt = stockTotal - stockInitial;
+  const stockProfitRate = (stockProfitAmt / stockInitial) * 100;
+  const futureProfitRate = ((futureAmt - futureInitial) / futureInitial) * 100;
   const isPlus = profit_loss_rate >= 0;
   const isStockPlus = stockProfitRate >= 0;
   const isFuturePlus = futureProfitRate >= 0;
 
-  // 누적 수익률 차트 데이터
-  const lineData = history.map((row) => ({
-    date: fmtDate(row.snapshot_at),
-    rate: parseFloat(row.profit_loss_rate.toFixed(2)),
-  }));
+  // 주식 파이차트 데이터
+  const stockPieData = [
+    ...holdings
+      .filter((h) => parseInt(h.hldg_qty) > 0)
+      .map((h) => ({ name: h.prdt_name, value: parseInt(h.evlu_amt) })),
+    { name: "현금", value: Math.max(0, cash_amt) },
+  ].filter((d) => d.value > 0);
+  const PIE_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#94a3b8"];
 
   // 날짜별 마지막 스냅샷만 추출 (하루 여러 번 찍혀도 EOD 기준으로)
   const dailyMap = new Map<string, HistoryRow>();
@@ -149,49 +156,73 @@ export function PortfolioPageClient({
         </div>
       </div>
 
-      {/* 계좌별 요약 */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* 주식계좌 */}
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
-          <p className="text-sm font-semibold border-b border-border pb-2">주식계좌</p>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">예수금</p>
-              <p className="text-xs font-bold md:text-sm">₩{fmt(cash_amt - stock_eval_amt)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">주식평가</p>
-              <p className="text-xs font-bold md:text-sm">₩{fmt(stock_eval_amt)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">평가손익</p>
-              <p className={`text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
-                {isStockPlus ? "+" : ""}₩{fmt(Math.round(stock_eval_amt + cash_amt - stockInitial))}
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">손익률</p>
-              <p className={`text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
-                {isStockPlus ? "+" : ""}{stockProfitRate.toFixed(2)}%
-              </p>
-            </div>
+      {/* 주식계좌 */}
+      <div className="rounded-xl border border-border bg-surface p-4 space-y-4">
+        <p className="text-sm font-semibold border-b border-border pb-2">주식계좌</p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">총평가금액</p>
+            <p className="text-xs font-bold md:text-sm">₩{fmt(stockTotal)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">예수금</p>
+            <p className="text-xs font-bold md:text-sm">₩{fmt(cash_amt)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">주식평가</p>
+            <p className="text-xs font-bold md:text-sm">₩{fmt(stock_eval_amt)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">평가손익</p>
+            <p className={`text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
+              {isStockPlus ? "+" : ""}₩{fmt(Math.round(stockProfitAmt))}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">손익률</p>
+            <p className={`text-xs font-bold md:text-sm ${isStockPlus ? "text-red-500" : "text-blue-500"}`}>
+              {isStockPlus ? "+" : ""}{stockProfitRate.toFixed(2)}%
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">보유종목 수</p>
+            <p className="text-xs font-bold md:text-sm">
+              {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length}개
+            </p>
           </div>
         </div>
+        {stockPieData.length > 0 && (
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={stockPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
+                {stockPieData.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(v: number) => `₩${fmt(v)}`} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </div>
 
-        {/* 선물계좌 */}
-        <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
-          <p className="text-sm font-semibold border-b border-border pb-2">선물계좌</p>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">평가금액</p>
-              <p className="text-xs font-bold md:text-sm">₩{fmt(futureEvalAmt)}</p>
-            </div>
-            <div className="text-right space-y-1">
-              <p className="text-xs text-muted-foreground">손익률</p>
-              <p className={`text-sm font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
-                {isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(2)}%
-              </p>
-            </div>
+      {/* 선물계좌 */}
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <p className="text-sm font-semibold border-b border-border pb-2 mb-3">선물계좌</p>
+        <div className="flex items-center gap-6">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">평가금액</p>
+            <p className="text-sm font-bold">₩{fmt(futureEvalAmt)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">총액</p>
+            <p className="text-sm font-bold">₩{fmt(futureAmt)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">손익률</p>
+            <p className={`text-sm font-bold ${isFuturePlus ? "text-red-500" : "text-blue-500"}`}>
+              {isFuturePlus ? "+" : ""}{futureProfitRate.toFixed(2)}%
+            </p>
           </div>
         </div>
       </div>
@@ -226,48 +257,6 @@ export function PortfolioPageClient({
         </div>
       )}
 
-      {/* 누적 수익률 라인 차트 */}
-      {lineData.length > 1 && (
-        <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm font-semibold mb-4">누적 수익률</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={lineData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={48} />
-              <Tooltip formatter={(v: number) => [`${v}%`, "수익률"]} labelStyle={{ fontSize: 12 }} />
-              <ReferenceLine y={0} stroke="#e5e7eb" strokeDasharray="3 3" />
-              <Line
-                type="monotone"
-                dataKey="rate"
-                stroke={profit_loss_rate >= 0 ? "#ef4444" : "#3b82f6"}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* 일별 손익 바 차트 */}
-      {barData.length > 0 && (
-        <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm font-semibold mb-4">일별 손익</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={barData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} width={40} />
-              <Tooltip formatter={(v: number) => [`₩${fmt(v)}`, "손익"]} labelStyle={{ fontSize: 12 }} />
-              <ReferenceLine y={0} stroke="#e5e7eb" />
-              <Bar dataKey="amt" radius={[2, 2, 0, 0]}>
-                {barData.map((entry, index) => (
-                  <Cell key={index} fill={entry.amt >= 0 ? "#ef4444" : "#3b82f6"} fillOpacity={0.85} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
 
       {/* 보유 종목 */}
       {holdings.filter((h) => parseInt(h.hldg_qty) > 0).length > 0 ? (
