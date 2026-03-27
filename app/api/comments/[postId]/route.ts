@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createAnonClient } from "@/lib/supabase-anon";
+import { getIP } from "@/lib/get-ip";
+
+const COMMENT_COOLDOWN_MS = 60 * 1000; // 1분
 
 export async function GET(_req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
@@ -21,7 +24,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ postId:
 
 export async function POST(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
+  const ip = getIP(req);
   const supabase = createAnonClient();
+  const adminSupabase = createAdminClient();
+
+  // rate limit 체크
+  const since = new Date(Date.now() - COMMENT_COOLDOWN_MS).toISOString();
+  const { data: rateRow } = await adminSupabase
+    .from("comment_rate_limits")
+    .select("last_at")
+    .eq("ip", ip)
+    .maybeSingle();
+
+  if (rateRow && rateRow.last_at > since) {
+    return NextResponse.json({ ok: false, error: "너무 빠르게 댓글을 작성하고 있습니다. 잠시 후 다시 시도해주세요." }, { status: 429 });
+  }
 
   const body = (await req.json().catch(() => ({}))) as {
     authorName?: string;
@@ -57,6 +74,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ postId:
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
   }
+
+  await adminSupabase
+    .from("comment_rate_limits")
+    .upsert({ ip, last_at: new Date().toISOString() }, { onConflict: "ip" });
 
   return NextResponse.json({ ok: true, comment: data });
 }
