@@ -211,9 +211,9 @@ export function PortfolioPageClient({
           </div>
         </div>
 
-        {/* KOSPI 비교 차트 */}
+        {/* KOSPI 비교 차트 (PC만) */}
         {showComparison && (
-          <div>
+          <div className="hidden md:block">
             <p className="text-xs font-medium text-muted-foreground mb-3">포트폴리오 vs KOSPI</p>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={compData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -245,46 +245,47 @@ export function PortfolioPageClient({
           </div>
         )}
 
-        {/* 보유종목 테이블 */}
+      </div>
+
+      {/* ── 보유종목 테이블 */}
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <p className="text-sm font-semibold mb-3">보유종목</p>
         {activeHoldings.length > 0 ? (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2">보유종목</p>
-            <div className="overflow-x-auto -mx-1">
-              <table className="w-full text-sm min-w-[480px]">
-                <thead>
-                  <tr className="text-left text-xs text-muted-foreground border-b border-border">
-                    <th className="pb-2">종목명</th>
-                    <th className="pb-2 text-right">수량</th>
-                    <th className="pb-2 text-right">평균단가</th>
-                    <th className="pb-2 text-right">현재가</th>
-                    <th className="pb-2 text-right">평가금액</th>
-                    <th className="pb-2 text-right">손익</th>
-                    <th className="pb-2 text-right">손익률</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeHoldings.map((h, i) => {
-                    const pfls = parseInt(h.evlu_pfls_amt);
-                    const isUp = pfls >= 0;
-                    return (
-                      <tr key={i} className="border-b border-border/50 last:border-0">
-                        <td className="py-2.5 font-medium">{h.prdt_name}</td>
-                        <td className="py-2.5 text-right">{parseInt(h.hldg_qty).toLocaleString()}주</td>
-                        <td className="py-2.5 text-right">₩{parseInt(h.pchs_avg_pric).toLocaleString()}</td>
-                        <td className="py-2.5 text-right">₩{parseInt(h.prpr).toLocaleString()}</td>
-                        <td className="py-2.5 text-right">₩{parseInt(h.evlu_amt).toLocaleString()}</td>
-                        <td className={`py-2.5 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
-                          {isUp ? "+" : ""}{pfls.toLocaleString()}
-                        </td>
-                        <td className={`py-2.5 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
-                          {isUp ? "+" : ""}{parseFloat(h.evlu_pfls_rt).toFixed(2)}%
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div className="overflow-x-auto -mx-1">
+            <table className="w-full text-sm min-w-[480px]">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground border-b border-border">
+                  <th className="pb-2">종목명</th>
+                  <th className="pb-2 text-right">수량</th>
+                  <th className="pb-2 text-right">평균단가</th>
+                  <th className="pb-2 text-right">현재가</th>
+                  <th className="pb-2 text-right">평가금액</th>
+                  <th className="pb-2 text-right">손익</th>
+                  <th className="pb-2 text-right">손익률</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeHoldings.map((h, i) => {
+                  const pfls = parseInt(h.evlu_pfls_amt);
+                  const isUp = pfls >= 0;
+                  return (
+                    <tr key={i} className="border-b border-border/50 last:border-0">
+                      <td className="py-2.5 font-medium">{h.prdt_name}</td>
+                      <td className="py-2.5 text-right">{parseInt(h.hldg_qty).toLocaleString()}주</td>
+                      <td className="py-2.5 text-right">₩{parseInt(h.pchs_avg_pric).toLocaleString()}</td>
+                      <td className="py-2.5 text-right">₩{parseInt(h.prpr).toLocaleString()}</td>
+                      <td className="py-2.5 text-right">₩{parseInt(h.evlu_amt).toLocaleString()}</td>
+                      <td className={`py-2.5 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
+                        {isUp ? "+" : ""}{pfls.toLocaleString()}
+                      </td>
+                      <td className={`py-2.5 text-right font-bold ${isUp ? "text-red-500" : "text-blue-500"}`}>
+                        {isUp ? "+" : ""}{parseFloat(h.evlu_pfls_rt).toFixed(2)}%
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground text-center py-2">보유종목 없음 (현금 100%)</p>
