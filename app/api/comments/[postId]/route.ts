@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
+import { createAnonClient } from "@/lib/supabase-anon";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = createAdminClient();
+  const supabase = createAnonClient();
 
   const { data, error } = await supabase
     .from("comments")
@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ postId:
 
 export async function POST(req: Request, { params }: { params: Promise<{ postId: string }> }) {
   const { postId } = await params;
-  const supabase = createAdminClient();
+  const supabase = createAnonClient();
 
   const body = (await req.json().catch(() => ({}))) as {
     authorName?: string;
