@@ -51,9 +51,23 @@ async function getLatestSnapshot() {
   return data;
 }
 
+async function getSnapshotHistory() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data } = await supabase
+    .from("portfolio_snapshots")
+    .select("snapshot_at,profit_loss_rate,profit_loss_amt,total_eval_amt")
+    .order("snapshot_at", { ascending: true })
+    .limit(180);
+  return data ?? [];
+}
+
 export default async function PortfolioPage() {
-  const [snapshot, token] = await Promise.all([
+  const [snapshot, history, token] = await Promise.all([
     getLatestSnapshot(),
+    getSnapshotHistory(),
     getToken(
       process.env.KIS_APP_KEY_STOCK!,
       process.env.KIS_APP_SECRET_STOCK!
@@ -73,7 +87,7 @@ export default async function PortfolioPage() {
         <h1 className="text-2xl font-bold">포트폴리오</h1>
         <p className="text-sm text-muted-foreground mt-1">머니NPC 모의투자 현황</p>
       </div>
-      <PortfolioPageClient snapshot={snapshot} holdings={holdings} />
+      <PortfolioPageClient snapshot={snapshot} holdings={holdings} history={history} />
     </section>
   );
 }
