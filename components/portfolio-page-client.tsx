@@ -85,31 +85,35 @@ export function PortfolioPageClient({
     rate: parseFloat(row.profit_loss_rate.toFixed(2)),
   }));
 
-  // 일별 선물 손익 바 차트 데이터 (future_amt 기준)
-  const barData = history.map((row, i) => {
-    const prev = history[i - 1];
-    const dailyAmt = prev
-      ? (row.future_amt ?? 0) - (prev.future_amt ?? 0)
-      : 0;
-    return {
-      date: fmtDate(row.snapshot_at),
-      amt: dailyAmt,
-    };
-  }).slice(1);
+  // 날짜별 마지막 스냅샷만 추출 (하루 여러 번 찍혀도 EOD 기준으로)
+  const dailyMap = new Map<string, HistoryRow>();
+  for (const row of history) {
+    const day = row.snapshot_at.slice(0, 10);
+    dailyMap.set(day, row);
+  }
+  const dailyHistory = Array.from(dailyMap.values()).sort(
+    (a, b) => a.snapshot_at.localeCompare(b.snapshot_at)
+  );
+
+  // 일별 선물 손익 (날짜별 EOD 기준)
+  const barData = dailyHistory.map((row, i) => {
+    const prev = dailyHistory[i - 1];
+    const dailyAmt = prev ? (row.future_amt ?? 0) - (prev.future_amt ?? 0) : 0;
+    return { date: fmtDate(row.snapshot_at), amt: dailyAmt };
+  }).slice(1).filter((d) => d.amt !== 0); // 변동 없는 날 제외
 
   // 매매 통계 (선물 기준)
   const tradingDays = barData.length;
   const winDays = barData.filter((d) => d.amt > 0).length;
   const lossDays = barData.filter((d) => d.amt < 0).length;
   const winRate = tradingDays > 0 ? (winDays / tradingDays) * 100 : 0;
-  const avgDailyAmt = tradingDays > 0 ? barData.reduce((s, d) => s + d.amt, 0) / tradingDays : 0;
   const maxGain = barData.length > 0 ? Math.max(...barData.map((d) => d.amt)) : 0;
   const maxLoss = barData.length > 0 ? Math.min(...barData.map((d) => d.amt)) : 0;
 
-  // MDD (선물 기준)
-  let peak = history[0]?.future_amt ?? 0;
+  // MDD (선물, EOD 기준)
+  let peak = dailyHistory[0]?.future_amt ?? 0;
   let mdd = 0;
-  for (const row of history) {
+  for (const row of dailyHistory) {
     const val = row.future_amt ?? 0;
     if (val > peak) peak = val;
     const drawdown = peak > 0 ? (val - peak) / peak * 100 : 0;
@@ -193,22 +197,17 @@ export function PortfolioPageClient({
       {tradingDays > 0 && (
         <div className="rounded-xl border border-border bg-surface p-4">
           <p className="text-sm font-semibold mb-3">매매 통계 <span className="text-xs text-muted-foreground font-normal">(선물 기준)</span></p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">거래일</p>
-              <p className="text-sm font-bold">{tradingDays}일</p>
-            </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">승률</p>
               <p className={`text-sm font-bold ${winRate >= 50 ? "text-red-500" : "text-blue-500"}`}>
-                {winRate.toFixed(1)}% ({winDays}승 {lossDays}패)
+                {winRate.toFixed(1)}%
               </p>
+              <p className="text-xs text-muted-foreground">{winDays}승 {lossDays}패</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">일 평균 손익</p>
-              <p className={`text-sm font-bold ${avgDailyAmt >= 0 ? "text-red-500" : "text-blue-500"}`}>
-                {avgDailyAmt >= 0 ? "+" : ""}₩{fmt(Math.round(avgDailyAmt))}
-              </p>
+              <p className="text-xs text-muted-foreground">MDD</p>
+              <p className="text-sm font-bold text-blue-500">{mdd.toFixed(2)}%</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">최대 수익일</p>
@@ -217,10 +216,6 @@ export function PortfolioPageClient({
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">최대 손실일</p>
               <p className="text-sm font-bold text-blue-500">₩{fmt(maxLoss)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">MDD</p>
-              <p className="text-sm font-bold text-blue-500">{mdd.toFixed(2)}%</p>
             </div>
           </div>
         </div>
