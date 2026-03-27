@@ -18,10 +18,10 @@ type Props = {
     excerpt: string | null;
     content: string;
     cover_url: string | null;
-    category_id: string | null;
     is_published: boolean;
   };
   categories: Category[];
+  initialCategoryIds: string[];
   initialAttachments: { id: string; name: string; url: string }[];
 };
 
@@ -47,9 +47,10 @@ function slugify(v: string) {
 
 type Attachment = { id?: string; name: string; url: string };
 
-export function EditPostForm({ post, categories, initialAttachments }: Props) {
+export function EditPostForm({ post, categories, initialCategoryIds, initialAttachments }: Props) {
   const [title, setTitle] = useState(post.title);
   const [slug, setSlug] = useState(post.slug);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(initialCategoryIds);
   const [editorContent, setEditorContent] = useState(post.content);
   const [editorKey, setEditorKey] = useState(0);
   const [savedDraft, setSavedDraft] = useState<{ title: string; content: string } | null>(null);
@@ -161,12 +162,35 @@ export function EditPostForm({ post, categories, initialAttachments }: Props) {
       <p className="text-xs text-muted-foreground">slug: {slug}</p>
       <Textarea name="excerpt" rows={2} placeholder="요약" defaultValue={post.excerpt ?? ""} />
 
-      <select name="category_id" required defaultValue={post.category_id ?? ""} className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm">
-        <option value="">카테고리 선택(필수)</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>{category.name}</option>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">카테고리 선택 (최소 1개, 중복 선택 가능)</p>
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => {
+            const selected = selectedCategoryIds.includes(cat.id);
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() =>
+                  setSelectedCategoryIds((prev) =>
+                    selected ? prev.filter((id) => id !== cat.id) : [...prev, cat.id]
+                  )
+                }
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${
+                  selected
+                    ? "bg-accent text-accent-foreground shadow-sm"
+                    : "text-muted-foreground bg-surface-muted border border-border hover:text-foreground"
+                }`}
+              >
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+        {selectedCategoryIds.map((id) => (
+          <input key={id} type="hidden" name="category_ids" value={id} />
         ))}
-      </select>
+      </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">

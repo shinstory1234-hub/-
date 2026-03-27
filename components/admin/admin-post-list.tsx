@@ -16,7 +16,7 @@ type Post = {
   is_published: boolean;
   published_at: string | null;
   created_at: string;
-  categories?: { name: string; slug: string } | null;
+  categories?: { name: string; slug: string }[];
 };
 
 export function AdminPostList({ posts }: { posts: Post[] }) {
@@ -99,7 +99,10 @@ export function AdminPostList({ posts }: { posts: Post[] }) {
                 <p className="text-xs text-muted-foreground">/{post.slug}</p>
                 <div className="flex gap-2">
                   <Badge>{post.is_published ? "발행" : "임시저장"}</Badge>
-                  <Badge>{post.categories?.name ?? "미분류"}</Badge>
+                  {(post.categories ?? []).length > 0
+                    ? (post.categories ?? []).map((c) => <Badge key={c.slug}>{c.name}</Badge>)
+                    : <Badge>미분류</Badge>
+                  }
                 </div>
               </div>
             </div>

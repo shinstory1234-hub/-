@@ -13,8 +13,9 @@ export type Post = {
   excerpt: string | null;
   content: string;
   cover_url: string | null;
-  category_id: string | null;
+  category_id?: string | null;
   category?: Category | null;
+  categories?: Category[];
   tags: string[];
   is_published: boolean;
   published_at: string | null;

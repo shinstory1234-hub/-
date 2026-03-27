@@ -39,6 +39,7 @@ type Attachment = { name: string; url: string };
 export function PostForm({ categories }: Props) {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [editorContent, setEditorContent] = useState("");
   const [editorKey, setEditorKey] = useState(0);
   const [savedDraft, setSavedDraft] = useState<{ title: string; content: string } | null>(null);
@@ -170,12 +171,35 @@ export function PostForm({ categories }: Props) {
         <p className="rounded-md border border-danger/20 bg-danger/10 p-3 text-sm text-danger">카테고리를 먼저 생성한 뒤 글을 작성해 주세요.</p>
       ) : null}
 
-      <select name="category_id" required className="h-11 w-full rounded-md border border-border bg-surface px-4 text-sm">
-        <option value="">카테고리 선택(필수)</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>{category.name}</option>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">카테고리 선택 (최소 1개, 중복 선택 가능)</p>
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => {
+            const selected = selectedCategoryIds.includes(cat.id);
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() =>
+                  setSelectedCategoryIds((prev) =>
+                    selected ? prev.filter((id) => id !== cat.id) : [...prev, cat.id]
+                  )
+                }
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${
+                  selected
+                    ? "bg-accent text-accent-foreground shadow-sm"
+                    : "text-muted-foreground bg-surface-muted border border-border hover:text-foreground"
+                }`}
+              >
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+        {selectedCategoryIds.map((id) => (
+          <input key={id} type="hidden" name="category_ids" value={id} />
         ))}
-      </select>
+      </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">

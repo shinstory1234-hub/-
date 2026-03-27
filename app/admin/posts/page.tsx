@@ -11,7 +11,7 @@ export default async function AdminPostsPage() {
   const supabase = await createClient();
   const { data: rawPosts } = await supabase
     .from("posts")
-    .select("id,title,slug,is_published,published_at,created_at,categories!posts_category_id_fkey(name,slug)")
+    .select("id,title,slug,is_published,published_at,created_at,post_categories(categories(name,slug))")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -22,7 +22,7 @@ export default async function AdminPostsPage() {
     is_published: p.is_published,
     published_at: p.published_at,
     created_at: p.created_at,
-    categories: Array.isArray(p.categories) ? p.categories[0] ?? null : p.categories ?? null,
+    categories: (p.post_categories ?? []).map((pc: any) => pc.categories).filter(Boolean),
   }));
 
   return (

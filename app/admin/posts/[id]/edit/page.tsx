@@ -22,12 +22,14 @@ export default async function AdminEditPage({ params }: { params: Promise<{ id: 
   await requireAdmin();
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: post }, { data: categories }, attachments] = await Promise.all([
-    supabase.from("posts").select("id,title,slug,excerpt,content,cover_url,category_id,is_published").eq("id", id).single(),
+  const [{ data: post }, { data: categories }, { data: postCategories }, attachments] = await Promise.all([
+    supabase.from("posts").select("id,title,slug,excerpt,content,cover_url,is_published").eq("id", id).single(),
     supabase.from("categories").select("id,name,slug,description,created_at,sort_order").order("sort_order", { ascending: true }).order("created_at", { ascending: false }),
+    supabase.from("post_categories").select("category_id").eq("post_id", id),
     getAttachments(id),
   ]);
   if (!post) return notFound();
+  const initialCategoryIds = (postCategories ?? []).map((r: any) => String(r.category_id));
   return (
     <section>
       <Card>
@@ -36,7 +38,7 @@ export default async function AdminEditPage({ params }: { params: Promise<{ id: 
           <p className="mt-2 text-sm text-muted-foreground">수정 화면에서도 이미지 업로드/커서 삽입을 동일하게 지원합니다.</p>
         </CardHeader>
         <CardContent>
-          <EditPostForm post={post} categories={categories ?? []} initialAttachments={attachments} />
+          <EditPostForm post={post} categories={categories ?? []} initialCategoryIds={initialCategoryIds} initialAttachments={attachments} />
         </CardContent>
       </Card>
     </section>

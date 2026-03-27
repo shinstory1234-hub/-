@@ -11,7 +11,7 @@ type Post = {
   excerpt?: string | null;
   content?: string | null;
   published_at?: string | null;
-  category?: { name: string; slug: string } | null;
+  categories?: { name: string; slug: string }[];
   tags?: string[] | null;
 };
 
@@ -40,7 +40,7 @@ export function HomeClient({ posts, categories }: Props) {
   );
 
   const filtered = activeCategory
-    ? posts.filter((p) => p.category?.slug === activeCategory)
+    ? posts.filter((p) => p.categories?.some((c) => c.slug === activeCategory))
     : posts;
 
   return (
@@ -81,12 +81,12 @@ export function HomeClient({ posts, categories }: Props) {
         <div className="divide-y divide-border">
           {filtered.map((post) => (
             <PostSlugLink key={post.id} slug={post.slug} className="block group py-5 first:pt-0">
-              <div className="flex items-center gap-2 mb-1.5">
-                {post.category && (
-                  <span className="inline-flex items-center rounded-full bg-accent-soft border border-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
-                    {post.category.name}
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                {(post.categories ?? []).map((cat) => (
+                  <span key={cat.slug} className="inline-flex items-center rounded-full bg-accent-soft border border-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
+                    {cat.name}
                   </span>
-                )}
+                ))}
                 {post.published_at && (
                   <span className="text-xs text-muted-foreground">{formatDate(post.published_at)}</span>
                 )}

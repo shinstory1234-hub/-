@@ -195,7 +195,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   const slugRaw = String(getText(formData, "slug") ?? "").trim();
   const content = String(getText(formData, "content") ?? "").trim();
   const excerpt = String(getText(formData, "excerpt") ?? "").trim();
-  const categoryId = String(getText(formData, "category_id") ?? "").trim() || null;
+  const categoryIds = formData.getAll("category_ids").map(String).filter(Boolean);
   const intent = String(getText(formData, "intent") || "draft").trim();
   const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
 
@@ -205,7 +205,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   if (!title || !slug || !content) {
     return { ok: false, error: "제목, slug, 본문은 필수입니다." };
   }
-  if (!categoryId) return { ok: false, error: "카테고리를 먼저 선택해 주세요." };
+  if (categoryIds.length === 0) return { ok: false, error: "카테고리를 최소 1개 선택해 주세요." };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -216,7 +216,6 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
       slug,
       excerpt: excerpt || null,
       content,
-      category_id: categoryId,
       is_published: isPublished,
       published_at: isPublished ? new Date().toISOString() : null,
       cover_url: coverUrl,
@@ -225,6 +224,10 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
     .single();
 
   if (error) return { ok: false, error: error.message };
+
+  await supabase.from("post_categories").insert(
+    categoryIds.map((cid) => ({ post_id: data.id, category_id: Number(cid) }))
+  );
 
   const attachmentsRaw = String(getText(formData, "attachments") ?? "").trim();
   if (attachmentsRaw && attachmentsRaw !== "[]") {
@@ -254,7 +257,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   const slugRaw = String(getText(formData, "slug") ?? "").trim();
   const content = String(getText(formData, "content") ?? "").trim();
   const excerpt = String(getText(formData, "excerpt") ?? "").trim();
-  const categoryId = String(getText(formData, "category_id") ?? "").trim() || null;
+  const categoryIds = formData.getAll("category_ids").map(String).filter(Boolean);
   const intent = String(getText(formData, "intent") || "save").trim();
   const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
 
@@ -262,7 +265,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
 
   if (!id) return { ok: false, error: "post id가 없습니다." };
   if (!title || !slug || !content) return { ok: false, error: "제목, slug, 본문은 필수입니다." };
-  if (!categoryId) return { ok: false, error: "카테고리를 먼저 선택해 주세요." };
+  if (categoryIds.length === 0) return { ok: false, error: "카테고리를 최소 1개 선택해 주세요." };
 
   const supabase = await createClient();
   const { data: currentPost, error: currentError } = await supabase
@@ -285,7 +288,6 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
       slug,
       excerpt: excerpt || null,
       content,
-      category_id: categoryId,
       is_published: nextPublished,
       published_at: nextPublishedAt,
       cover_url: coverUrl,
@@ -293,6 +295,11 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
     .eq("id", id);
 
   if (error) return { ok: false, error: error.message };
+
+  await supabase.from("post_categories").delete().eq("post_id", id);
+  await supabase.from("post_categories").insert(
+    categoryIds.map((cid) => ({ post_id: id, category_id: Number(cid) }))
+  );
 
   revalidatePath("/");
   revalidatePath("/admin/posts");
