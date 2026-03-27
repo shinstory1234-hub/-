@@ -1,6 +1,6 @@
 export const revalidate = 3600;
 import { notFound } from "next/navigation";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import { getPostBySlug } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
@@ -148,7 +148,17 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
       </header>
 
       {/* 본문 */}
-      <div className="prose prose-sm max-w-none leading-relaxed md:prose-base md:leading-normal" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }} />
+      <div className="prose prose-sm max-w-none leading-relaxed md:prose-base md:leading-normal" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content ?? "", {
+  allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "iframe", "figure", "figcaption", "mark", "s", "u", "del", "ins", "sup", "sub", "details", "summary", "h1", "h2", "h3", "h4", "h5", "h6"]),
+  allowedAttributes: {
+    ...sanitizeHtml.defaults.allowedAttributes,
+    "*": ["class", "style", "id"],
+    "a": ["href", "target", "rel"],
+    "img": ["src", "alt", "width", "height"],
+    "iframe": ["src", "width", "height", "frameborder", "allowfullscreen", "allow"],
+  },
+  allowedIframeHostnames: ["www.youtube.com", "player.vimeo.com"],
+}) }} />
 
       {/* 첨부파일 */}
       {attachments.length > 0 && (
