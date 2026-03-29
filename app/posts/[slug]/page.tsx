@@ -42,18 +42,52 @@ export async function generateStaticParams() {
   return (data ?? []).map((p) => ({ slug: p.slug }));
 }
 
-// 이전/다음/관련 글용 경량 조회 (content 제외)
-async function getPostNav() {
+async function getPrevPost(publishedAt: string) {
   const { data } = await getSupabase()
     .from("posts")
-    .select("id,title,slug,published_at,post_categories(categories(name,slug))")
+    .select("id,title,slug,published_at")
     .eq("is_published", true)
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
-  return (data ?? []).map((row: any) => ({
-    ...row,
-    categories: (row.post_categories ?? []).map((pc: any) => pc.categories).filter(Boolean),
-  }));
+    .lt("published_at", publishedAt)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function getNextPost(publishedAt: string) {
+  const { data } = await getSupabase()
+    .from("posts")
+    .select("id,title,slug,published_at")
+    .eq("is_published", true)
+    .gt("published_at", publishedAt)
+    .order("published_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function getRelatedPosts(postId: string, categorySlugs: string[]) {
+  if (categorySlugs.length === 0) return [];
+  const { data: catData } = await getSupabase()
+    .from("categories")
+    .select("id")
+    .in("slug", categorySlugs);
+  const categoryIds = (catData ?? []).map((c: any) => c.id);
+  if (categoryIds.length === 0) return [];
+  const { data: pcData } = await getSupabase()
+    .from("post_categories")
+    .select("post_id")
+    .in("category_id", categoryIds)
+    .neq("post_id", postId);
+  const postIds = [...new Set((pcData ?? []).map((r: any) => r.post_id))].slice(0, 3);
+  if (postIds.length === 0) return [];
+  const { data } = await getSupabase()
+    .from("posts")
+    .select("id,title,slug,published_at")
+    .eq("is_published", true)
+    .in("id", postIds)
+    .order("published_at", { ascending: false });
+  return data ?? [];
 }
 
 function formatPostDate(dateStr: string) {
@@ -106,16 +140,17 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
 
   if (!post) return notFound();
 
-  const [all, likes, comments, attachments] = await Promise.all([
-    getPostNav(),
+  const categorySlugs = ((post as any).categories ?? []).map((c: any) => c.slug) as string[];
+  const publishedAt = post.published_at ?? "";
+
+  const [prev, next, related, likes, comments, attachments] = await Promise.all([
+    publishedAt ? getPrevPost(publishedAt) : Promise.resolve(null),
+    publishedAt ? getNextPost(publishedAt) : Promise.resolve(null),
+    getRelatedPosts(post.id, categorySlugs),
     getLikesCount(post.id),
     getComments(post.id),
     getAttachments(post.id),
   ]);
-
-  const index = all.findIndex((item) => item.slug === post.slug);
-  const prev = index >= 0 ? all[index + 1] : undefined;
-  const next = index > 0 ? all[index - 1] : undefined;
 
   return (
     <div className="mx-auto max-w-3xl px-6 md:px-5 pt-6 md:pt-10">
@@ -177,38 +212,31 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
       </div>
 
       {/* 관련 글 */}
-      {(() => {
-        const postCategorySlugs = new Set(((post as any).categories ?? []).map((c: any) => c.slug));
-        const related = all
-          .filter((p) => p.slug !== post.slug && (p as any).categories?.some((c: any) => postCategorySlugs.has(c.slug)))
-          .slice(0, 3);
-        if (related.length === 0) return null;
-        return (
-          <div className="border-t border-border pt-6 space-y-3">
-            <p className="text-sm font-semibold text-foreground">관련 글</p>
-            <div className="space-y-2">
-              {related.map((p) => (
-                <PostSlugLink key={p.id} slug={p.slug}
-                  className="group flex items-center gap-3 rounded-lg border border-border px-4 py-3 hover:border-accent/30 hover:bg-accent-soft transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground group-hover:text-accent transition-colors line-clamp-1">
-                      {p.title}
+      {related.length > 0 && (
+        <div className="border-t border-border pt-6 space-y-3">
+          <p className="text-sm font-semibold text-foreground">관련 글</p>
+          <div className="space-y-2">
+            {related.map((p: any) => (
+              <PostSlugLink key={p.id} slug={p.slug}
+                className="group flex items-center gap-3 rounded-lg border border-border px-4 py-3 hover:border-accent/30 hover:bg-accent-soft transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground group-hover:text-accent transition-colors line-clamp-1">
+                    {p.title}
+                  </p>
+                  {p.published_at && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(p.published_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric" })}
                     </p>
-                    {p.published_at && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(p.published_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric" })}
-                      </p>
-                    )}
-                  </div>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-muted-foreground group-hover:text-accent transition-colors">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </PostSlugLink>
-              ))}
-            </div>
+                  )}
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-muted-foreground group-hover:text-accent transition-colors">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </PostSlugLink>
+            ))}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* 이전/다음 글 */}
       <div className="grid gap-2 sm:grid-cols-2 border-t border-border pt-6">
