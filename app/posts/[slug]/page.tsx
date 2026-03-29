@@ -158,7 +158,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
       </header>
 
       {/* 본문 */}
-      <div className="prose prose-sm max-w-none leading-relaxed md:prose-base md:leading-normal" dangerouslySetInnerHTML={{ __html: post.content ?? "" }} />
+      <div className="prose prose-sm max-w-none leading-relaxed md:prose-base md:leading-normal" dangerouslySetInnerHTML={{ __html: (post.content ?? "").replace(/<img /g, '<img loading="lazy" decoding="async" ') }} />
 
       {/* 첨부파일 */}
       {attachments.length > 0 && (
