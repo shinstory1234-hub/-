@@ -16,22 +16,6 @@ function getSupabase() {
   );
 }
 
-async function getLikesCount(postId: string) {
-  const { count } = await getSupabase()
-    .from("likes")
-    .select("id", { count: "exact", head: true })
-    .eq("post_id", postId);
-  return count ?? 0;
-}
-
-async function getComments(postId: string) {
-  const { data } = await getSupabase()
-    .from("comments")
-    .select("id,post_id,author_name,author_email,content,created_at")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: false });
-  return data ?? [];
-}
 
 // 빌드 시 모든 포스트 페이지 정적 생성
 export async function generateStaticParams() {
@@ -137,12 +121,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
   const categorySlugs = ((post as any).categories ?? []).map((c: any) => c.slug) as string[];
   const publishedAt = post.published_at ?? "";
 
-  const [prev, next, related, likes, comments, attachments] = await Promise.all([
+  const [prev, next, related, attachments] = await Promise.all([
     publishedAt ? getPrevPost(publishedAt) : Promise.resolve(null),
     publishedAt ? getNextPost(publishedAt) : Promise.resolve(null),
     getRelatedPosts(post.id, categorySlugs),
-    getLikesCount(post.id),
-    getComments(post.id),
     getAttachments(post.id),
   ]);
 
@@ -202,7 +184,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
       {/* 공유 + 좋아요/댓글 */}
       <div className="border-t border-border pt-6 space-y-6">
         <PostShareButtons />
-        <PostInteractions postId={post.id} initialLikes={likes ?? 0} initialComments={comments ?? []} />
+        <PostInteractions postId={post.id} initialLikes={0} initialComments={[]} />
       </div>
 
       {/* 관련 글 */}
