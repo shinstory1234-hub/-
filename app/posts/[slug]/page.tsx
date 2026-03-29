@@ -68,16 +68,10 @@ async function getNextPost(publishedAt: string) {
 
 async function getRelatedPosts(postId: string, categorySlugs: string[]) {
   if (categorySlugs.length === 0) return [];
-  const { data: catData } = await getSupabase()
-    .from("categories")
-    .select("id")
-    .in("slug", categorySlugs);
-  const categoryIds = (catData ?? []).map((c: any) => c.id);
-  if (categoryIds.length === 0) return [];
   const { data: pcData } = await getSupabase()
     .from("post_categories")
-    .select("post_id")
-    .in("category_id", categoryIds)
+    .select("post_id, categories!inner(slug)")
+    .in("categories.slug", categorySlugs)
     .neq("post_id", postId);
   const postIds = [...new Set((pcData ?? []).map((r: any) => r.post_id))].slice(0, 3);
   if (postIds.length === 0) return [];
