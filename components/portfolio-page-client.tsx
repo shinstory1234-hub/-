@@ -282,35 +282,35 @@ export function PortfolioPageClient({
       </div>
 
       {/* ── 매매 통계 (선물) */}
-      {futureDailyPnl.length > 0 && (
-        <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm font-semibold mb-3">
-            매매 통계 <span className="text-xs text-muted-foreground font-normal">(선물 기준)</span>
-          </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">승패</p>
-              <p className={`text-sm font-bold ${winDays >= lossDays ? "text-red-500" : "text-blue-500"}`}>
-                {winDays}승 {lossDays}패
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">MDD</p>
-              <p className="text-sm font-bold text-blue-500">{mdd.toFixed(2)}%</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">최대 수익일</p>
-              <p className="text-sm font-bold text-red-500">+₩{fmt(maxGain)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">최대 손실일</p>
-              <p className="text-sm font-bold text-blue-500">
-                {maxLoss !== null ? `₩${fmt(maxLoss)}` : "없음"}
-              </p>
-            </div>
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <p className="text-sm font-semibold mb-3">
+          매매 통계 <span className="text-xs text-muted-foreground font-normal">(선물 기준)</span>
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">승패</p>
+            <p className={`text-sm font-bold ${winDays >= lossDays ? "text-red-500" : "text-blue-500"}`}>
+              {winDays}승 {lossDays}패
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">MDD</p>
+            <p className="text-sm font-bold text-blue-500">{mdd.toFixed(2)}%</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">최대 수익일</p>
+            <p className="text-sm font-bold text-red-500">
+              {maxGain > 0 ? `+₩${fmt(maxGain)}` : "없음"}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">최대 손실일</p>
+            <p className="text-sm font-bold text-blue-500">
+              {maxLoss !== null ? `₩${fmt(maxLoss)}` : "없음"}
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       <p className="text-xs text-muted-foreground text-right">업데이트: {updatedAt} (모의투자)</p>
       <p className="text-xs text-muted-foreground text-center">본 블로그는 투자 권유용이 아닌 개인 기록용입니다.</p>
