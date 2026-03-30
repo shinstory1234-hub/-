@@ -185,23 +185,23 @@ export function PortfolioPageClient({
           </div>
         </div>
 
-        {/* 파이차트 (보유종목 있을 때만) */}
-        {showPie && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2">계좌 구성</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={stockPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
-                  {stockPieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(v: number) => `₩${fmt(v)}`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
       </div>
+
+      {/* ── 주식계좌 구성 파이차트 */}
+      {showPie && (
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <p className="text-sm font-semibold mb-3">주식계좌 구성</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={stockPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
+                {stockPieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+              </Pie>
+              <Tooltip formatter={(v: number) => `₩${fmt(v)}`} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* ── 보유종목 테이블 */}
       <div className="rounded-xl border border-border bg-surface p-5">
