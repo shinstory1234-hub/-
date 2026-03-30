@@ -73,7 +73,7 @@ export async function GET(req: Request) {
     ]);
 
     const output2 = stockBalance.output2?.[0];
-    if (!output2) return NextResponse.json({ error: "No stock data", debug: { rt_cd: stockBalance.rt_cd, msg_cd: stockBalance.msg_cd, msg1: stockBalance.msg1 } }, { status: 500 });
+    if (!output2) return NextResponse.json({ error: "No stock data", debug: { rt_cd: stockBalance.rt_cd, msg_cd: stockBalance.msg_cd, msg1: stockBalance.msg1, tokenStock: tokenStock ? tokenStock.slice(0, 20) + "..." : "NULL" } }, { status: 500 });
 
     const stockTotalAmt = parseInt(output2.tot_evlu_amt ?? "0");
     const cashAmt = parseInt(output2.dnca_tot_amt ?? "0");
