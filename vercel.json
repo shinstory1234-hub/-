@@ -1,4 +1,14 @@
 {
+  "headers": [
+    {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/portfolio",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
+  ],
   "crons": [
     {
       "path": "/api/portfolio/snapshot",
