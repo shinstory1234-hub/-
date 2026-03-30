@@ -119,7 +119,7 @@ export function PortfolioPageClient({
     ...activeHoldings.map((h) => ({ name: h.prdt_name, value: parseInt(h.evlu_amt) })),
     { name: "현금", value: Math.max(0, cash_amt) },
   ].filter((d) => d.value > 0);
-  const showPie = activeHoldings.length > 0; // 보유종목 있을 때만
+  const showPie = stockPieData.length > 0;
 
   const updatedAt = new Date(snapshot_at).toLocaleString("ko-KR", {
     timeZone: "Asia/Seoul",
