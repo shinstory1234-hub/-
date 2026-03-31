@@ -8,6 +8,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { PageTransition } from "@/components/page-transition";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://moneynpc.vercel.app"),
   title: "머니NPC 블로그",
   description: "VC심사역 출신의 투자 기록 - 액티브 ETF",
   manifest: "/manifest.json",
@@ -15,6 +16,11 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "머니NPC",
+  },
+  openGraph: {
+    siteName: "머니NPC의 액티브 ETF",
+    locale: "ko_KR",
+    type: "website",
   },
 };
 

@@ -1,5 +1,6 @@
 export const revalidate = 3600;
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getPostBySlug } from "@/lib/posts";
 import { PostInteractions } from "@/components/post-interactions";
 import { PostShareButtons } from "@/components/post-share-buttons";
@@ -16,6 +17,30 @@ function getSupabase() {
   );
 }
 
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { data: post } = await getSupabase()
+    .from("posts")
+    .select("title,excerpt")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .maybeSingle();
+
+  if (!post) return {};
+
+  return {
+    title: post.title,
+    description: post.excerpt ?? undefined,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      type: "article",
+      url: `https://moneynpc.vercel.app/posts/${slug}`,
+      images: [{ url: `/posts/${slug}/opengraph-image`, width: 1200, height: 630 }],
+    },
+  };
+}
 
 // 빌드 시 모든 포스트 페이지 정적 생성
 export async function generateStaticParams() {

@@ -17,13 +17,13 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
 
   const { data: post } = await getSupabase()
     .from("posts")
-    .select("title,excerpt,categories!posts_category_id_fkey(name)")
+    .select("title,excerpt,post_categories(categories(name))")
     .eq("slug", slug)
     .eq("is_published", true)
     .maybeSingle();
 
   const title = post?.title ?? "머니NPC의 액티브 ETF";
-  const category = (post as any)?.categories?.name ?? "";
+  const category = (post as any)?.post_categories?.[0]?.categories?.name ?? "";
   const excerpt = post?.excerpt ?? "VC심사역 출신의 투자 기록";
 
   return new ImageResponse(
