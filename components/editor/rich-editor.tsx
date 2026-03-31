@@ -26,6 +26,44 @@ type Props = {
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1920;
+const IMAGE_QUALITY = 0.82;
+
+async function compressImage(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width <= MAX_IMAGE_DIMENSION && height <= MAX_IMAGE_DIMENSION && file.size < 500 * 1024) {
+        resolve(file);
+        return;
+      }
+      if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+        const ratio = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" });
+          resolve(compressed.size < file.size ? compressed : file);
+        },
+        "image/webp",
+        IMAGE_QUALITY
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
 const COLORS = ["#000000", "#e03131", "#2f9e44", "#1971c2", "#f08c00", "#7048e8"];
 const HIGHLIGHTS = ["#fff3bf", "#d3f9d8", "#d0ebff", "#ffe8cc", "#f3d9fa"];
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
@@ -257,12 +295,13 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
     }, 180);
     try {
       validateImage(file);
+      const compressed = await compressImage(file);
       const supabase = createClient();
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("로그인이 필요합니다.");
-      const ext = file.name.split(".").pop() || "png";
+      const ext = compressed.name.split(".").pop() || "webp";
       const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("images").upload(path, file, { upsert: false });
+      const { error } = await supabase.storage.from("images").upload(path, compressed, { upsert: false });
       if (error) throw error;
       const { data } = supabase.storage.from("images").getPublicUrl(path);
       insertImageAtCursor(data.publicUrl);
