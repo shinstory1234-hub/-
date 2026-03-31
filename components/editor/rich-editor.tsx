@@ -13,7 +13,8 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
-import { Extension } from "@tiptap/core";
+import { Extension, Node } from "@tiptap/core";
+import { ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -78,6 +79,31 @@ const ORDERED_STYLES = [
   { label: "① 원 숫자",  value: "decimal" }, // rendered via CSS
   { label: "가. 한글",    value: "korean" },
 ];
+
+function HrNodeView({ deleteNode }: { deleteNode: () => void }) {
+  return (
+    <NodeViewWrapper className="relative group my-4">
+      <hr className="border-t border-border" />
+      <button
+        type="button"
+        contentEditable={false}
+        onClick={deleteNode}
+        className="absolute -top-3 right-0 hidden group-hover:flex items-center justify-center w-6 h-6 rounded-full bg-danger text-white text-xs leading-none hover:bg-danger/80 transition-colors"
+        title="삭제"
+      >
+        ✕
+      </button>
+    </NodeViewWrapper>
+  );
+}
+
+const DeletableHorizontalRule = Node.create({
+  name: "horizontalRule",
+  group: "block",
+  parseHTML() { return [{ tag: "hr" }]; },
+  renderHTML() { return ["hr"]; },
+  addNodeView() { return ReactNodeViewRenderer(HrNodeView); },
+});
 
 const FontSize = Extension.create({
   name: "fontSize",
@@ -236,7 +262,8 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ bulletList: false, orderedList: false }),
+      StarterKit.configure({ bulletList: false, orderedList: false, horizontalRule: false }),
+      DeletableHorizontalRule,
       StyledBulletList,
       StyledOrderedList,
       Indent,
