@@ -69,6 +69,39 @@ const COLORS = ["#000000", "#e03131", "#2f9e44", "#1971c2", "#f08c00", "#7048e8"
 const HIGHLIGHTS = ["#fff3bf", "#d3f9d8", "#d0ebff", "#ffe8cc", "#f3d9fa"];
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
 
+const LINE_HEIGHTS = [
+  { label: "1.0", value: "1" },
+  { label: "1.2", value: "1.2" },
+  { label: "1.5", value: "1.5" },
+  { label: "1.8", value: "1.8" },
+  { label: "2.0", value: "2" },
+  { label: "2.5", value: "2.5" },
+];
+
+const LineHeight = Extension.create({
+  name: "lineHeight",
+  addGlobalAttributes() {
+    return [{
+      types: ["paragraph", "heading"],
+      attributes: {
+        lineHeight: {
+          default: null,
+          parseHTML: (el) => el.style.lineHeight || null,
+          renderHTML: (attrs) => attrs.lineHeight ? { style: `line-height: ${attrs.lineHeight}` } : {},
+        },
+      },
+    }];
+  },
+  addCommands() {
+    return {
+      setLineHeight: (lineHeight: string) => ({ commands }: any) =>
+        commands.updateAttributes("paragraph", { lineHeight }),
+      unsetLineHeight: () => ({ commands }: any) =>
+        commands.updateAttributes("paragraph", { lineHeight: null }),
+    } as any;
+  },
+});
+
 const BULLET_STYLES = [
   { label: "● 채운 원",   value: "disc" },
   { label: "○ 빈 원",     value: "circle" },
@@ -256,6 +289,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
   const [showBulletPicker, setShowBulletPicker] = useState(false);
   const [showOrderedPicker, setShowOrderedPicker] = useState(false);
   const [showTableGrid, setShowTableGrid] = useState(false);
+  const [showLineHeightPicker, setShowLineHeightPicker] = useState(false);
   const [tableHover, setTableHover] = useState<{ rows: number; cols: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { show } = useToast();
@@ -267,6 +301,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
       StyledBulletList,
       StyledOrderedList,
       Indent,
+      LineHeight,
       Image,
       TextStyle,
       Color,
@@ -358,6 +393,7 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
     setShowBulletPicker(false);
     setShowOrderedPicker(false);
     setShowTableGrid(false);
+    setShowLineHeightPicker(false);
   };
 
   return (
@@ -594,6 +630,31 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
             </div>
           </>
         )}
+
+        {/* 줄간격 */}
+        <div className="relative">
+          <Button type="button" variant="outline" size="sm"
+            onClick={() => { if (showLineHeightPicker) { setShowLineHeightPicker(false); } else { closeAllPickers(); setShowLineHeightPicker(true); } }}>
+            줄간격
+          </Button>
+          {showLineHeightPicker && (
+            <div className="absolute top-9 left-0 z-50 flex flex-col rounded-lg border border-border bg-surface shadow-md overflow-hidden min-w-[90px]">
+              {LINE_HEIGHTS.map((lh) => (
+                <button key={lh.value} type="button"
+                  className="px-3 py-2 text-left text-sm hover:bg-surface-muted transition-colors"
+                  style={{ lineHeight: lh.value }}
+                  onClick={() => { (editor?.chain().focus() as any).setLineHeight(lh.value).run(); setShowLineHeightPicker(false); }}>
+                  {lh.label}
+                </button>
+              ))}
+              <button type="button"
+                className="px-3 py-2 text-left text-xs text-muted-foreground hover:bg-surface-muted transition-colors border-t border-border"
+                onClick={() => { (editor?.chain().focus() as any).unsetLineHeight().run(); setShowLineHeightPicker(false); }}>
+                기본
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* 이미지 */}
         <Button type="button" variant="outline" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}>
