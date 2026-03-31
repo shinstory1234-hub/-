@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase-server";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 function toSlug(v: string) {
   return v
@@ -248,6 +249,10 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   revalidatePath("/topics/all");
   revalidatePath(`/posts/${slug}`);
 
+  if (isPublished) {
+    await sendPushNotification("새 글이 올라왔어요 📝", title).catch(() => {});
+  }
+
   return { ok: true, id: data.id, redirectTo: "/admin/posts" };
 }
 
@@ -347,6 +352,14 @@ export async function togglePublishAction(_prev: ActionState, formData: FormData
 
   revalidatePath("/");
   revalidatePath("/admin/posts");
+
+  if (publish) {
+    const { data: post } = await supabase.from("posts").select("title").eq("id", id).single();
+    if (post?.title) {
+      await sendPushNotification("새 글이 올라왔어요 📝", post.title).catch(() => {});
+    }
+  }
+
   return { ok: true };
 }
 
