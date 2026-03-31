@@ -44,6 +44,7 @@ export function PostForm({ categories }: Props) {
   const [editorKey, setEditorKey] = useState(0);
   const [savedDraft, setSavedDraft] = useState<{ title: string; content: string } | null>(null);
   const [state, action] = useActionState(createPostAction, initialState);
+  const [showToc, setShowToc] = useState(true);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -223,6 +224,12 @@ export function PostForm({ categories }: Props) {
           </div>
         )}
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+        <input type="checkbox" checked={showToc} onChange={(e) => setShowToc(e.target.checked)} className="h-4 w-4" />
+        목차 표시
+      </label>
+      <input type="hidden" name="show_toc" value={showToc ? "1" : "0"} />
 
       <RichEditor key={editorKey} name="content" initialValue={editorContent} onChange={setEditorContent} onImageInserted={() => show("이미지를 커서 위치에 삽입했습니다.")} />
     </form>

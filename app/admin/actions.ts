@@ -200,9 +200,11 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
   const categoryIds = (() => { try { return JSON.parse(categoryIdsJson).map(String).filter(Boolean); } catch { return []; } })();
   const intent = String(getText(formData, "intent") || "draft").trim();
   const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
+  const showToc = String(getText(formData, "show_toc") ?? "1").trim();
 
   const slug = makePostSlug(slugRaw, title);
   const isPublished = intent === "publish";
+  const finalContent = showToc === "0" ? `<!--notoc-->${content}` : content;
 
   if (!title || !slug || !content) {
     return { ok: false, error: "제목, slug, 본문은 필수입니다." };
@@ -217,7 +219,7 @@ export async function createPostAction(_prev: ActionState, formData: FormData): 
       title,
       slug,
       excerpt: excerpt || null,
-      content,
+      content: finalContent,
       is_published: isPublished,
       published_at: isPublished ? new Date().toISOString() : null,
       cover_url: coverUrl,
@@ -268,8 +270,10 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
   const categoryIds = (() => { try { return JSON.parse(categoryIdsJson).map(String).filter(Boolean); } catch { return []; } })();
   const intent = String(getText(formData, "intent") || "save").trim();
   const coverUrl = String(getText(formData, "cover_url") ?? "").trim() || null;
+  const showToc = String(getText(formData, "show_toc") ?? "1").trim();
 
   const slug = makePostSlug(slugRaw, title);
+  const finalContent = showToc === "0" ? `<!--notoc-->${content}` : content;
 
   if (!id) return { ok: false, error: "post id가 없습니다." };
   if (!title || !slug || !content) return { ok: false, error: "제목, slug, 본문은 필수입니다." };
@@ -295,7 +299,7 @@ export async function updatePostAction(_prev: ActionState, formData: FormData): 
       title,
       slug,
       excerpt: excerpt || null,
-      content,
+      content: finalContent,
       is_published: nextPublished,
       published_at: nextPublishedAt,
       cover_url: coverUrl,

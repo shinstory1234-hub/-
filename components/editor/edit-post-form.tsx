@@ -51,7 +51,10 @@ export function EditPostForm({ post, categories, initialCategoryIds, initialAtta
   const [title, setTitle] = useState(post.title);
   const [slug, setSlug] = useState(post.slug);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(initialCategoryIds);
-  const [editorContent, setEditorContent] = useState(post.content);
+  const [showToc, setShowToc] = useState(!post.content.startsWith("<!--notoc-->"));
+  const [editorContent, setEditorContent] = useState(
+    post.content.startsWith("<!--notoc-->") ? post.content.replace("<!--notoc-->", "") : post.content
+  );
   const [editorKey, setEditorKey] = useState(0);
   const [savedDraft, setSavedDraft] = useState<{ title: string; content: string } | null>(null);
   const [state, action] = useActionState(updatePostAction, initialState);
@@ -214,6 +217,12 @@ export function EditPostForm({ post, categories, initialCategoryIds, initialAtta
           </div>
         )}
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+        <input type="checkbox" checked={showToc} onChange={(e) => setShowToc(e.target.checked)} className="h-4 w-4" />
+        목차 표시
+      </label>
+      <input type="hidden" name="show_toc" value={showToc ? "1" : "0"} />
 
       <RichEditor key={editorKey} name="content" initialValue={editorContent} onChange={setEditorContent} onImageInserted={() => show("이미지를 커서 위치에 삽입했습니다.")} />
     </form>
