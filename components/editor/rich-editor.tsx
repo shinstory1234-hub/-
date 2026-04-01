@@ -136,6 +136,23 @@ const DeletableHorizontalRule = Node.create({
   parseHTML() { return [{ tag: "hr" }]; },
   renderHTML() { return ["hr"]; },
   addNodeView() { return ReactNodeViewRenderer(HrNodeView); },
+  addCommands() {
+    return {
+      setHorizontalRule: () => ({ chain }: any) =>
+        chain().insertContent({ type: "horizontalRule" }).run(),
+    } as any;
+  },
+  addInputRules() {
+    const { InputRule } = require("@tiptap/core");
+    return [
+      new InputRule({
+        find: /^(?:---|—-|___|\*\*\*)[\t ]*$/,
+        handler: ({ state, range, chain }: any) => {
+          chain().deleteRange(range).insertContent({ type: "horizontalRule" }).run();
+        },
+      }),
+    ];
+  },
 });
 
 const FontSize = Extension.create({
