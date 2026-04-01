@@ -1,4 +1,5 @@
 export const revalidate = 3600;
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPostBySlug } from "@/lib/posts";
@@ -17,18 +18,27 @@ function getSupabase() {
   );
 }
 
+// React.cache로 같은 요청 내 중복 DB 호출 제거
+const getPost = cache(async (slug: string) => {
+  const { data } = await getSupabase()
+    .from("posts")
+    .select("id,title,slug,excerpt,content,tags,is_published,published_at,view_count,post_categories(categories(name,slug))")
+    .eq("is_published", true)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!data) return await getPostBySlug(slug);
+  return {
+    ...data,
+    categories: (data as any).post_categories?.map((pc: any) => pc.categories).filter(Boolean) ?? [],
+    category: (data as any).post_categories?.[0]?.categories ?? null,
+    view_count: Number((data as any).view_count ?? 0),
+  };
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const { data: post } = await getSupabase()
-    .from("posts")
-    .select("title,excerpt")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .maybeSingle();
-
+  const post = await getPost(slug);
   if (!post) return {};
-
   return {
     title: post.title,
     description: post.excerpt ?? undefined,
@@ -77,20 +87,14 @@ async function getNextPost(publishedAt: string) {
 
 async function getRelatedPosts(postId: string, categorySlugs: string[]) {
   if (categorySlugs.length === 0) return [];
-  const { data: pcData } = await getSupabase()
-    .from("post_categories")
-    .select("post_id, categories!inner(slug)")
-    .in("categories.slug", categorySlugs)
-    .neq("post_id", postId);
-  const postIds = [...new Set((pcData ?? []).map((r: any) => r.post_id))].slice(0, 3);
-  if (postIds.length === 0) return [];
   const { data } = await getSupabase()
-    .from("posts")
-    .select("id,title,slug,published_at")
-    .eq("is_published", true)
-    .in("id", postIds)
-    .order("published_at", { ascending: false });
-  return data ?? [];
+    .from("post_categories")
+    .select("posts!inner(id,title,slug,published_at), categories!inner(slug)")
+    .in("categories.slug", categorySlugs)
+    .neq("post_id", postId)
+    .eq("posts.is_published", true)
+    .limit(3);
+  return [...new Map((data ?? []).map((r: any) => [r.posts.id, r.posts])).values()];
 }
 
 function formatPostDate(dateStr: string) {
@@ -123,24 +127,7 @@ async function getAttachments(postId: string) {
 
 export default async function PostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-
-  // service role key로 직접 조회 (쿠키 기반 X → ISR 캐싱 정상 작동)
-  const { data: postRaw } = await getSupabase()
-    .from("posts")
-    .select("id,title,slug,excerpt,content,tags,is_published,published_at,view_count,post_categories(categories(name,slug))")
-    .eq("is_published", true)
-    .eq("slug", slug)
-    .maybeSingle();
-
-  const post = postRaw
-    ? {
-        ...postRaw,
-        categories: (postRaw as any).post_categories?.map((pc: any) => pc.categories).filter(Boolean) ?? [],
-        category: (postRaw as any).post_categories?.[0]?.categories ?? null,
-        view_count: Number((postRaw as any).view_count ?? 0),
-      }
-    : await getPostBySlug(slug); // fallback
-
+  const post = await getPost(slug);
   if (!post) return notFound();
 
   const categorySlugs = ((post as any).categories ?? []).map((c: any) => c.slug) as string[];
