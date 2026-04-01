@@ -22,34 +22,23 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: "ALL", value: "ALL" },
 ];
 
-function periodCutoff(period: Period): Date | null {
-  if (period === "ALL") return null;
-  const days = period === "1W" ? 7 : period === "1M" ? 30 : period === "3M" ? 90 : 365;
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d;
-}
-
 function filterByPeriod(data: Snapshot[], period: Period): Snapshot[] {
-  const cutoff = periodCutoff(period);
-  if (!cutoff || data.length === 0) return data;
+  if (period === "ALL" || data.length === 0) return data;
+  const days = period === "1W" ? 7 : period === "1M" ? 30 : period === "3M" ? 90 : 365;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
   return data.filter((d) => new Date(d.snapshot_at) >= cutoff);
 }
 
-function filterKospiByPeriod(data: KospiPoint[], period: Period): KospiPoint[] {
-  const cutoff = periodCutoff(period);
-  if (!cutoff || data.length === 0) return data;
-  return data.filter((d) => new Date(d.date) >= cutoff);
-}
-
-function findClosestSnapshot(snapshots: Snapshot[], date: string): Snapshot | null {
-  if (!snapshots.length) return null;
-  const target = new Date(date).getTime();
-  return snapshots.reduce((best, s) => {
-    return Math.abs(new Date(s.snapshot_at).getTime() - target) <
-      Math.abs(new Date(best.snapshot_at).getTime() - target)
-      ? s : best;
-  });
+function findClosestClose(kospiData: KospiPoint[], target: Date): number | null {
+  if (!kospiData.length) return null;
+  let best = kospiData[0];
+  let bestDiff = Math.abs(new Date(kospiData[0].date).getTime() - target.getTime());
+  for (const k of kospiData) {
+    const diff = Math.abs(new Date(k.date).getTime() - target.getTime());
+    if (diff < bestDiff) { bestDiff = diff; best = k; }
+  }
+  return best.close;
 }
 
 function fmtDate(str: string, short = false) {
@@ -103,33 +92,23 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
 
   if (!data || data.length === 0) return null;
 
+  const first = display[0];
   const rate = latest.profit_loss_rate;
   const isPlus = rate >= 0;
   const rateColor = isPlus ? "#ef4444" : "#3b82f6";
   const totalAmt = animatedAmt.toLocaleString("ko-KR");
 
-  // 코스피를 선택 기간으로 필터링 (포트폴리오 기간과 무관하게 전체 기간 표시)
-  const kospiFiltered = filterKospiByPeriod(kospiData, period);
-  const baseClose = kospiFiltered.length ? kospiFiltered[0].close : null;
+  // 코스피 기준점 (현재 표시 기간의 첫날)
+  const baseClose = kospiData.length
+    ? findClosestClose(kospiData, new Date(first.snapshot_at))
+    : null;
 
-  // KOSPI 날짜 기준으로 차트 데이터 구성, 포트폴리오는 가장 가까운 스냅샷 매핑
-  const chartData = kospiFiltered.length
-    ? kospiFiltered.map((k) => {
-        const kospi_rate = baseClose ? ((k.close - baseClose) / baseClose) * 100 : null;
-        const snap = findClosestSnapshot(display, k.date);
-        const snapDate = snap ? new Date(snap.snapshot_at).toISOString().split("T")[0] : null;
-        const isClose = snapDate === k.date ||
-          (snap && Math.abs(new Date(snap.snapshot_at).getTime() - new Date(k.date).getTime()) < 86400000 * 2);
-        return {
-          snapshot_at: k.date,
-          total_eval_amt: isClose ? snap!.total_eval_amt : null,
-          profit_loss_rate: isClose ? snap!.profit_loss_rate : null,
-          kospi_rate,
-        };
-      })
-    : display.map((snap) => ({ ...snap, kospi_rate: null }));
-
-  const first = chartData[0];
+  const chartData = display.map((snap) => {
+    if (!baseClose) return snap;
+    const curClose = findClosestClose(kospiData, new Date(snap.snapshot_at));
+    const kospi_rate = curClose != null ? ((curClose - baseClose) / baseClose) * 100 : undefined;
+    return { ...snap, kospi_rate };
+  });
 
   // 두 라인 모두 포함한 Y축 범위
   const allRates = chartData.flatMap((d: any) =>
