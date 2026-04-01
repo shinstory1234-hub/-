@@ -22,12 +22,24 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: "ALL", value: "ALL" },
 ];
 
-function filterByPeriod(data: Snapshot[], period: Period): Snapshot[] {
-  if (period === "ALL" || data.length === 0) return data;
+function getCutoff(period: Period): Date | null {
+  if (period === "ALL") return null;
   const days = period === "1W" ? 7 : period === "1M" ? 30 : period === "3M" ? 90 : 365;
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d;
+}
+
+function filterByPeriod(data: Snapshot[], period: Period): Snapshot[] {
+  const cutoff = getCutoff(period);
+  if (!cutoff || data.length === 0) return data;
   return data.filter((d) => new Date(d.snapshot_at) >= cutoff);
+}
+
+function filterKospiByPeriod(data: KospiPoint[], period: Period): KospiPoint[] {
+  const cutoff = getCutoff(period);
+  if (!cutoff || data.length === 0) return data;
+  return data.filter((d) => new Date(d.date) >= cutoff);
 }
 
 function findClosestClose(kospiData: KospiPoint[], target: Date): number | null {
@@ -39,6 +51,15 @@ function findClosestClose(kospiData: KospiPoint[], target: Date): number | null 
     if (diff < bestDiff) { bestDiff = diff; best = k; }
   }
   return best.close;
+}
+
+function findClosestSnapshot(snapshots: Snapshot[], dateStr: string): Snapshot | null {
+  if (!snapshots.length) return null;
+  const target = new Date(dateStr).getTime();
+  return snapshots.reduce((best, s) =>
+    Math.abs(new Date(s.snapshot_at).getTime() - target) <
+    Math.abs(new Date(best.snapshot_at).getTime() - target) ? s : best
+  );
 }
 
 function fmtDate(str: string, short = false) {
@@ -102,25 +123,24 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
   const rateColor = isPlus ? "#ef4444" : "#3b82f6";
   const totalAmt = animatedAmt.toLocaleString("ko-KR");
 
-  // 코스피 기준점: 선택한 기간 시작일 (포트폴리오 시작일이 아닌 기간 기준)
-  const periodStartDate = (() => {
-    if (period === "ALL") return new Date(first.snapshot_at);
-    const days = period === "1W" ? 7 : period === "1M" ? 30 : period === "3M" ? 90 : 365;
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d;
-  })();
+  const kospiFiltered = filterKospiByPeriod(kospiData, period);
+  const baseClose = kospiFiltered.length ? kospiFiltered[0].close : null;
 
-  const baseClose = kospiData.length
-    ? findClosestClose(kospiData, periodStartDate)
-    : null;
-
-  const chartData = display.map((snap) => {
-    if (!baseClose) return snap;
-    const curClose = findClosestClose(kospiData, new Date(snap.snapshot_at));
-    const kospi_rate = curClose != null ? ((curClose - baseClose) / baseClose) * 100 : undefined;
-    return { ...snap, kospi_rate };
-  });
+  const chartData = kospiFiltered.length
+    ? kospiFiltered.map((k) => {
+        const kospi_rate = baseClose != null ? ((k.close - baseClose) / baseClose) * 100 : null;
+        const snap = findClosestSnapshot(display, k.date);
+        const withinRange = snap
+          ? Math.abs(new Date(snap.snapshot_at).getTime() - new Date(k.date).getTime()) < 86400000 * 2
+          : false;
+        return {
+          snapshot_at: k.date,
+          total_eval_amt: withinRange ? snap!.total_eval_amt : null,
+          profit_loss_rate: withinRange ? snap!.profit_loss_rate : null,
+          kospi_rate,
+        };
+      })
+    : display.map((snap) => ({ ...snap, kospi_rate: null }));
 
   // 두 라인 모두 포함한 Y축 범위
   const allRates = chartData.flatMap((d: any) =>
@@ -204,6 +224,7 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
             strokeWidth={1.5}
             dot={false}
             activeDot={{ r: 3, strokeWidth: 0, fill: rateColor }}
+            connectNulls
           />
           {showKospi && (
             <Line
@@ -222,8 +243,8 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
 
       {/* 날짜 범위 */}
       <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
-        <span>{fmtDate(first.snapshot_at)}</span>
-        <span>{fmtDate(latest.snapshot_at)}</span>
+        <span>{fmtDate(kospiFiltered.length ? kospiFiltered[0].date : first.snapshot_at)}</span>
+        <span>{fmtDate(kospiFiltered.length ? kospiFiltered[kospiFiltered.length - 1].date : latest.snapshot_at)}</span>
       </div>
     </div>
   );
