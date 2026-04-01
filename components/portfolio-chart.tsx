@@ -53,17 +53,21 @@ function fmtDate(str: string, short = false) {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
-  const isPlus = d.profit_loss_rate >= 0;
+  const isPlus = (d.profit_loss_rate ?? 0) >= 0;
   const kospiIsPlus = (d.kospi_rate ?? 0) >= 0;
   return (
     <div className="rounded-lg border border-border bg-surface px-3 py-2.5 shadow-md text-xs space-y-1">
       <p className="text-muted-foreground">
         {new Date(label).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month: "short", day: "numeric" })}
       </p>
-      <p className="font-bold text-foreground">₩{d.total_eval_amt.toLocaleString("ko-KR")}</p>
-      <p className="font-semibold tabular-nums" style={{ color: isPlus ? "#ef4444" : "#3b82f6" }}>
-        포트폴리오 {isPlus ? "+" : ""}{d.profit_loss_rate.toFixed(2)}%
-      </p>
+      {d.total_eval_amt != null && (
+        <p className="font-bold text-foreground">₩{d.total_eval_amt.toLocaleString("ko-KR")}</p>
+      )}
+      {d.profit_loss_rate != null && (
+        <p className="font-semibold tabular-nums" style={{ color: isPlus ? "#ef4444" : "#3b82f6" }}>
+          포트폴리오 {isPlus ? "+" : ""}{d.profit_loss_rate.toFixed(2)}%
+        </p>
+      )}
       {d.kospi_rate != null && (
         <p className="font-semibold tabular-nums" style={{ color: kospiIsPlus ? "#f97316" : "#a78bfa" }}>
           코스피 {kospiIsPlus ? "+" : ""}{(d.kospi_rate as number).toFixed(2)}%
@@ -98,9 +102,17 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
   const rateColor = isPlus ? "#ef4444" : "#3b82f6";
   const totalAmt = animatedAmt.toLocaleString("ko-KR");
 
-  // 코스피 기준점 (현재 표시 기간의 첫날)
+  // 코스피 기준점: 선택한 기간 시작일 (포트폴리오 시작일이 아닌 기간 기준)
+  const periodStartDate = (() => {
+    if (period === "ALL") return new Date(first.snapshot_at);
+    const days = period === "1W" ? 7 : period === "1M" ? 30 : period === "3M" ? 90 : 365;
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d;
+  })();
+
   const baseClose = kospiData.length
-    ? findClosestClose(kospiData, new Date(first.snapshot_at))
+    ? findClosestClose(kospiData, periodStartDate)
     : null;
 
   const chartData = display.map((snap) => {
