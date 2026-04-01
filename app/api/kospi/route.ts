@@ -10,7 +10,7 @@ export async function GET() {
     const fmt = (d: Date) => d.toISOString().replace(/[-T:]/g, "").slice(0, 14);
 
     const res = await fetch(
-      `https://m.stock.naver.com/api/index/KOSPI/price?startDateTime=${fmt(start)}&endDateTime=${fmt(end)}&timeframe=day`,
+      `https://m.stock.naver.com/api/index/KOSPI/price?startDateTime=${fmt(start)}&endDateTime=${fmt(end)}&timeframe=day&pageSize=500`,
       { headers: { "User-Agent": "Mozilla/5.0" }, next: { revalidate: 3600 } }
     );
     if (!res.ok) throw new Error("fetch failed");
