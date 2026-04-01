@@ -4,22 +4,22 @@ export const revalidate = 3600;
 
 export async function GET() {
   try {
-    const end = new Date();
-    const start = new Date();
-    start.setFullYear(start.getFullYear() - 2);
-    const fmt = (d: Date) => d.toISOString().replace(/[-T:]/g, "").slice(0, 14);
-
+    // fchart API: returns up to `count` daily candles going back from today
     const res = await fetch(
-      `https://m.stock.naver.com/api/index/KOSPI/price?startDateTime=${fmt(start)}&endDateTime=${fmt(end)}&timeframe=day&pageSize=500`,
+      "https://fchart.stock.naver.com/sise.nhn?symbol=KOSPI&timeframe=day&count=500&requestType=0",
       { headers: { "User-Agent": "Mozilla/5.0" }, next: { revalidate: 3600 } }
     );
     if (!res.ok) throw new Error("fetch failed");
 
-    const json = await res.json();
-    const points = (json as any[])
-      .map((d) => ({ date: d.localTradedAt, close: parseFloat(d.closePrice.replace(/,/g, "")) }))
-      .filter((d) => !isNaN(d.close))
-      .reverse();
+    const text = await res.text();
+    // Each item: data="YYYYMMDD|open|high|low|close|volume"
+    const items = [...text.matchAll(/data="(\d{8})\|[^|]*\|[^|]*\|[^|]*\|([^|"]+)\|/g)];
+    const points = items
+      .map((m) => ({
+        date: `${m[1].slice(0, 4)}-${m[1].slice(4, 6)}-${m[1].slice(6, 8)}`,
+        close: parseFloat(m[2].replace(/,/g, "")),
+      }))
+      .filter((d) => !isNaN(d.close));
 
     return NextResponse.json(points, {
       headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
