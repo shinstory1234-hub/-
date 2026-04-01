@@ -109,13 +109,20 @@ export function PortfolioChart({ data }: { data: Snapshot[] }) {
       .catch(() => {});
   }, []);
 
-  const filtered = data && data.length > 0 ? filterByPeriod(data, period) : [];
-  const display = filtered.length > 0 ? filtered : (data ?? []);
+  // profit_loss_rate는 3개월마다 리셋되므로, total_eval_amt 기준 누적 수익률로 재계산
+  const baseAmt = data?.[0]?.total_eval_amt ?? 0;
+  const normalizedData: Snapshot[] = (data ?? []).map((snap) => ({
+    ...snap,
+    profit_loss_rate: baseAmt > 0 ? ((snap.total_eval_amt - baseAmt) / baseAmt) * 100 : 0,
+  }));
+
+  const filtered = normalizedData.length > 0 ? filterByPeriod(normalizedData, period) : [];
+  const display = filtered.length > 0 ? filtered : normalizedData;
   const latest = display[display.length - 1] ?? null;
 
   const animatedAmt = useCountUp(latest?.total_eval_amt ?? 0, 1200);
 
-  if (!data || data.length === 0) return null;
+  if (!normalizedData.length) return null;
 
   const first = display[0];
   const rate = latest.profit_loss_rate;
