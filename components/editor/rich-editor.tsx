@@ -656,6 +656,12 @@ export function RichEditor({ name, initialValue = "", onImageInserted, onChange 
           )}
         </div>
 
+        {/* 구분선 */}
+        <Button type="button" variant="outline" size="sm"
+          onClick={() => editor?.chain().focus().setHorizontalRule().run()}>
+          — 구분선
+        </Button>
+
         {/* 이미지 */}
         <Button type="button" variant="outline" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}>
           이미지 첨부
