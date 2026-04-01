@@ -89,9 +89,14 @@ export async function GET(req: Request) {
     }
 
     const INITIAL_AMT = 1000000000;
-    const totalEvalAmt = stockTotalAmt + futureTotalAmt;
-    const profitLossAmt = totalEvalAmt - INITIAL_AMT;
-    const profitLossRate = (profitLossAmt / INITIAL_AMT) * 100;
+    // 기간 전환 시 Vercel 환경변수 PORTFOLIO_BASE_TOTAL_AMT에 이전 기간 마지막 잔액 입력
+    // 기본값은 INITIAL_AMT (첫 기간)
+    const BASE_TOTAL_AMT = parseInt(process.env.PORTFOLIO_BASE_TOTAL_AMT ?? String(INITIAL_AMT));
+    const rawTotal = stockTotalAmt + futureTotalAmt;
+    // 이전 기간 수익을 연속으로 이어붙이기 위해 비율로 보정
+    const totalEvalAmt = Math.round((rawTotal / INITIAL_AMT) * BASE_TOTAL_AMT);
+    const profitLossAmt = totalEvalAmt - BASE_TOTAL_AMT;
+    const profitLossRate = (profitLossAmt / BASE_TOTAL_AMT) * 100;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
