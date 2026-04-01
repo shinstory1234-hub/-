@@ -11,24 +11,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ postId: 
   const ip = getIP(req);
   const supabase = await getSupabase();
 
-  const { count, error } = await supabase
-    .from("likes")
-    .select("id", { count: "exact", head: true })
-    .eq("post_id", postId);
+  const [{ count, error }, { data, error: likeError }] = await Promise.all([
+    supabase.from("likes").select("id", { count: "exact", head: true }).eq("post_id", postId),
+    supabase.from("likes").select("id").eq("post_id", postId).eq("ip_address", ip).maybeSingle(),
+  ]);
 
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  }
-
-  const { data, error: likeError } = await supabase
-    .from("likes")
-    .select("id")
-    .eq("post_id", postId)
-    .eq("ip_address", ip)
-    .maybeSingle();
-
-  if (likeError) {
-    return NextResponse.json({ ok: false, error: likeError.message }, { status: 500 });
+  if (error || likeError) {
+    return NextResponse.json({ ok: false, error: (error ?? likeError)?.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, count: count ?? 0, likedByMe: Boolean(data?.id) });

@@ -71,14 +71,10 @@ export function PostInteractions({ postId, initialLikes, initialComments }: Prop
       if (commentsJson?.ok) {
         setComments(commentsJson.comments ?? []);
         const initial: Record<string, { count: number; liked: boolean }> = {};
-        await Promise.all(
-          (commentsJson.comments ?? []).map(async (c) => {
-            const localLiked = localStorage.getItem(`comment_liked_${c.id}`) === "true";
-            const likeRes = await fetch(`/api/comment-likes/${c.id}`, { cache: "no-store" });
-            const likeJson = await safeJson<CommentLikeResponse>(likeRes);
-            initial[c.id] = { count: c.likes_count ?? 0, liked: localLiked || (likeJson?.liked ?? false) };
-          })
-        );
+        (commentsJson.comments ?? []).forEach((c) => {
+          const localLiked = localStorage.getItem(`comment_liked_${c.id}`) === "true";
+          initial[c.id] = { count: c.likes_count ?? 0, liked: localLiked };
+        });
         setCommentLikes(initial);
       }
     };

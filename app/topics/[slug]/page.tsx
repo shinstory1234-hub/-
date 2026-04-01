@@ -3,6 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { getCategories, getPosts } from "@/lib/posts";
 
+export const revalidate = 3600;
+
 export default async function TopicPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const categories = await getCategories();
