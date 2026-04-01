@@ -94,10 +94,20 @@ const LineHeight = Extension.create({
   },
   addCommands() {
     return {
-      setLineHeight: (lineHeight: string) => ({ commands }: any) =>
-        commands.updateAttributes("paragraph", { lineHeight }),
-      unsetLineHeight: () => ({ commands }: any) =>
-        commands.updateAttributes("paragraph", { lineHeight: null }),
+      setLineHeight: (lineHeight: string) => ({ commands, state }: any) => {
+        const { selection, doc } = state;
+        const node = doc.nodeAt(selection.$from.pos) ?? doc.resolve(selection.$from.pos).parent;
+        const type = node?.type?.name;
+        if (type === "heading") return commands.updateAttributes("heading", { lineHeight });
+        return commands.updateAttributes("paragraph", { lineHeight });
+      },
+      unsetLineHeight: () => ({ commands, state }: any) => {
+        const { selection, doc } = state;
+        const node = doc.nodeAt(selection.$from.pos) ?? doc.resolve(selection.$from.pos).parent;
+        const type = node?.type?.name;
+        if (type === "heading") return commands.updateAttributes("heading", { lineHeight: null });
+        return commands.updateAttributes("paragraph", { lineHeight: null });
+      },
     } as any;
   },
 });
