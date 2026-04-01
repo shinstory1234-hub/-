@@ -7,7 +7,7 @@ export async function GET() {
     const end = new Date();
     const start = new Date();
     start.setFullYear(start.getFullYear() - 2);
-    const fmt = (d: Date) => d.toISOString().replace(/[-T:]/g, "").slice(0, 14) + "00";
+    const fmt = (d: Date) => d.toISOString().replace(/[-T:]/g, "").slice(0, 14);
 
     const res = await fetch(
       `https://m.stock.naver.com/api/index/KOSPI/price?startDateTime=${fmt(start)}&endDateTime=${fmt(end)}&timeframe=day`,
